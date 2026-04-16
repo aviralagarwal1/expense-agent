@@ -250,6 +250,22 @@
       border-color: rgba(35, 66, 94, 0.42);
       box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
     }
+    .text-input {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 18px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.96);
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .text-input:focus {
+      border-color: rgba(35, 66, 94, 0.42);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .profile-actions {
+      margin-top: 6px;
+    }
     .btn {
       padding: 12px 18px;
       border: 1px solid transparent;
@@ -430,6 +446,24 @@
 
           <div class="detail-list">
             <section class="panel">
+              <div class="card-title">Profile name</div>
+              <p class="card-copy">Used for labels like "Aviral's Expenses" throughout the workspace.</p>
+
+              <div class="field-label">First name</div>
+              <input class="text-input" type="text" id="firstNameInput" placeholder="Aviral" autocomplete="given-name" />
+
+              <div class="field-label">Last name</div>
+              <input class="text-input" type="text" id="lastNameInput" placeholder="Agarwal" autocomplete="family-name" />
+
+              <div class="profile-actions">
+                <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Name</button>
+              </div>
+
+              <div class="status-msg" id="profileStatusMsg"></div>
+              <div class="meta-copy">Google can seed this automatically, but you can override it here.</div>
+            </section>
+
+            <section class="panel">
               <div class="card-title">What this unlocks</div>
               <div class="detail-item">
                 <strong>Upload and analyze screenshots</strong>
@@ -503,6 +537,9 @@
         badge.className = "key-badge unset";
         badge.textContent = "No key saved yet";
       }
+
+      document.getElementById("firstNameInput").value = data.profile?.first_name || "";
+      document.getElementById("lastNameInput").value = data.profile?.last_name || "";
     } catch (e) {
     }
   }
@@ -552,8 +589,55 @@
     el.style.display = "block";
   }
 
+  async function saveProfile() {
+    const firstName = document.getElementById("firstNameInput").value.trim();
+    const lastName = document.getElementById("lastNameInput").value.trim();
+    if (!firstName) {
+      showProfileStatus("First name is required.", false);
+      return;
+    }
+    const btn = document.getElementById("saveProfileBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Saving`;
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showProfileStatus(data.error, false);
+        return;
+      }
+      document.getElementById("firstNameInput").value = data.profile?.first_name || firstName;
+      document.getElementById("lastNameInput").value = data.profile?.last_name || lastName;
+      showProfileStatus("Profile saved.", true);
+    } catch (e) {
+      showProfileStatus("Network error - please try again.", false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save Name";
+    }
+  }
+
+  function showProfileStatus(msg, ok) {
+    const el = document.getElementById("profileStatusMsg");
+    el.textContent = msg;
+    el.className = "status-msg " + (ok ? "success" : "error");
+    el.style.display = "block";
+  }
+
   document.getElementById("apiKeyInput").addEventListener("keydown", e => {
     if (e.key === "Enter") saveKey();
+  });
+
+  document.getElementById("firstNameInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") saveProfile();
+  });
+
+  document.getElementById("lastNameInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") saveProfile();
   });
 </script>
 </body>

@@ -316,6 +316,7 @@
         </a>
         <div class="nav-actions">
           <a class="nav-link" href="/app">Back to App</a>
+          <button class="nav-link" type="button" onclick="doLogout()">Sign Out</button>
           <span class="nav-count" id="navCount">Loading</span>
         </div>
       </nav>
@@ -364,6 +365,12 @@
 <script>
   const token = sessionStorage.getItem("expense_token");
   if (!token) window.location.href = "/app";
+
+  function doLogout() {
+    sessionStorage.removeItem("expense_token");
+    sessionStorage.removeItem("expense_refresh_token");
+    window.location.href = "/app";
+  }
 
   function vendorMark(vendor) {
     const cleaned = (vendor || "").replace(/[^A-Za-z0-9 ]/g, "").trim();

@@ -312,6 +312,38 @@
     .auth-btn {
       width: 100%;
     }
+    .auth-social {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .btn-google {
+      width: 100%;
+      background: #ffffff;
+      color: var(--ink);
+      border: 1px solid var(--line-strong);
+      box-shadow: 0 12px 26px rgba(24, 33, 43, 0.06);
+    }
+    .btn-google svg {
+      flex-shrink: 0;
+    }
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
     .auth-footer {
       margin-top: 18px;
       color: var(--muted);
@@ -416,98 +448,193 @@
     .workspace-section.visible {
       display: grid;
     }
+    .loading-panel {
+      min-height: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 24px;
+      padding: 64px 28px;
+    }
+    .loading-panel .spinner {
+      width: 28px;
+      height: 28px;
+      border-width: 3px;
+      border-color: rgba(35, 43, 41, 0.14);
+      border-top-color: var(--ink);
+    }
+    .loading-text {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      max-width: 46ch;
+    }
+    .loading-title {
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 3.6vw, 2.9rem);
+      font-weight: 600;
+      letter-spacing: -0.045em;
+      line-height: 1.05;
+    }
+    .loading-copy {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.68;
+    }
+    .welcome-panel {
+      display: grid;
+      min-height: 520px;
+      grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+      align-items: stretch;
+      gap: 18px;
+      padding: 18px;
+    }
+    .welcome-main {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28px;
+    }
+    .welcome-main h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.5rem, 4vw, 3.6rem);
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+      max-width: 11ch;
+      margin-bottom: 16px;
+    }
+    .welcome-copy {
+      max-width: 44ch;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+    .welcome-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(48, 92, 79, 0.18);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--ink);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .welcome-status-mark {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 0 6px rgba(48, 92, 79, 0.12);
+    }
+    .welcome-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 26px;
+      flex-wrap: wrap;
+    }
+    .welcome-side {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      justify-content: space-between;
+    }
+    .welcome-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.76rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .welcome-kicker::before {
+      content: "";
+      width: 28px;
+      height: 1px;
+      background: rgba(116, 58, 30, 0.28);
+    }
+    .welcome-points {
+      display: grid;
+      gap: 14px;
+    }
+    .welcome-point {
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(35, 43, 41, 0.08);
+      background: rgba(255, 255, 255, 0.76);
+    }
+    .welcome-point strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.95rem;
+    }
+    .welcome-point span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
     .setup-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
       gap: 18px;
+      align-items: start;
     }
     .setup-main {
-      padding: 30px;
+      padding: 38px 34px;
     }
     .setup-main h1 {
       font-family: var(--serif);
-      font-size: clamp(2.4rem, 4vw, 3.35rem);
+      font-size: clamp(2.3rem, 3.8vw, 3.1rem);
       font-weight: 600;
       letter-spacing: -0.05em;
-      line-height: 0.96;
-      max-width: 11ch;
-      margin-bottom: 16px;
+      line-height: 1.02;
+      margin-bottom: 18px;
     }
     .setup-main p {
       color: var(--muted);
-      max-width: 56ch;
+      max-width: 44ch;
       line-height: 1.72;
-      margin-bottom: 22px;
+      margin-bottom: 28px;
     }
     .setup-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 18px;
     }
-    .setup-note {
-      color: var(--muted);
-      font-size: 0.86rem;
-      line-height: 1.58;
+    .setup-details {
+      padding: 10px 28px;
     }
-    .setup-side {
-      display: grid;
-      gap: 12px;
-      align-content: start;
+    .setup-detail {
+      padding: 22px 0;
+      border-top: 1px solid var(--line);
     }
-    .setup-side h2 {
-      font-size: 1.08rem;
-      letter-spacing: -0.02em;
-      margin-bottom: 14px;
+    .setup-detail:first-child {
+      border-top: none;
     }
-    .setup-list {
-      display: grid;
-      gap: 12px;
-    }
-    .setup-step {
-      background: rgba(255,255,255,0.72);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 15px 16px;
-    }
-    .setup-step strong {
+    .setup-detail strong {
       display: block;
-      font-size: 0.92rem;
-      margin-bottom: 4px;
-    }
-    .setup-step span {
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.55;
-    }
-    .quick-links {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .quick-link {
-      display: block;
-      background: rgba(255,255,255,0.78);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 20px;
-      text-decoration: none;
-      transition: transform 0.16s ease, border-color 0.16s ease;
-    }
-    .quick-link:hover {
-      transform: translateY(-1px);
-      border-color: var(--line-strong);
-    }
-    .quick-link strong {
-      display: block;
-      margin-bottom: 6px;
       font-size: 0.95rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
     }
-    .quick-link span {
+    .setup-detail p {
       color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.58;
+      font-size: 0.9rem;
+      line-height: 1.65;
+    }
+    .setup-detail a {
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: underline;
     }
 
     .hero-grid {
@@ -877,7 +1004,6 @@
     @media (max-width: 980px) {
       body { padding: 16px; }
       .setup-grid,
-      .quick-links,
       .hero-grid,
       .metrics-grid {
         grid-template-columns: 1fr;
@@ -931,6 +1057,9 @@
       .top-bar-actions {
         width: 100%;
       }
+      .welcome-panel {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -950,44 +1079,20 @@
           <section class="auth-card">
             <div class="auth-card-header">
               <h2>Enter the workspace</h2>
-              <p>Create an account or sign in to start expensing.</p>
+              <p>Sign in with Google to access your private expense history and saved Anthropic key.</p>
             </div>
 
-            <div class="auth-tabs">
-              <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
-              <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Create Account</button>
+            <div class="auth-social">
+              <a class="btn btn-google auth-btn" href="/auth/google">
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.2-1.9 2.9l3 2.3c1.8-1.6 2.8-4 2.8-7 0-.7-.1-1.4-.2-2H12z"/>
+                  <path fill="#34A853" d="M12 21c2.7 0 5-.9 6.7-2.5l-3-2.3c-.8.5-1.9.9-3.7.9-2.8 0-5.1-1.9-6-4.4l-3.1 2.4C4.7 18.6 8.1 21 12 21z"/>
+                  <path fill="#4A90E2" d="M6 12c0-.8.1-1.5.4-2.2L3.3 7.4C2.5 8.9 2 10.4 2 12s.5 3.1 1.3 4.6l3.1-2.4C6.1 13.5 6 12.8 6 12z"/>
+                  <path fill="#FBBC05" d="M12 6.9c1.5 0 2.8.5 3.9 1.5l2.9-2.9C17 3.8 14.7 3 12 3 8.1 3 4.7 5.4 3.3 8.9l3.1 2.4c.9-2.5 3.2-4.4 6-4.4z"/>
+                </svg>
+                Continue with Google
+              </a>
             </div>
-
-            <div id="panelSignIn">
-              <input class="auth-field" type="email" id="signinEmail" placeholder="Email" autocomplete="email" />
-              <input class="auth-field" type="password" id="signinPassword" placeholder="Password" autocomplete="current-password" />
-              <p class="auth-error" id="signinError"></p>
-              <button class="btn btn-primary auth-btn" id="signinBtn" onclick="doSignIn()">Sign In</button>
-              <div class="auth-switch">
-                <button class="link-button" type="button" onclick="showForgotPasswordPanel()">Forgot password?</button>
-              </div>
-            </div>
-
-            <div id="panelForgot" style="display:none;">
-              <input class="auth-field" type="email" id="forgotEmail" placeholder="Email" autocomplete="email" />
-              <p class="auth-error" id="forgotError"></p>
-              <p class="panel-copy" id="forgotSuccess" style="display:none; margin-bottom:12px;"></p>
-              <button class="btn btn-primary auth-btn" id="forgotBtn" onclick="sendPasswordReset()">Send Reset Link</button>
-              <div class="auth-switch" style="justify-content:space-between;">
-                <span style="color:var(--muted); font-size:0.82rem;">Use the email tied to your account.</span>
-                <button class="link-button" type="button" onclick="switchTab('signin')">Back to sign in</button>
-              </div>
-            </div>
-
-            <div id="panelSignUp" style="display:none;">
-              <input class="auth-field" type="text" id="signupFirstName" placeholder="First name" autocomplete="given-name" />
-              <input class="auth-field" type="text" id="signupLastName" placeholder="Last name" autocomplete="family-name" />
-              <input class="auth-field" type="email" id="signupEmail" placeholder="Email" autocomplete="email" />
-              <input class="auth-field" type="password" id="signupPassword" placeholder="Password" autocomplete="new-password" />
-              <p class="auth-error" id="signupError"></p>
-              <button class="btn btn-primary auth-btn" id="signupBtn" onclick="doSignUp()">Create Account</button>
-            </div>
-
           </section>
 
           <div class="auth-points">
@@ -1025,59 +1130,83 @@
           </div>
         </div>
 
-        <section id="setupView" class="workspace-section">
-          <div class="setup-grid">
-            <div class="panel setup-main">
-              <div class="eyebrow">Get started</div>
-              <h1>Connect your Anthropic API key before you upload anything.</h1>
-              <p>
-                Expense Agent is ready, but screenshot extraction stays off until your account has an Anthropic key.
-                Once it is connected, this page becomes your upload workspace automatically.
-              </p>
-              <div class="setup-actions">
-                <a class="btn btn-primary" href="/settings?return_to=%2Fapp">Connect API Key</a>
-                <a class="btn btn-secondary" href="/history">Open History</a>
+        <section id="loadingView" class="workspace-section">
+          <section class="panel loading-panel">
+            <span class="spinner" aria-hidden="true"></span>
+            <div class="loading-text">
+              <div class="eyebrow" style="margin-bottom: 0;">One moment</div>
+              <div class="loading-title" id="loadingTitle">Opening your workspace.</div>
+              <p class="loading-copy" id="loadingCopy">Checking your account and loading your saved setup.</p>
+            </div>
+          </section>
+        </section>
+
+        <section id="welcomeView" class="workspace-section">
+          <section class="panel welcome-panel">
+            <div class="welcome-main">
+              <div>
+                <div class="eyebrow">New account</div>
+                <h1 id="welcomeHeadline">Welcome to Expense Agent.</h1>
+                <p class="welcome-copy">
+                  Your Google account is connected and your private workspace is ready. Next, add your Anthropic key so screenshot uploads can start working.
+                </p>
+                <div class="welcome-actions">
+                  <button class="btn btn-primary" id="welcomeContinueBtn" type="button" onclick="completeWelcome()">Continue Setup</button>
+                  <button class="btn btn-secondary" type="button" onclick="completeWelcome('/settings?return_to=%2Fapp')">Open Settings</button>
+                </div>
               </div>
-              <div class="setup-note">
-                You can still browse the rest of the app. If an upload request reaches the backend without a key, the app will stop it and send you back to Settings with a clear error.
+              <div class="welcome-status">
+                <span class="welcome-status-mark" aria-hidden="true"></span>
+                New account confirmed. Returning sign-ins skip this step.
               </div>
             </div>
 
-            <aside class="setup-side">
-              <section class="panel panel-soft">
-                <div class="section-kicker">What happens next</div>
-                <h2>One setup step, then the normal flow.</h2>
-                <div class="setup-list">
-                  <div class="setup-step">
-                    <strong>1. Add your Anthropic key</strong>
-                    <span>Save it once in Settings. You can replace it later whenever you rotate credentials.</span>
+            <aside class="panel panel-soft welcome-side">
+              <div>
+                <div class="welcome-kicker">What changes now</div>
+                <div class="welcome-points">
+                  <div class="welcome-point">
+                    <strong>Same Google account, same history</strong>
+                    <span>Future sign-ins return to your existing workspace and transaction log.</span>
                   </div>
-                  <div class="setup-step">
-                    <strong>2. Upload screenshots</strong>
-                    <span>The upload workspace appears here after setup, with duplicate filtering and review intact.</span>
+                  <div class="welcome-point">
+                    <strong>This is your first-time setup</strong>
+                    <span>You only need to connect an Anthropic key once before uploads unlock.</span>
                   </div>
-                  <div class="setup-step">
-                    <strong>3. Review and confirm</strong>
-                    <span>Only approved transactions are written to your history.</span>
+                  <div class="welcome-point">
+                    <strong>Your data stays account-specific</strong>
+                    <span>Expenses, saved key status, and profile name stay tied to this account only.</span>
                   </div>
                 </div>
-              </section>
+              </div>
             </aside>
-          </div>
+          </section>
+        </section>
 
-          <div class="quick-links">
-            <a class="quick-link" href="/settings?return_to=%2Fapp">
-              <strong>Settings</strong>
-              <span>Connect, replace, or rotate your Anthropic API key.</span>
-            </a>
-            <a class="quick-link" href="/history">
-              <strong>History</strong>
-              <span>See previously saved transactions even before you upload a new batch.</span>
-            </a>
-            <a class="quick-link" href="/" onclick="event.preventDefault(); doLogout();">
-              <strong>Sign out</strong>
-              <span>Leave the workspace and clear the current browser session.</span>
-            </a>
+        <section id="setupView" class="workspace-section">
+          <div class="setup-grid">
+            <div class="panel setup-main">
+              <h1>Connect your Anthropic key to unlock uploads.</h1>
+              <p>Save it once to your account. The workspace turns on as soon as the key lands.</p>
+              <div class="setup-actions">
+                <a class="btn btn-primary" href="/settings?return_to=%2Fapp">Connect API Key</a>
+              </div>
+            </div>
+
+            <aside class="panel panel-soft setup-details">
+              <div class="setup-detail">
+                <strong>Where to get a key</strong>
+                <p>Create one in the <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>. Sign in, open API keys, generate a key, then paste it on the next screen.</p>
+              </div>
+              <div class="setup-detail">
+                <strong>What each screenshot costs</strong>
+                <p>Anthropic bills your own account as the workspace runs — typically about a penny per screenshot.</p>
+              </div>
+              <div class="setup-detail">
+                <strong>Where your key lives</strong>
+                <p>Saved only to your Expense Agent account, used only to read screenshots. Replace or remove it from Settings any time.</p>
+              </div>
+            </aside>
           </div>
         </section>
 
@@ -1146,77 +1275,48 @@
     </div>
 
     <div class="toast" id="toast"></div>
-
-    <div id="resetScreen" class="reset-shell">
-      <div class="reset-card">
-        <a class="brand" href="/" style="margin-bottom:20px;">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span>Expense Agent</span>
-        </a>
-        <div class="eyebrow">Password recovery</div>
-        <h2>Choose a new password.</h2>
-        <p>This recovery link came from Supabase email reset flow. Set a new password, then sign back in.</p>
-        <input class="auth-field" type="password" id="resetPassword" placeholder="New password" autocomplete="new-password" />
-        <input class="auth-field" type="password" id="resetPasswordConfirm" placeholder="Confirm new password" autocomplete="new-password" />
-        <p class="auth-error" id="resetError"></p>
-        <button class="btn btn-primary auth-btn" id="resetBtnSubmit" onclick="submitPasswordReset()">Update Password</button>
-        <div class="reset-note">Use at least 8 characters.</div>
-      </div>
-    </div>
   </div>
 
 <script>
   let sessionToken = sessionStorage.getItem("expense_token") || "";
   let sessionRefreshToken = sessionStorage.getItem("expense_refresh_token") || "";
   let hasApiKey = false;
+  let profileFirstName = "";
+  let isNewAccount = false;
+  const authError = new URLSearchParams(window.location.search).get("auth_error");
+  const loadingView = document.getElementById("loadingView");
+  const welcomeView = document.getElementById("welcomeView");
+  const setupView = document.getElementById("setupView");
+  const workspaceView = document.getElementById("workspaceView");
+  const mainApp = document.getElementById("mainApp");
+  const authScreen = document.getElementById("authScreen");
+  const userEmailEl = document.getElementById("userEmail");
+  const uploadMarkEl = document.getElementById("uploadMark");
+  const loadingTitleEl = document.getElementById("loadingTitle");
+  const loadingCopyEl = document.getElementById("loadingCopy");
+  const welcomeHeadlineEl = document.getElementById("welcomeHeadline");
+  const welcomeContinueBtn = document.getElementById("welcomeContinueBtn");
 
-  if (new URLSearchParams(window.location.search).get("signup") === "1") {
-    switchTab("signup");
-  }
-
-  (async function handleEmailConfirm() {
+  (async function handleAuthRedirect() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = hash.get("access_token");
     const refreshToken = hash.get("refresh_token");
-    const type = hash.get("type");
-    if (accessToken && (type === "signup" || type === "magiclink")) {
+    if (accessToken) {
       sessionToken = accessToken;
       sessionRefreshToken = refreshToken || "";
       sessionStorage.setItem("expense_token", sessionToken);
       sessionStorage.setItem("expense_refresh_token", sessionRefreshToken);
       window.history.replaceState(null, "", "/app");
-      const vFirstName = getFirstNameFromToken(accessToken);
-      document.getElementById("authScreen").style.display = "flex";
-      document.getElementById("authScreen").innerHTML = `
-        <nav class="auth-nav">
-          <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span>Expense Agent</span></a>
-        </nav>
-        <div class="auth-shell">
-          <div class="auth-card" style="text-align:center;">
-            <div style="width:48px;height:48px;margin:0 auto 16px;border-radius:50%;background:var(--success-soft);display:flex;align-items:center;justify-content:center;">
-              <svg width="22" height="22" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <h2 style="font-family:var(--serif);font-size:1.8rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:8px;">You\u2019re all set${vFirstName ? ', ' + vFirstName : ''}.</h2>
-            <p style="color:var(--muted);line-height:1.7;margin-bottom:24px;">Your email is verified and your account is ready to use.</p>
-            <button class="btn btn-primary" style="width:100%;" onclick="checkApiKeyAndEnter()">Continue</button>
-          </div>
-        </div>`;
-      return;
-    }
-    if (accessToken && type === "recovery") {
-      sessionToken = accessToken;
-      sessionRefreshToken = refreshToken || "";
-      sessionStorage.setItem("expense_token", sessionToken);
-      sessionStorage.setItem("expense_refresh_token", sessionRefreshToken);
-      window.history.replaceState(null, "", "/app?reset=1");
-      showResetScreen();
+      profileFirstName = getFirstNameFromToken(sessionToken);
+      showAuthenticatedShell();
+      checkApiKeyAndEnter();
       return;
     }
   })();
 
-  if (new URLSearchParams(window.location.search).get("reset") === "1" && sessionToken) {
-    showResetScreen();
-  } else if (sessionToken) {
+  if (sessionToken) {
+    profileFirstName = getFirstNameFromToken(sessionToken);
+    showAuthenticatedShell();
     checkApiKeyAndEnter();
   }
 
@@ -1231,277 +1331,136 @@
   function getFirstNameFromToken(token) {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      const displayName = (payload.user_metadata && payload.user_metadata.display_name) || "";
-      return displayName.split(" ")[0] || "";
+      const metadata = payload.user_metadata || {};
+      const firstName = (metadata.first_name || metadata.firstName || "").trim();
+      if (firstName) return firstName;
+
+      const displayName = (metadata.display_name || metadata.full_name || metadata.name || "").trim();
+      return displayName.split(/\s+/)[0] || "";
     } catch {
       return "";
     }
+  }
+
+  function clearStoredSession() {
+    sessionToken = "";
+    sessionRefreshToken = "";
+    hasApiKey = false;
+    profileFirstName = "";
+    isNewAccount = false;
+    sessionStorage.removeItem("expense_token");
+    sessionStorage.removeItem("expense_refresh_token");
+  }
+
+  function getUserIdFromToken(token) {
+    try {
+      return JSON.parse(atob(token.split(".")[1])).sub || "";
+    } catch {
+      return "";
+    }
+  }
+
+  function getWelcomeSeenKey() {
+    const userId = getUserIdFromToken(sessionToken);
+    return userId ? `expense_welcome_seen_${userId}` : "";
+  }
+
+  function markWelcomeSeenLocally() {
+    const key = getWelcomeSeenKey();
+    if (key) localStorage.setItem(key, "1");
+  }
+
+  function hasSeenWelcomeLocally() {
+    const key = getWelcomeSeenKey();
+    return key ? localStorage.getItem(key) === "1" : false;
+  }
+
+  function showAuthenticatedShell() {
+    authScreen.style.display = "none";
+    mainApp.style.display = "block";
+    const email = getEmailFromToken(sessionToken);
+    userEmailEl.textContent = email;
+    const firstName = profileFirstName || getFirstNameFromToken(sessionToken);
+    uploadMarkEl.textContent = firstName ? firstName + "\u2019s Expenses" : "EA";
+    loadingTitleEl.textContent = "Opening your workspace.";
+    loadingCopyEl.textContent = "Checking your account and loading your saved setup.";
+    loadingView.classList.add("visible");
+    welcomeView.classList.remove("visible");
+    setupView.classList.remove("visible");
+    workspaceView.classList.remove("visible");
   }
 
   async function checkApiKeyAndEnter() {
     try {
       const res = await fetch("/api/settings", { headers: { "Authorization": `Bearer ${sessionToken}` } });
       if (res.status === 401) {
-        sessionStorage.removeItem("expense_token");
-        sessionToken = "";
+        clearStoredSession();
+        authScreen.style.display = "block";
+        mainApp.style.display = "none";
         return;
       }
       const data = await res.json();
       hasApiKey = data.has_key;
+      profileFirstName = (data.profile && data.profile.first_name) || getFirstNameFromToken(sessionToken);
+      isNewAccount = Boolean(data.is_new_user) && !hasSeenWelcomeLocally();
       showMainApp();
     } catch (e) {
+      loadingTitleEl.textContent = "Could not load the workspace.";
+      loadingCopyEl.textContent = "Refresh and try again. If it keeps happening, check the Supabase connection.";
     }
   }
 
   function showMainApp() {
-    document.getElementById("resetScreen").style.display = "none";
-    document.getElementById("authScreen").style.display = "none";
-    document.getElementById("mainApp").style.display = "block";
+    authScreen.style.display = "none";
+    mainApp.style.display = "block";
     const email = getEmailFromToken(sessionToken);
-    if (email) {
-      document.getElementById("userEmail").textContent = email;
-    }
-    const firstName = getFirstNameFromToken(sessionToken);
-    if (firstName) {
-      document.getElementById("uploadMark").textContent = firstName + "\u2019s Expenses";
-    }
-    document.getElementById("setupView").classList.toggle("visible", !hasApiKey);
-    document.getElementById("workspaceView").classList.toggle("visible", hasApiKey);
-  }
-
-  function switchTab(tab) {
-    const isSignIn = tab === "signin";
-    const isSignUp = tab === "signup";
-    document.getElementById("tabSignIn").classList.toggle("active", isSignIn);
-    document.getElementById("tabSignUp").classList.toggle("active", isSignUp);
-    document.getElementById("panelSignIn").style.display = isSignIn ? "block" : "none";
-    document.getElementById("panelForgot").style.display = "none";
-    document.getElementById("panelSignUp").style.display = isSignUp ? "block" : "none";
-  }
-
-  function showForgotPasswordPanel() {
-    clearAuthError("forgotError");
-    document.getElementById("forgotSuccess").style.display = "none";
-    document.getElementById("forgotSuccess").textContent = "";
-    document.getElementById("tabSignIn").classList.remove("active");
-    document.getElementById("tabSignUp").classList.remove("active");
-    document.getElementById("panelSignIn").style.display = "none";
-    document.getElementById("panelSignUp").style.display = "none";
-    document.getElementById("panelForgot").style.display = "block";
-    document.getElementById("forgotEmail").value = document.getElementById("signinEmail").value.trim();
-    document.getElementById("forgotEmail").focus();
-  }
-
-  function showResetScreen() {
-    document.getElementById("mainApp").style.display = "none";
-    document.getElementById("authScreen").style.display = "none";
-    document.getElementById("resetScreen").style.display = "flex";
-  }
-
-  function showForgotSuccess(msg) {
-    const el = document.getElementById("forgotSuccess");
-    el.textContent = msg;
-    el.style.display = "block";
-  }
-
-  function showAuthError(id, msg) {
-    const el = document.getElementById(id);
-    el.textContent = msg;
-    el.style.display = "block";
-  }
-
-  function clearAuthError(id) {
-    const el = document.getElementById(id);
-    el.textContent = "";
-    el.style.display = "none";
-  }
-
-  function showExistingAccountMessage(email) {
-    switchTab("signin");
-    document.getElementById("signinEmail").value = email;
-    document.getElementById("signinPassword").focus();
-    showAuthError("signinError", "That email already has an account. Sign in instead.");
-  }
-
-  async function doSignIn() {
-    clearAuthError("signinError");
-    const email = document.getElementById("signinEmail").value.trim();
-    const password = document.getElementById("signinPassword").value;
-    if (!email || !password) {
-      showAuthError("signinError", "Email and password are required.");
+    userEmailEl.textContent = email;
+    const firstName = profileFirstName || getFirstNameFromToken(sessionToken);
+    uploadMarkEl.textContent = firstName ? firstName + "\u2019s Expenses" : "EA";
+    loadingView.classList.remove("visible");
+    if (isNewAccount) {
+      const welcomeName = firstName ? `Welcome to Expense Agent, ${firstName}.` : "Welcome to Expense Agent.";
+      welcomeHeadlineEl.textContent = welcomeName;
+      welcomeView.classList.add("visible");
+      setupView.classList.remove("visible");
+      workspaceView.classList.remove("visible");
       return;
     }
-    const btn = document.getElementById("signinBtn");
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span>Signing In`;
+    welcomeView.classList.remove("visible");
+    setupView.classList.toggle("visible", !hasApiKey);
+    workspaceView.classList.toggle("visible", hasApiKey);
+  }
+
+  async function completeWelcome(targetUrl = "") {
+    welcomeContinueBtn.disabled = true;
+    welcomeContinueBtn.innerHTML = `<span class="spinner"></span>Continuing`;
     try {
-      const res = await fetch("/login", {
+      await fetch("/api/welcome-seen", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        headers: { "Authorization": `Bearer ${sessionToken}` },
       });
-      const data = await res.json();
-      if (data.error) {
-        showAuthError("signinError", data.error);
+    } catch (e) {
+    } finally {
+      markWelcomeSeenLocally();
+      isNewAccount = false;
+      welcomeContinueBtn.disabled = false;
+      welcomeContinueBtn.textContent = "Continue Setup";
+      if (targetUrl) {
+        window.location.href = targetUrl;
         return;
       }
-      sessionToken = data.token;
-      sessionStorage.setItem("expense_token", sessionToken);
-      await checkApiKeyAndEnter();
-    } catch (e) {
-      showAuthError("signinError", "Network error - please try again.");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Sign In";
+      showMainApp();
     }
   }
 
-  async function doSignUp() {
-    clearAuthError("signupError");
-    clearAuthError("signinError");
-    const firstName = document.getElementById("signupFirstName").value.trim();
-    const lastName = document.getElementById("signupLastName").value.trim();
-    const email = document.getElementById("signupEmail").value.trim();
-    const password = document.getElementById("signupPassword").value;
-    if (!firstName || !lastName || !email || !password) {
-      showAuthError("signupError", "First name, last name, email, and password are required.");
-      return;
-    }
-    const btn = document.getElementById("signupBtn");
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span>Creating Account`;
-    try {
-      const res = await fetch("/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          password,
-        }),
-      });
-      const data = await res.json();
-      if (data.error === "account_exists") {
-        showExistingAccountMessage(email);
-        return;
-      }
-      if (data.error) {
-        showAuthError("signupError", data.error);
-        return;
-      }
-      document.getElementById("panelSignUp").innerHTML = `
-        <div class="panel panel-soft" style="padding:20px;">
-          <div class="section-kicker">Verification required</div>
-          <h3 style="font-size:1.1rem; letter-spacing:-0.02em; margin-bottom:8px;">Check your inbox</h3>
-          <p class="panel-copy" style="margin-bottom:16px;">If <strong>${email}</strong> is a new account, we sent a verification link. If you already have an account, sign in instead.</p>
-          <button class="btn btn-secondary auth-btn" type="button" onclick="showExistingAccountMessage('${email.replace(/'/g, "\\'")}')">Go to Sign In</button>
-        </div>`;
-    } catch (e) {
-      showAuthError("signupError", "Network error - please try again.");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Create Account";
-    }
-  }
-
-  async function sendPasswordReset() {
-    clearAuthError("forgotError");
-    document.getElementById("forgotSuccess").style.display = "none";
-    document.getElementById("forgotSuccess").textContent = "";
-    const email = document.getElementById("forgotEmail").value.trim();
-    if (!email) {
-      showAuthError("forgotError", "Email is required.");
-      return;
-    }
-    const btn = document.getElementById("forgotBtn");
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span>Sending`;
-    try {
-      const res = await fetch("/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        showAuthError("forgotError", data.error);
-        return;
-      }
-      showForgotSuccess(`If ${email} matches an account, the reset link is on the way.`);
-    } catch (e) {
-      showAuthError("forgotError", "Network error - please try again.");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Send Reset Link";
-    }
+  function startGoogleSignIn() {
+    window.location.href = "/auth/google";
   }
 
   function doLogout() {
-    sessionToken = "";
-    sessionRefreshToken = "";
-    sessionStorage.removeItem("expense_token");
-    sessionStorage.removeItem("expense_refresh_token");
+    clearStoredSession();
     window.location.href = "/app";
   }
-
-  async function submitPasswordReset() {
-    clearAuthError("resetError");
-    const password = document.getElementById("resetPassword").value;
-    const confirm = document.getElementById("resetPasswordConfirm").value;
-    if (!password) {
-      showAuthError("resetError", "Password is required.");
-      return;
-    }
-    if (password.length < 8) {
-      showAuthError("resetError", "Password must be at least 8 characters.");
-      return;
-    }
-    if (password !== confirm) {
-      showAuthError("resetError", "Passwords do not match.");
-      return;
-    }
-    const btn = document.getElementById("resetBtnSubmit");
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span>Updating`;
-    try {
-      const res = await fetch("/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionToken}`,
-        },
-        body: JSON.stringify({
-          password,
-          refresh_token: sessionRefreshToken,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        showAuthError("resetError", data.error);
-        return;
-      }
-      sessionToken = "";
-      sessionRefreshToken = "";
-      sessionStorage.removeItem("expense_token");
-      sessionStorage.removeItem("expense_refresh_token");
-      window.location.href = "/app";
-    } catch (e) {
-      showAuthError("resetError", "Network error - please try again.");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Update Password";
-    }
-  }
-
-  document.addEventListener("keydown", e => {
-    if (e.key !== "Enter") return;
-    const active = document.activeElement;
-    if (active && active.closest("#panelSignIn")) doSignIn();
-    else if (active && active.closest("#panelForgot")) sendPasswordReset();
-    else if (active && active.closest("#panelSignUp")) doSignUp();
-    else if (active && active.closest("#resetScreen")) submitPasswordReset();
-  });
 
   const dropZone = document.getElementById("dropZone");
   const fileInput = document.getElementById("fileInput");
@@ -1804,6 +1763,16 @@
     toast.textContent = msg;
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 3000);
+  }
+
+  if (authError) {
+    const authErrorMessages = {
+      google_sign_in_unavailable: "Google sign-in could not start. Check APP_URL and the Supabase Google redirect URLs.",
+      google_callback_missing_code: "Google returned without an auth code. Recheck the Supabase redirect URL for Google OAuth.",
+      google_callback_exchange_failed: "Google sign-in returned, but Supabase could not finish the session exchange.",
+    };
+    showToast(authErrorMessages[authError] || "Google sign-in failed.");
+    window.history.replaceState(null, "", "/app");
   }
 </script>
 </body>

@@ -2,36 +2,50 @@ import os
 import json
 import base64
 import anthropic
+from urllib.parse import urlencode
 from dotenv import load_dotenv
 load_dotenv()
 from supabase import create_client, Client
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from datetime import datetime
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ── Config ──────────────────────────────────────────────────────────────────
 SUPABASE_URL         = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+APP_URL              = (os.environ.get("APP_URL") or "").rstrip("/")
 
 supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 
-# ── Auth helper ──────────────────────────────────────────────────────────────
-def get_user_id_from_request():
+def get_external_app_url(path: str = "/"):
+    base_url = APP_URL or request.url_root.rstrip("/")
+    return f"{base_url}{path}"
+
+
+def redirect_to_app_with_error(error_code: str):
+    return redirect(url_for("index", auth_error=error_code))
+
+
+def get_user_from_request():
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         return None
     token = auth_header[7:]
     try:
-        user = supabase_admin.auth.get_user(token)
-        return user.user.id
+        response = supabase_admin.auth.get_user(token)
+        return response.user
     except Exception:
         return None
 
 
-def make_supabase_client() -> Client:
-    return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+# ── Auth helper ──────────────────────────────────────────────────────────────
+def get_user_id_from_request():
+    user = get_user_from_request()
+    return user.id if user else None
 
 
 # ── User settings (BYOA) ─────────────────────────────────────────────────────
@@ -45,6 +59,111 @@ def get_user_api_key(user_id: str):
     if result.data:
         return result.data[0].get("anthropic_api_key") or None
     return None
+
+
+def split_name_parts(full_name: str):
+    parts = [part for part in (full_name or "").strip().split() if part]
+    if not parts:
+        return "", ""
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], " ".join(parts[1:])
+
+
+def get_profile_seed_from_user(user):
+    metadata = getattr(user, "user_metadata", {}) or {}
+
+    first_name = (
+        metadata.get("first_name")
+        or metadata.get("firstName")
+        or metadata.get("given_name")
+        or ""
+    ).strip()
+    last_name = (
+        metadata.get("last_name")
+        or metadata.get("lastName")
+        or metadata.get("family_name")
+        or ""
+    ).strip()
+
+    if not first_name:
+        seed_full_name = (
+            metadata.get("full_name")
+            or metadata.get("display_name")
+            or metadata.get("name")
+            or ""
+        ).strip()
+        seed_first, seed_last = split_name_parts(seed_full_name)
+        first_name = first_name or seed_first
+        last_name = last_name or seed_last
+
+    return {
+        "first_name": first_name or None,
+        "last_name": last_name or None,
+    }
+
+
+def get_profile_for_user(user_id: str):
+    result = (
+        supabase_admin.table("profiles")
+        .select("first_name,last_name")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    if result.data:
+        row = result.data[0]
+        return {
+            "first_name": (row.get("first_name") or "").strip() or None,
+            "last_name": (row.get("last_name") or "").strip() or None,
+        }
+    return None
+
+
+def upsert_profile_for_user(user_id: str, first_name: str | None, last_name: str | None):
+    row = {
+        "user_id": user_id,
+        "first_name": first_name or None,
+        "last_name": last_name or None,
+    }
+    supabase_admin.table("profiles").upsert(row).execute()
+    return {
+        "first_name": row["first_name"],
+        "last_name": row["last_name"],
+    }
+
+
+def user_has_transactions(user_id: str) -> bool:
+    result = (
+        supabase_admin.table("transactions")
+        .select("id")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    return bool(result.data)
+
+
+def ensure_profile_for_user(user):
+    user_id = user.id
+    seed = get_profile_seed_from_user(user)
+    profile = get_profile_for_user(user_id)
+
+    if not profile:
+        return seed
+
+    return {
+        "first_name": profile.get("first_name") or seed.get("first_name"),
+        "last_name": profile.get("last_name") or seed.get("last_name"),
+    }
+
+
+def is_new_user_account(user_id: str, has_key: bool, profile: dict | None):
+    if has_key:
+        return False
+    if profile and (profile.get("first_name") or profile.get("last_name")):
+        return False
+    return not user_has_transactions(user_id)
 
 
 # ── Vendor normalization ──────────────────────────────────────────────────────
@@ -229,85 +348,70 @@ def settings_page():
     return render_template("settings.html")
 
 
-@app.route("/register", methods=["POST"])
-def register():
-    data = request.json or {}
-    first_name = data.get("first_name", "").strip()
-    last_name = data.get("last_name", "").strip()
-    email = data.get("email", "").strip()
-    password = data.get("password", "")
-    if not first_name or not last_name or not email or not password:
-        return jsonify({"error": "First name, last name, email, and password are required"}), 400
+@app.route("/auth/google")
+def auth_google():
+    redirect_to = get_external_app_url("/auth/callback")
     try:
-        supabase_admin.auth.sign_up({
-            "email": email,
-            "password": password,
+        response = supabase_admin.auth.sign_in_with_oauth({
+            "provider": "google",
             "options": {
-                "data": {
-                    "first_name": first_name,
-                    "last_name": last_name,
-                }
+                "redirect_to": redirect_to,
+                "scopes": "email profile",
+                "query_params": {
+                    "prompt": "select_account",
+                },
             },
         })
-        return jsonify({"verify": True})
-    except Exception as e:
-        message = str(e)
-        lowered = message.lower()
-        if (
-            ("already" in lowered and "registered" in lowered)
-            or ("already" in lowered and "exists" in lowered)
-            or ("user already registered" in lowered)
-            or ("email exists" in lowered)
-        ):
-            return jsonify({"error": "account_exists"}), 409
-        return jsonify({"error": message}), 400
-
-
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.json or {}
-    email    = data.get("email", "").strip()
-    password = data.get("password", "")
-    if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
-    try:
-        session = supabase_admin.auth.sign_in_with_password({"email": email, "password": password})
-        return jsonify({"token": session.session.access_token})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 401
-
-
-@app.route("/forgot-password", methods=["POST"])
-def forgot_password():
-    data = request.json or {}
-    email = data.get("email", "").strip()
-    if not email:
-        return jsonify({"error": "Email is required"}), 400
-
-    redirect_to = request.url_root.rstrip("/") + "/app?reset=1"
-
-    try:
-        supabase_admin.auth.reset_password_for_email(
-            email,
-            {"redirect_to": redirect_to},
-        )
+        auth_url = getattr(response, "url", "")
+        if not auth_url:
+            raise RuntimeError("Supabase did not return an OAuth URL")
+        return redirect(auth_url)
     except Exception:
-        # Return a generic success response to avoid leaking account existence.
-        pass
+        app.logger.exception("Failed to start Google OAuth")
+        return redirect_to_app_with_error("google_sign_in_unavailable")
 
-    return jsonify({
-        "success": True,
-        "message": "If that email has an account, a reset link has been sent.",
-    })
+
+@app.route("/auth/callback")
+def auth_callback():
+    auth_code = request.args.get("code")
+    if not auth_code:
+        app.logger.error("Missing OAuth code on callback: %s", dict(request.args))
+        return redirect_to_app_with_error("google_callback_missing_code")
+
+    try:
+        response = supabase_admin.auth.exchange_code_for_session({
+            "auth_code": auth_code,
+        })
+        session = getattr(response, "session", None)
+        access_token = getattr(session, "access_token", "") if session else ""
+        refresh_token = getattr(session, "refresh_token", "") if session else ""
+        if not access_token:
+            raise RuntimeError("Supabase did not return an access token")
+        fragment = urlencode({
+            "access_token": access_token,
+            "refresh_token": refresh_token or "",
+        })
+        return redirect(f"{get_external_app_url('/app')}#{fragment}")
+    except Exception:
+        app.logger.exception("Failed to exchange Google OAuth code for session")
+        return redirect_to_app_with_error("google_callback_exchange_failed")
 
 
 @app.route("/api/settings", methods=["GET"])
 def api_settings_get():
-    user_id = get_user_id_from_request()
-    if not user_id:
+    user = get_user_from_request()
+    if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    key = get_user_api_key(user_id)
-    return jsonify({"has_key": bool(key)})
+    key = get_user_api_key(user.id)
+    try:
+        profile = ensure_profile_for_user(user)
+    except Exception:
+        profile = get_profile_seed_from_user(user)
+    try:
+        is_new_user = is_new_user_account(user.id, bool(key), profile)
+    except Exception:
+        is_new_user = False
+    return jsonify({"has_key": bool(key), "profile": profile, "is_new_user": is_new_user})
 
 
 @app.route("/api/settings", methods=["POST"])
@@ -324,6 +428,40 @@ def api_settings_save():
         "anthropic_api_key": api_key,
     }).execute()
     return jsonify({"success": True})
+
+
+@app.route("/api/profile", methods=["POST"])
+def api_profile_save():
+    user_id = get_user_id_from_request()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    first_name = (data.get("first_name") or "").strip()
+    last_name = (data.get("last_name") or "").strip()
+
+    if not first_name:
+        return jsonify({"error": "First name is required"}), 400
+
+    try:
+        profile = upsert_profile_for_user(user_id, first_name, last_name)
+    except Exception as e:
+        return jsonify({"error": f"Failed to save profile: {str(e)}"}), 500
+    return jsonify({"success": True, "profile": profile})
+
+
+@app.route("/api/welcome-seen", methods=["POST"])
+def api_welcome_seen():
+    user = get_user_from_request()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        seed = get_profile_seed_from_user(user)
+        profile = upsert_profile_for_user(user.id, seed.get("first_name"), seed.get("last_name"))
+        return jsonify({"success": True, "profile": profile})
+    except Exception:
+        return jsonify({"success": True})
 
 
 @app.route("/upload", methods=["POST"])
@@ -407,32 +545,6 @@ def confirm():
         return jsonify({"error": f"Failed to write to database: {str(e)}"}), 500
 
     return jsonify({"success": True, "added": len(transactions)})
-
-
-@app.route("/reset-password", methods=["POST"])
-def reset_password():
-    auth_header = request.headers.get("Authorization", "")
-    if not auth_header.startswith("Bearer "):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    access_token = auth_header[7:]
-    data = request.json or {}
-    refresh_token = data.get("refresh_token", "")
-    password = data.get("password", "")
-
-    if not password:
-        return jsonify({"error": "Password is required"}), 400
-    if len(password) < 8:
-        return jsonify({"error": "Password must be at least 8 characters"}), 400
-
-    try:
-        user_client = make_supabase_client()
-        user_client.auth.set_session(access_token, refresh_token)
-        user_client.auth.update_user({"password": password})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-    return jsonify({"success": True})
 
 
 if __name__ == "__main__":
