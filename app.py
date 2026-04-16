@@ -30,6 +30,10 @@ def get_user_id_from_request():
         return None
 
 
+def make_supabase_client() -> Client:
+    return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+
 # ── User settings (BYOA) ─────────────────────────────────────────────────────
 def get_user_api_key(user_id: str):
     result = (
@@ -273,6 +277,30 @@ def login():
         return jsonify({"error": str(e)}), 401
 
 
+@app.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    data = request.json or {}
+    email = data.get("email", "").strip()
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    redirect_to = request.url_root.rstrip("/") + "/app?reset=1"
+
+    try:
+        supabase_admin.auth.reset_password_for_email(
+            email,
+            {"redirect_to": redirect_to},
+        )
+    except Exception:
+        # Return a generic success response to avoid leaking account existence.
+        pass
+
+    return jsonify({
+        "success": True,
+        "message": "If that email has an account, a reset link has been sent.",
+    })
+
+
 @app.route("/api/settings", methods=["GET"])
 def api_settings_get():
     user_id = get_user_id_from_request()
@@ -379,6 +407,32 @@ def confirm():
         return jsonify({"error": f"Failed to write to database: {str(e)}"}), 500
 
     return jsonify({"success": True, "added": len(transactions)})
+
+
+@app.route("/reset-password", methods=["POST"])
+def reset_password():
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    access_token = auth_header[7:]
+    data = request.json or {}
+    refresh_token = data.get("refresh_token", "")
+    password = data.get("password", "")
+
+    if not password:
+        return jsonify({"error": "Password is required"}), 400
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters"}), 400
+
+    try:
+        user_client = make_supabase_client()
+        user_client.auth.set_session(access_token, refresh_token)
+        user_client.auth.update_user({"password": password})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify({"success": True})
 
 
 if __name__ == "__main__":

@@ -315,6 +315,51 @@
       font-size: 0.82rem;
       line-height: 1.55;
     }
+    .auth-switch {
+      margin-top: 14px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .link-button {
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      font-weight: 700;
+      padding: 0;
+    }
+    .link-button:hover {
+      text-decoration: underline;
+    }
+    .reset-shell {
+      min-height: calc(100vh - 48px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .reset-card {
+      width: min(560px, 100%);
+      padding: 30px;
+      border-radius: 32px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--line);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .reset-card h2 {
+      font-size: 1.7rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+    .reset-card p {
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+    .reset-note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
 
     .main-app {
       padding: 22px;
@@ -830,6 +875,20 @@
             <input class="auth-field" type="password" id="signinPassword" placeholder="Password" autocomplete="current-password" />
             <p class="auth-error" id="signinError"></p>
             <button class="btn btn-primary auth-btn" id="signinBtn" onclick="doSignIn()">Sign In</button>
+            <div class="auth-switch">
+              <button class="link-button" type="button" onclick="showForgotPasswordPanel()">Forgot password?</button>
+            </div>
+          </div>
+
+          <div id="panelForgot" style="display:none;">
+            <input class="auth-field" type="email" id="forgotEmail" placeholder="Email" autocomplete="email" />
+            <p class="auth-error" id="forgotError"></p>
+            <p class="panel-copy" id="forgotSuccess" style="display:none; margin-bottom:12px;"></p>
+            <button class="btn btn-primary auth-btn" id="forgotBtn" onclick="sendPasswordReset()">Send Reset Link</button>
+            <div class="auth-switch" style="justify-content:space-between;">
+              <span style="color:var(--muted); font-size:0.82rem;">Use the email tied to your account.</span>
+              <button class="link-button" type="button" onclick="switchTab('signin')">Back to sign in</button>
+            </div>
           </div>
 
           <div id="panelSignUp" style="display:none;">
@@ -868,7 +927,7 @@
         <section class="hero-grid">
           <div class="panel hero-panel">
             <div class="eyebrow">Upload and review</div>
-            <h1>Log recent card activity without the cleanup pass later.</h1>
+            <h1>Log card activity without the cleanup pass later.</h1>
             <p>
               Use overlapping screenshots if needed. The app extracts expenses, checks what is already in
               your history, and gives you a narrow review queue before anything is written.
@@ -979,10 +1038,28 @@
     </div>
 
     <div class="toast" id="toast"></div>
+
+    <div id="resetScreen" class="reset-shell">
+      <div class="reset-card">
+        <a class="brand" href="/" style="margin-bottom:20px;">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Expense Agent</span>
+        </a>
+        <div class="eyebrow">Password recovery</div>
+        <h2>Choose a new password.</h2>
+        <p>This recovery link came from Supabase email reset flow. Set a new password, then sign back in.</p>
+        <input class="auth-field" type="password" id="resetPassword" placeholder="New password" autocomplete="new-password" />
+        <input class="auth-field" type="password" id="resetPasswordConfirm" placeholder="Confirm new password" autocomplete="new-password" />
+        <p class="auth-error" id="resetError"></p>
+        <button class="btn btn-primary auth-btn" id="resetBtnSubmit" onclick="submitPasswordReset()">Update Password</button>
+        <div class="reset-note">Use at least 8 characters.</div>
+      </div>
+    </div>
   </div>
 
 <script>
   let sessionToken = sessionStorage.getItem("expense_token") || "";
+  let sessionRefreshToken = sessionStorage.getItem("expense_refresh_token") || "";
 
   if (new URLSearchParams(window.location.search).get("signup") === "1") {
     switchTab("signup");
@@ -991,10 +1068,13 @@
   (async function handleEmailConfirm() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = hash.get("access_token");
+    const refreshToken = hash.get("refresh_token");
     const type = hash.get("type");
     if (accessToken && (type === "signup" || type === "magiclink")) {
       sessionToken = accessToken;
+      sessionRefreshToken = refreshToken || "";
       sessionStorage.setItem("expense_token", sessionToken);
+      sessionStorage.setItem("expense_refresh_token", sessionRefreshToken);
       window.history.replaceState(null, "", "/app");
       document.getElementById("authScreen").style.display = "flex";
       document.getElementById("authScreen").innerHTML = `
@@ -1011,9 +1091,20 @@
       await checkApiKeyAndEnter();
       return;
     }
+    if (accessToken && type === "recovery") {
+      sessionToken = accessToken;
+      sessionRefreshToken = refreshToken || "";
+      sessionStorage.setItem("expense_token", sessionToken);
+      sessionStorage.setItem("expense_refresh_token", sessionRefreshToken);
+      window.history.replaceState(null, "", "/app?reset=1");
+      showResetScreen();
+      return;
+    }
   })();
 
-  if (sessionToken) {
+  if (new URLSearchParams(window.location.search).get("reset") === "1" && sessionToken) {
+    showResetScreen();
+  } else if (sessionToken) {
     checkApiKeyAndEnter();
   }
 
@@ -1044,6 +1135,7 @@
   }
 
   function showMainApp() {
+    document.getElementById("resetScreen").style.display = "none";
     document.getElementById("authScreen").style.display = "none";
     document.getElementById("mainApp").style.display = "block";
     const email = getEmailFromToken(sessionToken);
@@ -1054,10 +1146,37 @@
 
   function switchTab(tab) {
     const isSignIn = tab === "signin";
+    const isSignUp = tab === "signup";
     document.getElementById("tabSignIn").classList.toggle("active", isSignIn);
-    document.getElementById("tabSignUp").classList.toggle("active", !isSignIn);
+    document.getElementById("tabSignUp").classList.toggle("active", isSignUp);
     document.getElementById("panelSignIn").style.display = isSignIn ? "block" : "none";
-    document.getElementById("panelSignUp").style.display = isSignIn ? "none" : "block";
+    document.getElementById("panelForgot").style.display = "none";
+    document.getElementById("panelSignUp").style.display = isSignUp ? "block" : "none";
+  }
+
+  function showForgotPasswordPanel() {
+    clearAuthError("forgotError");
+    document.getElementById("forgotSuccess").style.display = "none";
+    document.getElementById("forgotSuccess").textContent = "";
+    document.getElementById("tabSignIn").classList.remove("active");
+    document.getElementById("tabSignUp").classList.remove("active");
+    document.getElementById("panelSignIn").style.display = "none";
+    document.getElementById("panelSignUp").style.display = "none";
+    document.getElementById("panelForgot").style.display = "block";
+    document.getElementById("forgotEmail").value = document.getElementById("signinEmail").value.trim();
+    document.getElementById("forgotEmail").focus();
+  }
+
+  function showResetScreen() {
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("resetScreen").style.display = "flex";
+  }
+
+  function showForgotSuccess(msg) {
+    const el = document.getElementById("forgotSuccess");
+    el.textContent = msg;
+    el.style.display = "block";
   }
 
   function showAuthError(id, msg) {
@@ -1161,17 +1280,102 @@
     }
   }
 
+  async function sendPasswordReset() {
+    clearAuthError("forgotError");
+    document.getElementById("forgotSuccess").style.display = "none";
+    document.getElementById("forgotSuccess").textContent = "";
+    const email = document.getElementById("forgotEmail").value.trim();
+    if (!email) {
+      showAuthError("forgotError", "Email is required.");
+      return;
+    }
+    const btn = document.getElementById("forgotBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Sending`;
+    try {
+      const res = await fetch("/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showAuthError("forgotError", data.error);
+        return;
+      }
+      showForgotSuccess(`If ${email} matches an account, the reset link is on the way.`);
+    } catch (e) {
+      showAuthError("forgotError", "Network error - please try again.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Send Reset Link";
+    }
+  }
+
   function doLogout() {
     sessionToken = "";
+    sessionRefreshToken = "";
     sessionStorage.removeItem("expense_token");
+    sessionStorage.removeItem("expense_refresh_token");
     window.location.href = "/app";
+  }
+
+  async function submitPasswordReset() {
+    clearAuthError("resetError");
+    const password = document.getElementById("resetPassword").value;
+    const confirm = document.getElementById("resetPasswordConfirm").value;
+    if (!password) {
+      showAuthError("resetError", "Password is required.");
+      return;
+    }
+    if (password.length < 8) {
+      showAuthError("resetError", "Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirm) {
+      showAuthError("resetError", "Passwords do not match.");
+      return;
+    }
+    const btn = document.getElementById("resetBtnSubmit");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Updating`;
+    try {
+      const res = await fetch("/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionToken}`,
+        },
+        body: JSON.stringify({
+          password,
+          refresh_token: sessionRefreshToken,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showAuthError("resetError", data.error);
+        return;
+      }
+      sessionToken = "";
+      sessionRefreshToken = "";
+      sessionStorage.removeItem("expense_token");
+      sessionStorage.removeItem("expense_refresh_token");
+      window.location.href = "/app";
+    } catch (e) {
+      showAuthError("resetError", "Network error - please try again.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Update Password";
+    }
   }
 
   document.addEventListener("keydown", e => {
     if (e.key !== "Enter") return;
     const active = document.activeElement;
     if (active && active.closest("#panelSignIn")) doSignIn();
+    else if (active && active.closest("#panelForgot")) sendPasswordReset();
     else if (active && active.closest("#panelSignUp")) doSignUp();
+    else if (active && active.closest("#resetScreen")) submitPasswordReset();
   });
 
   const dropZone = document.getElementById("dropZone");
