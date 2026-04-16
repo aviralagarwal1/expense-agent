@@ -15,7 +15,7 @@ transactions, the backend checks them against prior history, and the user confir
 
 ## Product flow
 
-1. Create an account and verify the email address
+1. Sign in with Google
 2. Add an Anthropic API key in Settings
 3. Upload card screenshots
 4. Review new transactions, skipped duplicates, and possible duplicates
@@ -44,15 +44,19 @@ Copy `.env.example` to `.env` and fill in:
 ```env
 SUPABASE_URL=...
 SUPABASE_SERVICE_KEY=...
+APP_URL=http://localhost:5000
 ```
 
 Notes:
 
 - in the product flow, users normally supply their own Anthropic API key
 - `SUPABASE_ANON_KEY` is not required by the current server-rendered frontend
+- `APP_URL` should be the public origin of the Flask app so Google OAuth redirects back to the
+  right callback and `/app` URLs in both local and deployed environments
+- in Supabase Google auth settings, allow the exact callback URL `APP_URL/auth/callback`
 
-For local development, sign up for a test account in the app and save an Anthropic API key through
-the Settings page before using the upload flow.
+For local development, sign in with a Google account in the app and save an Anthropic API key
+through the Settings page before using the upload flow.
 
 ### Run
 
