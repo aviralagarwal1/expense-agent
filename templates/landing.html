@@ -113,13 +113,16 @@
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
-      gap: 28px;
+      grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+      gap: 32px;
       padding: 34px 28px 24px;
       align-items: stretch;
     }
     .hero-copy {
-      padding: 18px 6px 12px;
+      padding: 20px 8px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     .eyebrow {
       display: inline-flex;
@@ -143,16 +146,15 @@
     }
     .hero h1 {
       font-family: var(--serif);
-      font-size: clamp(3rem, 7vw, 5.35rem);
+      font-size: clamp(2.8rem, 5.4vw, 4.7rem);
       font-weight: 600;
-      line-height: 0.96;
+      line-height: 1.01;
       letter-spacing: -0.045em;
-      max-width: 10.5ch;
+      max-width: 11ch;
       margin-bottom: 22px;
     }
-    .hero h1 span { color: #2d5376; }
     .hero p {
-      max-width: 56ch;
+      max-width: 38ch;
       color: var(--muted);
       font-size: 1.06rem;
       line-height: 1.72;
@@ -185,39 +187,22 @@
     }
 
     .hero-panel {
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78)),
-        linear-gradient(135deg, rgba(230,238,245,0.7), rgba(250,246,239,0.55));
-      border: 1px solid rgba(24, 33, 43, 0.08);
-      border-radius: 30px;
-      padding: 20px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-      display: grid;
-      gap: 16px;
-      align-content: start;
-    }
-    .panel-top {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-    }
-    .panel-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-    .panel-note {
-      font-size: 0.8rem;
-      color: var(--muted);
+      flex-direction: column;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 20px;
     }
     .panel-summary {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 24px;
       padding: 18px;
-      display: grid;
-      gap: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
     .summary-grid {
       display: grid;
@@ -227,30 +212,30 @@
     .summary-metric {
       background: var(--surface-alt);
       border: 1px solid rgba(24, 33, 43, 0.06);
-      border-radius: 18px;
-      padding: 12px;
+      border-radius: 16px;
+      padding: 11px 12px;
     }
     .summary-metric strong {
       display: block;
-      font-size: 1.2rem;
-      margin-bottom: 4px;
+      font-size: 1.08rem;
+      margin-bottom: 2px;
     }
     .summary-metric span {
       color: var(--muted);
-      font-size: 0.76rem;
-      line-height: 1.4;
+      font-size: 0.72rem;
+      line-height: 1.32;
     }
     .summary-list {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
     .summary-item {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 14px;
+      gap: 12px;
       border-bottom: 1px solid var(--line);
-      padding-bottom: 10px;
+      padding-bottom: 8px;
     }
     .summary-item:last-child {
       border-bottom: none;
@@ -258,17 +243,18 @@
     }
     .summary-item strong {
       display: block;
-      margin-bottom: 2px;
-      font-size: 0.92rem;
+      margin-bottom: 1px;
+      font-size: 0.88rem;
     }
     .summary-item span {
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
+      line-height: 1.35;
     }
     .summary-pill {
       border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 0.75rem;
+      padding: 6px 10px;
+      font-size: 0.72rem;
       font-weight: 700;
       background: var(--accent-soft);
       color: var(--accent);
@@ -341,7 +327,7 @@
 
     .workflow {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
     }
     .workflow-card,
@@ -382,48 +368,119 @@
 
     .value-grid {
       display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
     }
-    .value-stack {
+    .value-card {
+      padding: 32px;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .cta-kicker {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .cta-line {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 3.2vw, 2.7rem);
+      line-height: 1.04;
+      letter-spacing: -0.04em;
+      max-width: 10ch;
+      margin-bottom: 22px;
+    }
+    .cta-note {
+      max-width: 28ch;
+    }
+    .cta-actions {
+      margin-top: 28px;
+    }
+    .cta-actions .hero-cta {
+      padding: 16px 28px;
+      font-size: 1rem;
+      min-width: 220px;
+    }
+    .callout-number {
+      font-size: clamp(2.6rem, 4vw, 3.6rem);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+      margin-bottom: 10px;
+    }
+    .callout-copy {
+      max-width: 34ch;
+      margin-bottom: 20px;
+    }
+    .callout-divider {
+      width: 100%;
+      height: 1px;
+      background: var(--line);
+      margin: 0 0 18px;
+    }
+    .callout-points {
       display: grid;
-      gap: 16px;
+      gap: 12px;
     }
-    .price-row {
+    .callout-point {
       display: flex;
       justify-content: space-between;
-      gap: 16px;
-      border-bottom: 1px solid var(--line);
-      padding: 12px 0;
-      font-size: 0.9rem;
+      align-items: baseline;
+      gap: 18px;
     }
-    .price-row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
+    .callout-point strong {
+      font-size: 1rem;
+      letter-spacing: -0.02em;
     }
-    .price-row span:first-child {
+    .callout-point span {
       color: var(--muted);
-    }
-    .price-row strong {
-      font-size: 0.96rem;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      text-align: right;
     }
 
-    .footer {
-      padding: 0 28px 28px;
-    }
-    .footer-card {
+    .stats-strip {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 32px 36px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 24px;
     }
-    .footer-copy {
-      max-width: 48ch;
+    .stats-strip-item {
+      flex: 1;
+      text-align: center;
+      padding: 0 24px;
     }
-    .footer-links {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+    .stats-strip-item strong {
+      display: block;
+      font-size: clamp(2rem, 3.2vw, 2.7rem);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .stats-strip-item span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+    .stats-strip-divider {
+      width: 1px;
+      height: 48px;
+      background: var(--line-strong);
+      flex-shrink: 0;
+    }
+
+    .cta-block {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 36px 32px;
     }
 
     .site-foot {
@@ -447,6 +504,15 @@
       .section-header,
       .footer-card {
         align-items: start;
+      }
+      .stats-strip {
+        flex-direction: column;
+        gap: 24px;
+        padding: 28px 24px;
+      }
+      .stats-strip-divider {
+        width: 100%;
+        height: 1px;
       }
     }
 
@@ -496,31 +562,17 @@
 
       <section class="hero">
         <div class="hero-copy">
-          <div class="eyebrow">Personal expense capture from screenshots</div>
-          <h1>Turn card activity into a <span>clean running log</span>.</h1>
+          <h1>Expense tracking that runs itself.</h1>
           <p>
-            Upload screenshots from any credit card app, let Claude extract the transactions, then
-            review only what matters. Expense Agent keeps the flow simple: capture, compare, confirm.
+            Screenshot your card app. We extract the charges, filter duplicates, and surface only what needs your sign-off.
           </p>
           <div class="hero-actions">
             <a class="hero-cta" href="/app?signup=1">Start Free</a>
-            <a class="ghost-cta" href="/app">Open App</a>
-          </div>
-          <div class="hero-meta">
-            <span>Your own Anthropic key</span>
-            <span>Duplicate-aware review</span>
-            <span>Private per-user history</span>
+            <a class="ghost-cta" href="/app">Sign In</a>
           </div>
         </div>
 
         <div class="hero-panel">
-          <div class="panel-top">
-            <div>
-              <div class="panel-title">What the workflow feels like</div>
-              <div class="panel-note">A compact review loop, not another spreadsheet chore.</div>
-            </div>
-          </div>
-
           <div class="panel-summary">
             <div class="summary-grid">
               <div class="summary-metric">
@@ -564,113 +616,58 @@
         </div>
       </section>
 
-      <section class="stat-band">
-        <div class="stat-card">
-          <strong>Bring your own key</strong>
-          <span>Claude charges go directly to your Anthropic account, not through the app.</span>
-        </div>
-        <div class="stat-card">
-          <strong>Per-user data</strong>
-          <span>Each account has its own history and its own review flow.</span>
-        </div>
-        <div class="stat-card">
-          <strong>Mobile-first</strong>
-          <span>Designed for the actual input source: phone screenshots from banking apps.</span>
-        </div>
-        <div class="stat-card">
-          <strong>Review, then write</strong>
-          <span>Nothing is inserted automatically. You always confirm what gets logged.</span>
-        </div>
-      </section>
-
-      <section class="section">
+<section class="section">
         <div class="section-header">
           <div>
-            <div class="section-label">Workflow</div>
-            <div class="section-title">A short path from screenshots to structure</div>
+            <div class="section-title">Here's how it works.</div>
           </div>
-          <p class="section-copy">
-            The product should feel closer to a focused review desk than a bulky finance dashboard.
-            Each step is deliberately narrow so the important decisions stay obvious.
-          </p>
         </div>
 
         <div class="workflow">
           <div class="workflow-card">
             <div class="workflow-step">01</div>
-            <h3>Drop in screenshots</h3>
-            <p>Upload as many images as you need, even when there is overlap across card views or days.</p>
+            <h3>Sign up with email</h3>
+            <p>Takes 30 seconds, no credit card needed.</p>
           </div>
           <div class="workflow-card">
             <div class="workflow-step">02</div>
-            <h3>Let the app classify</h3>
-            <p>Claude extracts expenses, the backend normalizes merchants, and likely duplicates get separated.</p>
+            <h3>Connect your key</h3>
+            <p>Your usage bills directly to your Anthropic account.</p>
           </div>
           <div class="workflow-card">
             <div class="workflow-step">03</div>
-            <h3>Confirm the final list</h3>
-            <p>Add the new transactions, inspect edge cases, and keep a monthly history ready for export later.</p>
+            <h3>Capture transactions</h3>
+            <p>Upload your credit card screenshots, we pull transactions out.</p>
+          </div>
+          <div class="workflow-card">
+            <div class="workflow-step">04</div>
+            <h3>Review and verify</h3>
+            <p>You decide what logs and what doesn't.</p>
           </div>
         </div>
       </section>
 
-      <section class="section">
-        <div class="value-grid">
-          <div class="value-card">
-            <div class="section-label">Cost model</div>
-            <h3>Your key, your credits, your visibility</h3>
-            <p>
-              Expense Agent does not add a subscription layer on top of Claude usage. You connect your own key,
-              monitor your own spend, and keep the economics transparent.
-            </p>
-            <div class="price-row">
-              <span>Expense Agent subscription</span>
-              <strong>Free</strong>
-            </div>
-            <div class="price-row">
-              <span>Typical session (3-5 screenshots)</span>
-              <strong>~$0.05-$0.15</strong>
-            </div>
-            <div class="price-row">
-              <span>At weekly use, per month</span>
-              <strong>~$0.25-$0.60</strong>
-            </div>
-            <div class="price-row">
-              <span>New Anthropic account credit</span>
-              <strong>$5 free credit</strong>
-            </div>
+      <section class="section" style="padding-top: 0; padding-bottom: 60px;">
+        <div class="stats-strip">
+          <div class="stats-strip-item">
+            <strong>$0.01</strong>
+            <span>per screenshot processed</span>
           </div>
-
-          <div class="value-stack">
-            <div class="value-card">
-              <div class="section-label">Why it is useful</div>
-              <h3>Better than piecing it together later</h3>
-              <p>Most people already capture screenshots while checking recent activity. This turns that habit into a usable ledger.</p>
-            </div>
-            <div class="value-card">
-              <div class="section-label">Current shape</div>
-              <h3>Simple by design</h3>
-              <p>The app is intentionally narrow right now: sign in, add your key, upload, review, and inspect your history.</p>
-            </div>
+          <div class="stats-strip-divider"></div>
+          <div class="stats-strip-item">
+            <strong>15 min</strong>
+            <span>saved vs. manual entry per batch</span>
+          </div>
+          <div class="stats-strip-divider"></div>
+          <div class="stats-strip-item">
+            <strong>100%</strong>
+            <span>extraction accuracy on visible transactions</span>
           </div>
         </div>
       </section>
-
-      <div class="footer">
-        <div class="footer-card">
-          <div class="footer-copy">
-            <h2>Start with the screenshots you already have.</h2>
-            <p>Create an account, add your Anthropic key, and test the flow on a few recent card screens.</p>
-          </div>
-          <div class="footer-links">
-            <a class="ghost-cta" href="/app">Sign In</a>
-            <a class="hero-cta" href="/app?signup=1">Create Account</a>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <div class="site-foot">Expense Agent</div>
+    <div class="site-foot">Aviral Agarwal &nbsp;·&nbsp; © 2026</div>
   </div>
 </body>
 </html>
