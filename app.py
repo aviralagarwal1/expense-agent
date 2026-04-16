@@ -11,7 +11,6 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ── Config ──────────────────────────────────────────────────────────────────
-ANTHROPIC_API_KEY    = os.environ.get("ANTHROPIC_API_KEY")  # fallback for local dev only
 SUPABASE_URL         = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 
@@ -305,7 +304,7 @@ def upload():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    api_key = get_user_api_key(user_id) or ANTHROPIC_API_KEY
+    api_key = get_user_api_key(user_id)
     if not api_key:
         return jsonify({"error": "no_api_key"}), 400
 

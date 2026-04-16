@@ -36,7 +36,6 @@ transactions, the backend checks them against prior history, and the user confir
 
 - Python 3.11+
 - A Supabase project with the expected tables
-- An Anthropic API key for local fallback testing, if needed
 
 ### Environment variables
 
@@ -45,14 +44,15 @@ Copy `.env.example` to `.env` and fill in:
 ```env
 SUPABASE_URL=...
 SUPABASE_SERVICE_KEY=...
-ANTHROPIC_API_KEY=...
 ```
 
 Notes:
 
-- `ANTHROPIC_API_KEY` is only a local development fallback
 - in the product flow, users normally supply their own Anthropic API key
 - `SUPABASE_ANON_KEY` is not required by the current server-rendered frontend
+
+For local development, sign up for a test account in the app and save an Anthropic API key through
+the Settings page before using the upload flow.
 
 ### Run
 
