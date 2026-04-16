@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Settings - Expense Agent</title>
+  <title>Connect Anthropic - Expense Agent</title>
   <style>
     :root {
       --bg: #f4f1eb;
@@ -42,7 +42,7 @@
     button { cursor: pointer; }
 
     .page {
-      max-width: 1080px;
+      max-width: 1180px;
       margin: 0 auto;
     }
     .frame {
@@ -82,55 +82,49 @@
     }
     .nav-link,
     .nav-danger,
-    .save-btn {
+    .btn,
+    .secondary-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       border-radius: 999px;
-      padding: 12px 18px;
       font-size: 0.9rem;
       font-weight: 700;
+      transition: transform 0.16s ease, border-color 0.16s ease;
+    }
+    .nav-link,
+    .nav-danger {
+      padding: 12px 18px;
       border: 1px solid var(--line-strong);
       background: rgba(255,255,255,0.8);
       color: var(--ink);
-      transition: transform 0.16s ease, opacity 0.16s ease;
+    }
+    .nav-link:hover,
+    .nav-danger:hover,
+    .btn:hover,
+    .secondary-link:hover {
+      transform: translateY(-1px);
     }
     .nav-danger {
       border-color: rgba(161, 72, 66, 0.18);
       color: var(--danger);
     }
-    .save-btn {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: transparent;
-      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
-    }
-    .nav-link:hover,
-    .nav-danger:hover,
-    .save-btn:hover {
-      transform: translateY(-1px);
-    }
-    .save-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      transform: none;
-    }
 
-    .content {
-      padding: 26px;
+    .settings-shell {
+      padding: 34px 28px 30px;
       display: grid;
       gap: 18px;
     }
-    .hero {
+    .intro {
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
+      grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
       gap: 18px;
     }
     .panel {
-      background: rgba(255,255,255,0.76);
+      background: rgba(255,255,255,0.78);
       border: 1px solid var(--line);
       border-radius: 28px;
-      padding: 24px;
+      padding: 28px;
     }
     .panel-soft {
       background: rgba(248, 246, 242, 0.82);
@@ -155,52 +149,61 @@
       border-radius: 50%;
       background: #5a7a96;
     }
-    .hero h1 {
+    .intro h1 {
       font-family: var(--serif);
-      font-size: clamp(2.3rem, 4vw, 3.3rem);
+      font-size: clamp(2.4rem, 4vw, 3.4rem);
       font-weight: 600;
       letter-spacing: -0.05em;
       line-height: 0.96;
-      margin-bottom: 14px;
-      max-width: 10ch;
+      max-width: 12ch;
+      margin-bottom: 16px;
     }
-    .hero p,
-    .panel p {
+    .intro p,
+    .card-copy,
+    .meta-copy,
+    .detail-item span,
+    .status-note {
       color: var(--muted);
       line-height: 1.68;
     }
-    .list {
+    .summary-stack {
       display: grid;
       gap: 12px;
+      align-content: start;
     }
-    .list-item {
-      border-top: 1px solid var(--line);
-      padding-top: 12px;
+    .summary-row {
+      background: rgba(255,255,255,0.8);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 15px 16px;
     }
-    .list-item:first-child {
-      border-top: none;
-      padding-top: 0;
-    }
-    .list-item strong {
+    .summary-row strong {
       display: block;
-      margin-bottom: 4px;
       font-size: 0.92rem;
+      margin-bottom: 4px;
     }
-    .list-item span {
+    .summary-row span {
       color: var(--muted);
       font-size: 0.84rem;
       line-height: 1.55;
     }
 
-    .card-title {
-      font-size: 1.18rem;
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
+    .connect-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(300px, 0.98fr);
+      gap: 18px;
+      align-items: start;
     }
-    .card-desc {
-      color: var(--muted);
-      line-height: 1.64;
-      margin-bottom: 18px;
+    .primary-card {
+      background: rgba(255,255,255,0.88);
+    }
+    .card-title {
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .card-copy {
+      margin-bottom: 20px;
     }
     .key-badge {
       display: none;
@@ -239,7 +242,7 @@
       padding: 14px 15px;
       border-radius: 18px;
       border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,0.95);
+      background: rgba(255,255,255,0.96);
       outline: none;
       font-family: "Consolas", "SFMono-Regular", monospace;
     }
@@ -247,33 +250,71 @@
       border-color: rgba(35, 66, 94, 0.42);
       box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
     }
+    .btn {
+      padding: 12px 18px;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
+    }
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .secondary-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .secondary-link {
+      padding: 11px 16px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.8);
+      color: var(--ink);
+    }
+    .secondary-link.primary-return {
+      background: var(--success-soft);
+      border-color: rgba(36, 102, 74, 0.18);
+      color: var(--success);
+    }
     .status-msg {
       display: none;
-      margin-top: 12px;
+      margin-top: 14px;
       font-size: 0.86rem;
       font-weight: 700;
       line-height: 1.5;
     }
     .status-msg.success { color: var(--success); }
     .status-msg.error { color: var(--danger); }
-    .cost-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--line);
+    .status-note {
+      margin-top: 12px;
+      font-size: 0.82rem;
+    }
+    .detail-list {
+      display: grid;
+      gap: 12px;
+    }
+    .detail-item {
+      background: rgba(255,255,255,0.8);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 15px 16px;
+    }
+    .detail-item strong {
+      display: block;
       font-size: 0.92rem;
+      margin-bottom: 4px;
     }
-    .cost-row:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
+    .meta-copy {
+      font-size: 0.84rem;
+      margin-top: 14px;
     }
-    .cost-row .lbl {
-      color: var(--muted);
-    }
-    .cost-row .val {
-      font-weight: 700;
-    }
+
     .spinner {
       display: inline-block;
       width: 14px;
@@ -285,11 +326,10 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media (max-width: 860px) {
+    @media (max-width: 920px) {
       body { padding: 16px; }
-      .nav,
-      .content,
-      .hero {
+      .intro,
+      .connect-grid {
         grid-template-columns: 1fr;
       }
       .nav {
@@ -303,10 +343,18 @@
       .nav-danger {
         flex: 1;
       }
-      .field-wrap {
+    }
+
+    @media (max-width: 640px) {
+      .settings-shell {
+        padding: 22px 18px 20px;
+      }
+      .field-wrap,
+      .secondary-actions {
         flex-direction: column;
       }
-      .save-btn {
+      .btn,
+      .secondary-link {
         width: 100%;
       }
     }
@@ -321,64 +369,93 @@
           <span>Expense Agent</span>
         </a>
         <div class="nav-actions">
-          <a class="nav-link" href="/app">Back to App</a>
+          <a class="nav-link" id="backLink" href="/app">Back to App</a>
           <button class="nav-danger" onclick="doLogout()">Sign Out</button>
         </div>
       </nav>
 
-      <div class="content">
-        <section class="hero">
+      <div class="settings-shell">
+        <section class="intro">
           <div class="panel">
-            <div class="eyebrow">Workspace settings</div>
-            <h1>Connect the key that powers extraction.</h1>
+            <div class="eyebrow">Connect Anthropic</div>
+            <h1>Unlock screenshot uploads with one account key.</h1>
             <p>
-              Expense Agent uses your own Anthropic API key to read screenshots. The app stores that key
-              for your account so you can move straight into the upload flow on future sessions.
+              Expense Agent uses your Anthropic API key only when you ask it to read screenshots.
+              Until a key is connected, upload actions stay blocked, but the rest of the app remains available.
             </p>
           </div>
 
           <aside class="panel panel-soft">
-            <div class="list">
-              <div class="list-item">
-                <strong>Why this exists</strong>
-                <span>The product stays free because model costs go directly to your Anthropic account.</span>
+            <div class="summary-stack">
+              <div class="summary-row">
+                <strong>Needed for</strong>
+                <span>Screenshot extraction and transaction parsing</span>
               </div>
-              <div class="list-item">
-                <strong>What is saved</strong>
-                <span>Only your account can use the key stored with your settings record.</span>
+              <div class="summary-row">
+                <strong>Saved to</strong>
+                <span>Your own account settings so you do not need to paste it every session</span>
               </div>
-              <div class="list-item">
-                <strong>When to update it</strong>
-                <span>Replace the key here any time you rotate credentials or switch Anthropic accounts.</span>
+              <div class="summary-row">
+                <strong>After setup</strong>
+                <span>You return to the workspace and the upload surface becomes active</span>
               </div>
             </div>
           </aside>
         </section>
 
-        <section class="panel">
-          <div class="card-title">Anthropic API key</div>
-          <p class="card-desc">
-            Generate a key in the Anthropic console and paste it here. The upload flow will use it for
-            screenshot extraction each time you analyze a batch.
-          </p>
-          <div id="keyBadge" class="key-badge unset">Not set</div>
-          <div class="field-label">API key</div>
-          <div class="field-wrap">
-            <input class="api-input" type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" />
-            <button class="save-btn" id="saveBtn" onclick="saveKey()">Save Key</button>
-          </div>
-          <div class="status-msg" id="statusMsg"></div>
-        </section>
+        <section class="connect-grid">
+          <div class="panel primary-card">
+            <div id="keyBadge" class="key-badge unset">No key saved yet</div>
+            <div class="card-title">Anthropic API key</div>
+            <p class="card-copy">
+              Generate a key in the
+              <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:underline;">Anthropic console</a>,
+              paste it here, and save it to your Expense Agent account.
+            </p>
 
-        <section class="panel panel-soft">
-          <div class="card-title">Expected usage cost</div>
-          <p class="card-desc">
-            Charges go directly to your Anthropic account. This page is only showing rough operating ranges
-            so you know what a normal session tends to look like.
-          </p>
-          <div class="cost-row"><span class="lbl">Typical session (3-5 screenshots)</span><span class="val">~$0.05-$0.15</span></div>
-          <div class="cost-row"><span class="lbl">At weekly use, per month</span><span class="val">~$0.25-$0.60</span></div>
-          <div class="cost-row"><span class="lbl">New Anthropic account credit</span><span class="val">$5 free</span></div>
+            <div class="field-label">API key</div>
+            <div class="field-wrap">
+              <input class="api-input" type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" />
+              <button class="btn btn-primary" id="saveBtn" onclick="saveKey()">Save Key</button>
+            </div>
+
+            <div class="status-msg" id="statusMsg"></div>
+            <div class="status-note">You can replace this key at any time.</div>
+
+            <div class="secondary-actions">
+              <a class="secondary-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open Anthropic Console</a>
+              <a class="secondary-link primary-return" id="returnLink" href="/app" style="display:none;">Return to Workspace</a>
+            </div>
+          </div>
+
+          <div class="detail-list">
+            <section class="panel">
+              <div class="card-title">What this unlocks</div>
+              <div class="detail-item">
+                <strong>Upload and analyze screenshots</strong>
+                <span>The main workspace will accept files and call Anthropic to extract transactions.</span>
+              </div>
+              <div class="detail-item">
+                <strong>Duplicate-aware review</strong>
+                <span>New, skipped, and possible-duplicate transactions stay separated before you confirm anything.</span>
+              </div>
+            </section>
+
+            <section class="panel panel-soft">
+              <div class="card-title">How your key is handled</div>
+              <div class="detail-item">
+                <strong>Stored for your account</strong>
+                <span>The server saves it to your user settings so the workspace can use it later.</span>
+              </div>
+              <div class="detail-item">
+                <strong>Used only for extraction</strong>
+                <span>Expense Agent uses the key to call Anthropic for screenshot parsing and nothing else.</span>
+              </div>
+              <div class="meta-copy">
+                If you rotate credentials, just save a new key here and the old one is replaced.
+              </div>
+            </section>
+          </div>
         </section>
       </div>
     </div>
@@ -390,21 +467,38 @@
     window.location.href = "/app";
   }
 
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = params.get("return_to") || "/app";
+  const backLink = document.getElementById("backLink");
+  const returnLink = document.getElementById("returnLink");
+  backLink.href = returnTo;
+  returnLink.href = returnTo;
+
   function doLogout() {
     sessionStorage.removeItem("expense_token");
+    sessionStorage.removeItem("expense_refresh_token");
     window.location.href = "/app";
+  }
+
+  function showReturnLink() {
+    returnLink.style.display = "inline-flex";
   }
 
   async function loadKeyStatus() {
     try {
       const res = await fetch("/api/settings", { headers: { "Authorization": `Bearer ${token}` } });
+      if (res.status === 401) {
+        window.location.href = "/app";
+        return;
+      }
       const data = await res.json();
       const badge = document.getElementById("keyBadge");
       badge.style.display = "inline-flex";
       if (data.has_key) {
         badge.className = "key-badge set";
-        badge.textContent = "Key saved on this account";
+        badge.textContent = "Key already connected";
         document.getElementById("apiKeyInput").placeholder = "Enter a new key to replace the current one";
+        showReturnLink();
       } else {
         badge.className = "key-badge unset";
         badge.textContent = "No key saved yet";
@@ -439,8 +533,9 @@
         showStatus(data.error, false);
         return;
       }
-      showStatus("Key saved. You can go back to the app and upload screenshots.", true);
       document.getElementById("apiKeyInput").value = "";
+      showStatus("Key saved. Your workspace is ready.", true);
+      showReturnLink();
       loadKeyStatus();
     } catch (e) {
       showStatus("Network error - please try again.", false);
@@ -455,7 +550,6 @@
     el.textContent = msg;
     el.className = "status-msg " + (ok ? "success" : "error");
     el.style.display = "block";
-    if (ok) setTimeout(() => { el.style.display = "none"; }, 4000);
   }
 
   document.getElementById("apiKeyInput").addEventListener("keydown", e => {

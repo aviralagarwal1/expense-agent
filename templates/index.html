@@ -181,54 +181,55 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .auth-screen {
-      min-height: calc(100vh - 48px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .auth-shell {
-      display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.82fr);
-      gap: 24px;
-      width: 100%;
-      max-width: 1180px;
-      align-items: center;
-    }
-    .auth-intro {
-      padding: 40px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.76)),
-        linear-gradient(135deg, rgba(230,238,245,0.7), rgba(250,246,239,0.55));
-      border: 1px solid rgba(24, 33, 43, 0.08);
-      border-radius: 32px;
       display: flex;
       flex-direction: column;
+      align-items: center;
+    }
+    .auth-nav {
+      display: flex;
       justify-content: space-between;
-      gap: 22px;
+      align-items: center;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--line);
     }
-    .auth-intro h1 {
-      font-family: var(--serif);
-      font-size: clamp(3rem, 5vw, 4.8rem);
-      font-weight: 600;
-      letter-spacing: -0.05em;
-      line-height: 0.98;
-      max-width: 14ch;
-      margin-bottom: 18px;
+    .auth-nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 11px 16px;
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      background: rgba(255,255,255,0.78);
+      text-decoration: none;
+      transition: transform 0.16s ease;
     }
-    .auth-intro p {
-      color: var(--muted);
-      line-height: 1.7;
-      max-width: 50ch;
+    .auth-nav-link:hover {
+      transform: translateY(-1px);
+    }
+    .auth-shell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      width: 100%;
+      max-width: 1180px;
+      padding: 40px 28px;
     }
     .auth-points {
       display: grid;
-      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      width: 100%;
     }
     .auth-point {
-      background: rgba(255,255,255,0.78);
+      background: rgba(255,255,255,0.72);
       border: 1px solid var(--line);
       border-radius: 20px;
-      padding: 14px 16px;
+      padding: 16px 18px;
+      text-align: center;
     }
     .auth-point strong {
       display: block;
@@ -246,13 +247,11 @@
       background: rgba(255,255,255,0.86);
       border: 1px solid var(--line);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-      align-self: center;
       display: flex;
       flex-direction: column;
       justify-content: center;
       width: 100%;
-      max-width: 460px;
-      justify-self: end;
+      max-width: 480px;
     }
     .auth-card-header {
       margin-bottom: 24px;
@@ -410,6 +409,106 @@
       font-size: 0.88rem;
       font-weight: 700;
     }
+    .workspace-section {
+      display: none;
+      gap: 18px;
+    }
+    .workspace-section.visible {
+      display: grid;
+    }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
+      gap: 18px;
+    }
+    .setup-main {
+      padding: 30px;
+    }
+    .setup-main h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.4rem, 4vw, 3.35rem);
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      line-height: 0.96;
+      max-width: 11ch;
+      margin-bottom: 16px;
+    }
+    .setup-main p {
+      color: var(--muted);
+      max-width: 56ch;
+      line-height: 1.72;
+      margin-bottom: 22px;
+    }
+    .setup-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .setup-note {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.58;
+    }
+    .setup-side {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .setup-side h2 {
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+    .setup-list {
+      display: grid;
+      gap: 12px;
+    }
+    .setup-step {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 15px 16px;
+    }
+    .setup-step strong {
+      display: block;
+      font-size: 0.92rem;
+      margin-bottom: 4px;
+    }
+    .setup-step span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .quick-link {
+      display: block;
+      background: rgba(255,255,255,0.78);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 20px;
+      text-decoration: none;
+      transition: transform 0.16s ease, border-color 0.16s ease;
+    }
+    .quick-link:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+    }
+    .quick-link strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+    }
+    .quick-link span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.58;
+    }
 
     .hero-grid {
       display: grid;
@@ -518,18 +617,18 @@
       display: none;
     }
     .upload-mark {
-      width: 54px;
-      height: 54px;
-      margin: 0 auto 16px;
-      border-radius: 18px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
+      margin: 0 auto 16px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 1rem;
       font-weight: 800;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
     }
     .upload-zone strong {
       display: block;
@@ -539,7 +638,6 @@
     }
     .upload-zone p {
       color: var(--muted);
-      max-width: 48ch;
       margin: 0 auto;
       line-height: 1.6;
     }
@@ -778,14 +876,14 @@
 
     @media (max-width: 980px) {
       body { padding: 16px; }
-      .auth-shell,
+      .setup-grid,
+      .quick-links,
       .hero-grid,
       .metrics-grid {
         grid-template-columns: 1fr;
       }
-      .auth-card {
-        max-width: none;
-        justify-self: stretch;
+      .auth-points {
+        grid-template-columns: 1fr;
       }
       .top-bar,
       .upload-header,
@@ -799,8 +897,8 @@
     }
 
     @media (max-width: 700px) {
-      .auth-intro,
       .auth-card,
+      .auth-shell,
       .main-app {
         padding-left: 18px;
         padding-right: 18px;
@@ -827,6 +925,9 @@
       .top-link {
         width: 100%;
       }
+      .setup-actions .btn {
+        width: 100%;
+      }
       .top-bar-actions {
         width: 100%;
       }
@@ -836,82 +937,74 @@
 <body>
   <div class="page">
     <div id="authScreen" class="auth-screen">
-      <div class="auth-shell">
-        <section class="auth-intro">
-          <div>
-            <a class="brand" href="/">
-              <span class="brand-mark" aria-hidden="true"></span>
-              <span>Expense Agent</span>
-            </a>
-            <div class="eyebrow" style="margin-top: 22px;">Card screenshots to structured history</div>
-            <h1>Review what matters. Skip what is already known.</h1>
-            <p>
-              Upload screenshots from your card apps, let Claude extract the expenses, and confirm the
-              entries worth logging. The product is intentionally narrow so the workflow stays quick.
-            </p>
-          </div>
+      <div class="frame" style="width: 100%; max-width: 1180px;">
+        <nav class="auth-nav">
+          <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>Expense Agent</span>
+          </a>
+          <a class="auth-nav-link" href="/">Home</a>
+        </nav>
+
+        <div class="auth-shell">
+          <section class="auth-card">
+            <div class="auth-card-header">
+              <h2>Enter the workspace</h2>
+              <p>Create an account or sign in to start expensing.</p>
+            </div>
+
+            <div class="auth-tabs">
+              <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
+              <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Create Account</button>
+            </div>
+
+            <div id="panelSignIn">
+              <input class="auth-field" type="email" id="signinEmail" placeholder="Email" autocomplete="email" />
+              <input class="auth-field" type="password" id="signinPassword" placeholder="Password" autocomplete="current-password" />
+              <p class="auth-error" id="signinError"></p>
+              <button class="btn btn-primary auth-btn" id="signinBtn" onclick="doSignIn()">Sign In</button>
+              <div class="auth-switch">
+                <button class="link-button" type="button" onclick="showForgotPasswordPanel()">Forgot password?</button>
+              </div>
+            </div>
+
+            <div id="panelForgot" style="display:none;">
+              <input class="auth-field" type="email" id="forgotEmail" placeholder="Email" autocomplete="email" />
+              <p class="auth-error" id="forgotError"></p>
+              <p class="panel-copy" id="forgotSuccess" style="display:none; margin-bottom:12px;"></p>
+              <button class="btn btn-primary auth-btn" id="forgotBtn" onclick="sendPasswordReset()">Send Reset Link</button>
+              <div class="auth-switch" style="justify-content:space-between;">
+                <span style="color:var(--muted); font-size:0.82rem;">Use the email tied to your account.</span>
+                <button class="link-button" type="button" onclick="switchTab('signin')">Back to sign in</button>
+              </div>
+            </div>
+
+            <div id="panelSignUp" style="display:none;">
+              <input class="auth-field" type="text" id="signupFirstName" placeholder="First name" autocomplete="given-name" />
+              <input class="auth-field" type="text" id="signupLastName" placeholder="Last name" autocomplete="family-name" />
+              <input class="auth-field" type="email" id="signupEmail" placeholder="Email" autocomplete="email" />
+              <input class="auth-field" type="password" id="signupPassword" placeholder="Password" autocomplete="new-password" />
+              <p class="auth-error" id="signupError"></p>
+              <button class="btn btn-primary auth-btn" id="signupBtn" onclick="doSignUp()">Create Account</button>
+            </div>
+
+          </section>
 
           <div class="auth-points">
             <div class="auth-point">
               <strong>Your own API key</strong>
-              <span>Usage charges go directly to your Anthropic account. The app stays free.</span>
+              <span>Usage bills directly to your Anthropic account.</span>
             </div>
             <div class="auth-point">
               <strong>Duplicate-aware review</strong>
-              <span>Existing history is checked before anything is added to your log.</span>
+              <span>History is checked before anything is added.</span>
             </div>
             <div class="auth-point">
               <strong>Clean monthly history</strong>
-              <span>Every confirmed expense lands in a simple per-user record you can inspect later.</span>
+              <span>Every confirmed expense is stored per-user.</span>
             </div>
           </div>
-        </section>
-
-        <section class="auth-card">
-          <div class="auth-card-header">
-            <h2>Enter the workspace</h2>
-            <p>Create an account or sign in to continue your review flow.</p>
-          </div>
-
-          <div class="auth-tabs">
-            <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
-            <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Create Account</button>
-          </div>
-
-          <div id="panelSignIn">
-            <input class="auth-field" type="email" id="signinEmail" placeholder="Email" autocomplete="email" />
-            <input class="auth-field" type="password" id="signinPassword" placeholder="Password" autocomplete="current-password" />
-            <p class="auth-error" id="signinError"></p>
-            <button class="btn btn-primary auth-btn" id="signinBtn" onclick="doSignIn()">Sign In</button>
-            <div class="auth-switch">
-              <button class="link-button" type="button" onclick="showForgotPasswordPanel()">Forgot password?</button>
-            </div>
-          </div>
-
-          <div id="panelForgot" style="display:none;">
-            <input class="auth-field" type="email" id="forgotEmail" placeholder="Email" autocomplete="email" />
-            <p class="auth-error" id="forgotError"></p>
-            <p class="panel-copy" id="forgotSuccess" style="display:none; margin-bottom:12px;"></p>
-            <button class="btn btn-primary auth-btn" id="forgotBtn" onclick="sendPasswordReset()">Send Reset Link</button>
-            <div class="auth-switch" style="justify-content:space-between;">
-              <span style="color:var(--muted); font-size:0.82rem;">Use the email tied to your account.</span>
-              <button class="link-button" type="button" onclick="switchTab('signin')">Back to sign in</button>
-            </div>
-          </div>
-
-          <div id="panelSignUp" style="display:none;">
-            <input class="auth-field" type="text" id="signupFirstName" placeholder="First name" autocomplete="given-name" />
-            <input class="auth-field" type="text" id="signupLastName" placeholder="Last name" autocomplete="family-name" />
-            <input class="auth-field" type="email" id="signupEmail" placeholder="Email" autocomplete="email" />
-            <input class="auth-field" type="password" id="signupPassword" placeholder="Password" autocomplete="new-password" />
-            <p class="auth-error" id="signupError"></p>
-            <button class="btn btn-primary auth-btn" id="signupBtn" onclick="doSignUp()">Create Account</button>
-          </div>
-
-          <p class="auth-footer">
-            Email verification is required before a new account can use the upload flow.
-          </p>
-        </section>
+        </div>
       </div>
     </div>
 
@@ -927,120 +1020,127 @@
           </div>
           <div class="top-bar-actions">
             <a class="top-link" href="/history">History</a>
-            <a class="top-link" href="/settings">Settings</a>
+            <a class="top-link" href="/settings?return_to=%2Fapp">Settings</a>
             <button class="top-link" style="border-color: rgba(161, 72, 66, 0.2); color: var(--danger);" onclick="doLogout()">Sign Out</button>
           </div>
         </div>
 
-        <section class="hero-grid">
-          <div class="panel hero-panel">
-            <div class="eyebrow">Upload and review</div>
-            <h1>Log card activity without the cleanup pass later.</h1>
-            <p>
-              Use overlapping screenshots if needed. The app extracts expenses, checks what is already in
-              your history, and gives you a narrow review queue before anything is written.
-            </p>
-            <div class="hero-stats">
-              <div class="hero-stat">
-                <strong>Pending included</strong>
-                <span>New and pending charges are both surfaced during extraction.</span>
+        <section id="setupView" class="workspace-section">
+          <div class="setup-grid">
+            <div class="panel setup-main">
+              <div class="eyebrow">Get started</div>
+              <h1>Connect your Anthropic API key before you upload anything.</h1>
+              <p>
+                Expense Agent is ready, but screenshot extraction stays off until your account has an Anthropic key.
+                Once it is connected, this page becomes your upload workspace automatically.
+              </p>
+              <div class="setup-actions">
+                <a class="btn btn-primary" href="/settings?return_to=%2Fapp">Connect API Key</a>
+                <a class="btn btn-secondary" href="/history">Open History</a>
               </div>
-              <div class="hero-stat">
-                <strong>Exact and fuzzy checks</strong>
-                <span>Nearby dates with the same merchant and amount are separated for review.</span>
-              </div>
-              <div class="hero-stat">
-                <strong>Nothing auto-saves</strong>
-                <span>You always decide what actually lands in the log.</span>
+              <div class="setup-note">
+                You can still browse the rest of the app. If an upload request reaches the backend without a key, the app will stop it and send you back to Settings with a clear error.
               </div>
             </div>
+
+            <aside class="setup-side">
+              <section class="panel panel-soft">
+                <div class="section-kicker">What happens next</div>
+                <h2>One setup step, then the normal flow.</h2>
+                <div class="setup-list">
+                  <div class="setup-step">
+                    <strong>1. Add your Anthropic key</strong>
+                    <span>Save it once in Settings. You can replace it later whenever you rotate credentials.</span>
+                  </div>
+                  <div class="setup-step">
+                    <strong>2. Upload screenshots</strong>
+                    <span>The upload workspace appears here after setup, with duplicate filtering and review intact.</span>
+                  </div>
+                  <div class="setup-step">
+                    <strong>3. Review and confirm</strong>
+                    <span>Only approved transactions are written to your history.</span>
+                  </div>
+                </div>
+              </section>
+            </aside>
           </div>
 
-          <aside class="panel panel-soft">
-            <div class="section-kicker">How to use it well</div>
-            <div class="aside-list">
-              <div class="aside-item">
-                <strong>Upload complete runs</strong>
-                <span>Include enough screenshots to cover the full recent activity list for a card.</span>
-              </div>
-              <div class="aside-item">
-                <strong>Expect overlaps</strong>
-                <span>Duplicate handling is built for repeated screenshots and pending-to-settled changes.</span>
-              </div>
-              <div class="aside-item">
-                <strong>Save in batches or one by one</strong>
-                <span>Use the per-item action for spot checks, or confirm the full reviewed set at once.</span>
-              </div>
-            </div>
-          </aside>
-        </section>
-
-        <section class="panel upload-panel">
-          <div class="upload-header">
-            <div>
-              <h2>Upload screenshots</h2>
-              <p>Tap to choose images or drag them in. The app will analyze every screenshot you include in this batch.</p>
-            </div>
-          </div>
-
-          <div class="upload-zone" id="dropZone">
-            <input type="file" id="fileInput" accept="image/*" multiple />
-            <div class="upload-mark">EA</div>
-            <strong>Select screenshots</strong>
-            <p>Drag and drop images here or open the file picker. Overlap across screenshots is fine.</p>
-          </div>
-
-          <div class="preview-grid" id="previewGrid"></div>
-
-          <div class="upload-actions">
-            <div class="upload-caption">Analyze only when the batch looks complete. You can remove images before sending them.</div>
-            <button class="btn btn-primary" id="analyzeBtn" disabled>Analyze Screenshots</button>
+          <div class="quick-links">
+            <a class="quick-link" href="/settings?return_to=%2Fapp">
+              <strong>Settings</strong>
+              <span>Connect, replace, or rotate your Anthropic API key.</span>
+            </a>
+            <a class="quick-link" href="/history">
+              <strong>History</strong>
+              <span>See previously saved transactions even before you upload a new batch.</span>
+            </a>
+            <a class="quick-link" href="/" onclick="event.preventDefault(); doLogout();">
+              <strong>Sign out</strong>
+              <span>Leave the workspace and clear the current browser session.</span>
+            </a>
           </div>
         </section>
 
-        <section class="panel status" id="resultsBox">
-          <div class="status-header">
-            <div>
-              <div class="status-title">Analysis summary</div>
-              <div class="status-subtitle">New items are ready to log. Possible duplicates stay separate until you decide.</div>
+        <div id="workspaceView" class="workspace-section">
+          <section class="panel upload-panel">
+            <div class="upload-zone" id="dropZone">
+              <input type="file" id="fileInput" accept="image/*" multiple />
+              <div class="upload-mark" id="uploadMark">EA</div>
+              <strong>Drop your screenshots here.</strong>
+              <p>Overlapping screenshots are fine. We filter duplicates automatically.</p>
             </div>
+
+            <div class="preview-grid" id="previewGrid"></div>
+
+            <div class="upload-actions">
+              <button class="btn btn-primary" id="analyzeBtn" disabled>Analyze Screenshots</button>
+            </div>
+          </section>
+
+          <section class="panel status" id="resultsBox">
+            <div class="status-header">
+              <div>
+                <div class="status-title">Analysis summary</div>
+                <div class="status-subtitle">New items are ready to log. Possible duplicates stay separate until you decide.</div>
+              </div>
+            </div>
+
+            <div class="metrics-grid">
+              <div class="metric-card success">
+                <strong id="newCount">0</strong>
+                <span>Ready to add</span>
+              </div>
+              <div class="metric-card warning">
+                <strong id="possibleCount">0</strong>
+                <span>Need review</span>
+              </div>
+              <div class="metric-card neutral">
+                <strong id="skipCount">0</strong>
+                <span>Skipped as duplicates</span>
+              </div>
+              <div class="metric-card accent">
+                <strong id="totalCount">0</strong>
+                <span>Total extracted</span>
+              </div>
+            </div>
+
+            <div class="transaction-list" id="txList"></div>
+          </section>
+
+          <section class="panel status" id="possibleBox" style="border-color: rgba(154, 106, 32, 0.2);">
+            <div class="status-header">
+              <div>
+                <div class="status-title">Needs your review</div>
+                <div class="status-subtitle">These look close to something already logged. Add or skip them one by one.</div>
+              </div>
+            </div>
+            <div class="possible-list" id="possibleList"></div>
+          </section>
+
+          <div class="results-actions">
+            <button class="btn btn-success" id="confirmBtn" style="display:none">Add to Log</button>
+            <button class="btn btn-secondary" id="resetBtn" style="display:none">Start Over</button>
           </div>
-
-          <div class="metrics-grid">
-            <div class="metric-card success">
-              <strong id="newCount">0</strong>
-              <span>Ready to add</span>
-            </div>
-            <div class="metric-card warning">
-              <strong id="possibleCount">0</strong>
-              <span>Need review</span>
-            </div>
-            <div class="metric-card neutral">
-              <strong id="skipCount">0</strong>
-              <span>Skipped as duplicates</span>
-            </div>
-            <div class="metric-card accent">
-              <strong id="totalCount">0</strong>
-              <span>Total extracted</span>
-            </div>
-          </div>
-
-          <div class="transaction-list" id="txList"></div>
-        </section>
-
-        <section class="panel status" id="possibleBox" style="border-color: rgba(154, 106, 32, 0.2);">
-          <div class="status-header">
-            <div>
-              <div class="status-title">Needs your review</div>
-              <div class="status-subtitle">These look close to something already logged. Add or skip them one by one.</div>
-            </div>
-          </div>
-          <div class="possible-list" id="possibleList"></div>
-        </section>
-
-        <div class="results-actions">
-          <button class="btn btn-success" id="confirmBtn" style="display:none">Add to Log</button>
-          <button class="btn btn-secondary" id="resetBtn" style="display:none">Start Over</button>
         </div>
       </div>
     </div>
@@ -1068,6 +1168,7 @@
 <script>
   let sessionToken = sessionStorage.getItem("expense_token") || "";
   let sessionRefreshToken = sessionStorage.getItem("expense_refresh_token") || "";
+  let hasApiKey = false;
 
   if (new URLSearchParams(window.location.search).get("signup") === "1") {
     switchTab("signup");
@@ -1084,19 +1185,22 @@
       sessionStorage.setItem("expense_token", sessionToken);
       sessionStorage.setItem("expense_refresh_token", sessionRefreshToken);
       window.history.replaceState(null, "", "/app");
+      const vFirstName = getFirstNameFromToken(accessToken);
       document.getElementById("authScreen").style.display = "flex";
       document.getElementById("authScreen").innerHTML = `
-        <div class="frame" style="width:min(540px, 100%); padding:34px; text-align:center; background:rgba(255,255,255,0.9);">
-          <a class="brand" href="/" style="justify-content:center; margin-bottom:22px;">
-            <span class="brand-mark" aria-hidden="true"></span>
-            <span>Expense Agent</span>
-          </a>
-          <div class="eyebrow" style="margin:0 auto 18px;">Email confirmed</div>
-          <h2 style="font-family:var(--serif); font-size:2.1rem; font-weight:600; letter-spacing:-0.04em; margin-bottom:10px;">Your account is ready.</h2>
-          <p style="color:var(--muted); line-height:1.7;">Finishing sign-in now so we can route you to the right next step.</p>
+        <nav class="auth-nav">
+          <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span>Expense Agent</span></a>
+        </nav>
+        <div class="auth-shell">
+          <div class="auth-card" style="text-align:center;">
+            <div style="width:48px;height:48px;margin:0 auto 16px;border-radius:50%;background:var(--success-soft);display:flex;align-items:center;justify-content:center;">
+              <svg width="22" height="22" fill="none" stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h2 style="font-family:var(--serif);font-size:1.8rem;font-weight:600;letter-spacing:-0.03em;margin-bottom:8px;">You\u2019re all set${vFirstName ? ', ' + vFirstName : ''}.</h2>
+            <p style="color:var(--muted);line-height:1.7;margin-bottom:24px;">Your email is verified and your account is ready to use.</p>
+            <button class="btn btn-primary" style="width:100%;" onclick="checkApiKeyAndEnter()">Continue</button>
+          </div>
         </div>`;
-      await new Promise(r => setTimeout(r, 1800));
-      await checkApiKeyAndEnter();
       return;
     }
     if (accessToken && type === "recovery") {
@@ -1124,6 +1228,16 @@
     }
   }
 
+  function getFirstNameFromToken(token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const displayName = (payload.user_metadata && payload.user_metadata.display_name) || "";
+      return displayName.split(" ")[0] || "";
+    } catch {
+      return "";
+    }
+  }
+
   async function checkApiKeyAndEnter() {
     try {
       const res = await fetch("/api/settings", { headers: { "Authorization": `Bearer ${sessionToken}` } });
@@ -1133,10 +1247,7 @@
         return;
       }
       const data = await res.json();
-      if (!data.has_key) {
-        window.location.href = "/settings";
-        return;
-      }
+      hasApiKey = data.has_key;
       showMainApp();
     } catch (e) {
     }
@@ -1150,6 +1261,12 @@
     if (email) {
       document.getElementById("userEmail").textContent = email;
     }
+    const firstName = getFirstNameFromToken(sessionToken);
+    if (firstName) {
+      document.getElementById("uploadMark").textContent = firstName + "\u2019s Expenses";
+    }
+    document.getElementById("setupView").classList.toggle("visible", !hasApiKey);
+    document.getElementById("workspaceView").classList.toggle("visible", hasApiKey);
   }
 
   function switchTab(tab) {
@@ -1277,7 +1394,7 @@
         <div class="panel panel-soft" style="padding:20px;">
           <div class="section-kicker">Verification required</div>
           <h3 style="font-size:1.1rem; letter-spacing:-0.02em; margin-bottom:8px;">Check your inbox</h3>
-          <p class="panel-copy" style="margin-bottom:16px;">If <strong>${email}</strong> is new, we sent a verification link. If you already have an account, sign in instead.</p>
+          <p class="panel-copy" style="margin-bottom:16px;">If <strong>${email}</strong> is a new account, we sent a verification link. If you already have an account, sign in instead.</p>
           <button class="btn btn-secondary auth-btn" type="button" onclick="showExistingAccountMessage('${email.replace(/'/g, "\\'")}')">Go to Sign In</button>
         </div>`;
     } catch (e) {
@@ -1450,7 +1567,34 @@
     });
   }
 
+  function redirectToSettingsForKey() {
+    window.location.href = "/settings?return_to=%2Fapp";
+  }
+
+  function resetWorkspace() {
+    files = [];
+    newTransactions = [];
+    possibleTransactions = [];
+    submittedIndices = new Set();
+    previewGrid.innerHTML = "";
+    resultsBox.classList.remove("visible");
+    document.getElementById("possibleBox").classList.remove("visible");
+    document.getElementById("possibleList").innerHTML = "";
+    confirmBtn.style.display = "none";
+    resetBtn.style.display = "none";
+    analyzeBtn.style.display = "inline-flex";
+    analyzeBtn.disabled = true;
+    dropZone.style.display = "block";
+    previewGrid.style.display = "grid";
+    fileInput.value = "";
+  }
+
   analyzeBtn.addEventListener("click", async () => {
+    if (!hasApiKey) {
+      showToast("Add your Anthropic API key in Settings before analyzing screenshots.");
+      setTimeout(redirectToSettingsForKey, 500);
+      return;
+    }
     analyzeBtn.innerHTML = `<span class="spinner"></span>Analyzing`;
     analyzeBtn.disabled = true;
     const formData = new FormData();
@@ -1463,7 +1607,8 @@
       });
       const data = await res.json();
       if (data.error === "no_api_key") {
-        window.location.href = "/settings";
+        showToast("Add your Anthropic API key in Settings before analyzing screenshots.");
+        setTimeout(redirectToSettingsForKey, 500);
         return;
       }
       if (data.error) {
@@ -1653,23 +1798,7 @@
     }
   });
 
-  resetBtn.addEventListener("click", () => {
-    files = [];
-    newTransactions = [];
-    possibleTransactions = [];
-    submittedIndices = new Set();
-    previewGrid.innerHTML = "";
-    resultsBox.classList.remove("visible");
-    document.getElementById("possibleBox").classList.remove("visible");
-    document.getElementById("possibleList").innerHTML = "";
-    confirmBtn.style.display = "none";
-    resetBtn.style.display = "none";
-    analyzeBtn.style.display = "inline-flex";
-    analyzeBtn.disabled = true;
-    dropZone.style.display = "block";
-    previewGrid.style.display = "grid";
-    fileInput.value = "";
-  });
+  resetBtn.addEventListener("click", resetWorkspace);
 
   function showToast(msg) {
     toast.textContent = msg;
