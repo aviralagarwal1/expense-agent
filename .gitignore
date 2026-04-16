@@ -1,0 +1,12 @@
+credentials.json
+key.json
+.claude/
+.env
+expense-agent/
+CLAUDE.md
+ToDo.txt
+.github/workflows/deploy.yml
+*.ps1
+__pycache__/
+*.pyc
+.DS_Store

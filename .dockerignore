@@ -1,0 +1,11 @@
+.git
+__pycache__
+*.pyc
+*.pyo
+.env
+credentials.json
+.DS_Store
+README.md
+Procfile
+run.ps1
+runtime.txt

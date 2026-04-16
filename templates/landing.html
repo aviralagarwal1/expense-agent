@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Agent - Capture expenses from screenshots</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --paper: rgba(255, 255, 255, 0.82);
+      --surface: #ffffff;
+      --surface-alt: #f8f6f2;
+      --ink: #18212b;
+      --muted: #5e6873;
+      --line: rgba(24, 33, 43, 0.1);
+      --line-strong: rgba(24, 33, 43, 0.16);
+      --accent: #23425e;
+      --accent-soft: #e6eef5;
+      --shadow: 0 24px 60px rgba(24, 33, 43, 0.08);
+      --radius-lg: 30px;
+      --radius-md: 20px;
+      --radius-sm: 14px;
+      --sans: "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.92), rgba(255,255,255,0) 38%),
+        linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .page {
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+
+    .frame {
+      background: var(--paper);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: var(--shadow);
+      border-radius: 36px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #2f587d, #89a6c0);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-link,
+    .nav-cta,
+    .hero-cta,
+    .ghost-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      padding: 12px 18px;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+    }
+    .nav-link,
+    .ghost-cta {
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      background: rgba(255,255,255,0.72);
+    }
+    .nav-cta,
+    .hero-cta {
+      color: #ffffff;
+      background: var(--accent);
+      border: 1px solid transparent;
+      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
+    }
+    .nav-link:hover,
+    .nav-cta:hover,
+    .hero-cta:hover,
+    .ghost-cta:hover {
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      gap: 28px;
+      padding: 34px 28px 24px;
+      align-items: stretch;
+    }
+    .hero-copy {
+      padding: 18px 6px 12px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 22px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #5a7a96;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(3rem, 7vw, 5.35rem);
+      font-weight: 600;
+      line-height: 0.96;
+      letter-spacing: -0.045em;
+      max-width: 10.5ch;
+      margin-bottom: 22px;
+    }
+    .hero h1 span { color: #2d5376; }
+    .hero p {
+      max-width: 56ch;
+      color: var(--muted);
+      font-size: 1.06rem;
+      line-height: 1.72;
+      margin-bottom: 26px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .hero-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-meta span::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(35, 66, 94, 0.6);
+    }
+
+    .hero-panel {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78)),
+        linear-gradient(135deg, rgba(230,238,245,0.7), rgba(250,246,239,0.55));
+      border: 1px solid rgba(24, 33, 43, 0.08);
+      border-radius: 30px;
+      padding: 20px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+    .panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .panel-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .panel-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .panel-summary {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .summary-metric {
+      background: var(--surface-alt);
+      border: 1px solid rgba(24, 33, 43, 0.06);
+      border-radius: 18px;
+      padding: 12px;
+    }
+    .summary-metric strong {
+      display: block;
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+    .summary-metric span {
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.4;
+    }
+    .summary-list {
+      display: grid;
+      gap: 10px;
+    }
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+    .summary-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .summary-item strong {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 0.92rem;
+    }
+    .summary-item span {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .summary-pill {
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--accent-soft);
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .summary-pill.warn {
+      background: #fbf2df;
+      color: #8b6320;
+    }
+    .summary-pill.neutral {
+      background: #f1efea;
+      color: #5f6770;
+    }
+
+    .stat-band {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      padding: 0 28px 28px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px;
+    }
+    .stat-card strong {
+      display: block;
+      font-size: 1.55rem;
+      margin-bottom: 6px;
+      letter-spacing: -0.03em;
+    }
+    .stat-card span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .section {
+      padding: 28px;
+      display: grid;
+      gap: 16px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+    }
+    .section-label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a8390;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+    .section-copy {
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 60ch;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .workflow-card,
+    .value-card,
+    .footer-card {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 22px;
+    }
+    .workflow-step {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+    .workflow-card h3,
+    .value-card h3,
+    .footer-card h2 {
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .workflow-card p,
+    .value-card p,
+    .footer-card p {
+      color: var(--muted);
+      line-height: 1.62;
+      font-size: 0.92rem;
+    }
+
+    .value-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+    }
+    .value-stack {
+      display: grid;
+      gap: 16px;
+    }
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 0;
+      font-size: 0.9rem;
+    }
+    .price-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .price-row span:first-child {
+      color: var(--muted);
+    }
+    .price-row strong {
+      font-size: 0.96rem;
+    }
+
+    .footer {
+      padding: 0 28px 28px;
+    }
+    .footer-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+    .footer-copy {
+      max-width: 48ch;
+    }
+    .footer-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .site-foot {
+      text-align: center;
+      color: #7b828b;
+      font-size: 0.78rem;
+      padding: 20px 0 8px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 980px) {
+      body { padding: 16px; }
+      .hero,
+      .value-grid,
+      .workflow,
+      .stat-band,
+      .footer-card {
+        grid-template-columns: 1fr;
+      }
+      .section-header,
+      .footer-card {
+        align-items: start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav,
+      .hero,
+      .section,
+      .footer,
+      .stat-band {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+      .nav-link,
+      .nav-cta {
+        flex: 1;
+      }
+      .hero h1 {
+        max-width: none;
+      }
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="frame">
+      <nav class="nav">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Expense Agent</span>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" href="/app">Sign In</a>
+          <a class="nav-cta" href="/app?signup=1">Create Account</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Personal expense capture from screenshots</div>
+          <h1>Turn card activity into a <span>clean running log</span>.</h1>
+          <p>
+            Upload screenshots from any credit card app, let Claude extract the transactions, then
+            review only what matters. Expense Agent keeps the flow simple: capture, compare, confirm.
+          </p>
+          <div class="hero-actions">
+            <a class="hero-cta" href="/app?signup=1">Start Free</a>
+            <a class="ghost-cta" href="/app">Open App</a>
+          </div>
+          <div class="hero-meta">
+            <span>Your own Anthropic key</span>
+            <span>Duplicate-aware review</span>
+            <span>Private per-user history</span>
+          </div>
+        </div>
+
+        <div class="hero-panel">
+          <div class="panel-top">
+            <div>
+              <div class="panel-title">What the workflow feels like</div>
+              <div class="panel-note">A compact review loop, not another spreadsheet chore.</div>
+            </div>
+          </div>
+
+          <div class="panel-summary">
+            <div class="summary-grid">
+              <div class="summary-metric">
+                <strong>14</strong>
+                <span>transactions extracted across overlapping screenshots</span>
+              </div>
+              <div class="summary-metric">
+                <strong>11</strong>
+                <span>new items ready to log after de-duplication</span>
+              </div>
+              <div class="summary-metric">
+                <strong>3</strong>
+                <span>edge cases surfaced for a quick manual decision</span>
+              </div>
+            </div>
+
+            <div class="summary-list">
+              <div class="summary-item">
+                <div>
+                  <strong>Sweetgreen</strong>
+                  <span>Savor · 2026-04-11 · captured from screenshot</span>
+                </div>
+                <div class="summary-pill">Ready to add</div>
+              </div>
+              <div class="summary-item">
+                <div>
+                  <strong>Lyft</strong>
+                  <span>Same amount found on a nearby date in history</span>
+                </div>
+                <div class="summary-pill warn">Needs review</div>
+              </div>
+              <div class="summary-item">
+                <div>
+                  <strong>Whole Foods</strong>
+                  <span>Exact match already stored in the log</span>
+                </div>
+                <div class="summary-pill neutral">Skipped</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stat-band">
+        <div class="stat-card">
+          <strong>Bring your own key</strong>
+          <span>Claude charges go directly to your Anthropic account, not through the app.</span>
+        </div>
+        <div class="stat-card">
+          <strong>Per-user data</strong>
+          <span>Each account has its own history and its own review flow.</span>
+        </div>
+        <div class="stat-card">
+          <strong>Mobile-first</strong>
+          <span>Designed for the actual input source: phone screenshots from banking apps.</span>
+        </div>
+        <div class="stat-card">
+          <strong>Review, then write</strong>
+          <span>Nothing is inserted automatically. You always confirm what gets logged.</span>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-label">Workflow</div>
+            <div class="section-title">A short path from screenshots to structure</div>
+          </div>
+          <p class="section-copy">
+            The product should feel closer to a focused review desk than a bulky finance dashboard.
+            Each step is deliberately narrow so the important decisions stay obvious.
+          </p>
+        </div>
+
+        <div class="workflow">
+          <div class="workflow-card">
+            <div class="workflow-step">01</div>
+            <h3>Drop in screenshots</h3>
+            <p>Upload as many images as you need, even when there is overlap across card views or days.</p>
+          </div>
+          <div class="workflow-card">
+            <div class="workflow-step">02</div>
+            <h3>Let the app classify</h3>
+            <p>Claude extracts expenses, the backend normalizes merchants, and likely duplicates get separated.</p>
+          </div>
+          <div class="workflow-card">
+            <div class="workflow-step">03</div>
+            <h3>Confirm the final list</h3>
+            <p>Add the new transactions, inspect edge cases, and keep a monthly history ready for export later.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="value-grid">
+          <div class="value-card">
+            <div class="section-label">Cost model</div>
+            <h3>Your key, your credits, your visibility</h3>
+            <p>
+              Expense Agent does not add a subscription layer on top of Claude usage. You connect your own key,
+              monitor your own spend, and keep the economics transparent.
+            </p>
+            <div class="price-row">
+              <span>Expense Agent subscription</span>
+              <strong>Free</strong>
+            </div>
+            <div class="price-row">
+              <span>Typical session (3-5 screenshots)</span>
+              <strong>~$0.05-$0.15</strong>
+            </div>
+            <div class="price-row">
+              <span>At weekly use, per month</span>
+              <strong>~$0.25-$0.60</strong>
+            </div>
+            <div class="price-row">
+              <span>New Anthropic account credit</span>
+              <strong>$5 free credit</strong>
+            </div>
+          </div>
+
+          <div class="value-stack">
+            <div class="value-card">
+              <div class="section-label">Why it is useful</div>
+              <h3>Better than piecing it together later</h3>
+              <p>Most people already capture screenshots while checking recent activity. This turns that habit into a usable ledger.</p>
+            </div>
+            <div class="value-card">
+              <div class="section-label">Current shape</div>
+              <h3>Simple by design</h3>
+              <p>The app is intentionally narrow right now: sign in, add your key, upload, review, and inspect your history.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">
+        <div class="footer-card">
+          <div class="footer-copy">
+            <h2>Start with the screenshots you already have.</h2>
+            <p>Create an account, add your Anthropic key, and test the flow on a few recent card screens.</p>
+          </div>
+          <div class="footer-links">
+            <a class="ghost-cta" href="/app">Sign In</a>
+            <a class="hero-cta" href="/app?signup=1">Create Account</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="site-foot">Expense Agent</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction History - Expense Agent</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --paper: rgba(255, 255, 255, 0.82);
+      --surface: #ffffff;
+      --surface-alt: #f8f6f2;
+      --ink: #18212b;
+      --muted: #5d6872;
+      --line: rgba(24, 33, 43, 0.1);
+      --line-strong: rgba(24, 33, 43, 0.16);
+      --accent: #23425e;
+      --accent-soft: #e6eef5;
+      --warning: #9a6a20;
+      --danger: #a14842;
+      --shadow: 0 24px 60px rgba(24, 33, 43, 0.08);
+      --sans: "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.92), rgba(255,255,255,0) 38%),
+        linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    button { font: inherit; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .frame {
+      background: var(--paper);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: var(--shadow);
+      border-radius: 36px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 26px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #2f587d, #89a6c0);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .nav-link,
+    .nav-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.8);
+    }
+    .nav-count {
+      color: var(--muted);
+    }
+
+    .content {
+      padding: 26px;
+      display: grid;
+      gap: 18px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+      gap: 18px;
+    }
+    .panel {
+      background: rgba(255,255,255,0.76);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 24px;
+    }
+    .panel-soft {
+      background: rgba(248, 246, 242, 0.82);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.8);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #5a7a96;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.3rem, 4vw, 3.3rem);
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      line-height: 0.96;
+      margin-bottom: 14px;
+      max-width: 10ch;
+    }
+    .hero p,
+    .panel p {
+      color: var(--muted);
+      line-height: 1.68;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .summary-card {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+    }
+    .summary-card .val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+    .summary-card .lbl {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .month-block {
+      display: grid;
+      gap: 10px;
+    }
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 0 4px;
+      color: #7a8390;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+    }
+    .tx-card {
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      overflow: hidden;
+    }
+    .tx-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .tx-row:last-child {
+      border-bottom: none;
+    }
+    .tx-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+    .tx-vendor {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tx-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .tx-right {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .tx-amount {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .tx-status {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #7a8390;
+    }
+    .tx-status.pending {
+      color: var(--warning);
+    }
+
+    .empty,
+    .spinner-wrap {
+      text-align: center;
+      padding: 64px 20px;
+    }
+    .empty h3 {
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .empty p {
+      color: var(--muted);
+      line-height: 1.68;
+    }
+    .empty a {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(24, 33, 43, 0.12);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 860px) {
+      body { padding: 16px; }
+      .hero,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-actions {
+        width: 100%;
+      }
+      .nav-link,
+      .nav-count {
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .tx-row {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+      .tx-right {
+        grid-column: 2;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="frame">
+      <nav class="nav">
+        <a class="brand" href="/app">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Expense Agent</span>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" href="/app">Back to App</a>
+          <span class="nav-count" id="navCount">Loading</span>
+        </div>
+      </nav>
+
+      <div class="content">
+        <section class="hero">
+          <div class="panel">
+            <div class="eyebrow">Transaction history</div>
+            <h1>Your running log, grouped by month.</h1>
+            <p>
+              This view keeps the stored expenses simple: monthly totals, recent activity, and status labels
+              for pending entries that may settle later.
+            </p>
+          </div>
+
+          <aside class="panel panel-soft">
+            <p>
+              History is read from your account only. Exact duplicates should already be filtered before they
+              reach this screen, so this page is mainly for review and recall.
+            </p>
+          </aside>
+        </section>
+
+        <section class="summary" id="summary" style="display:none;">
+          <div class="summary-card">
+            <div class="val" id="sumTotal">-</div>
+            <div class="lbl">Transactions stored in your log</div>
+          </div>
+          <div class="summary-card">
+            <div class="val" id="sumSpend">-</div>
+            <div class="lbl">Total amount across visible history</div>
+          </div>
+          <div class="summary-card">
+            <div class="val" id="sumMonths">-</div>
+            <div class="lbl">Distinct months represented</div>
+          </div>
+        </section>
+
+        <section class="panel" id="listWrap">
+          <div class="spinner-wrap"><div class="spinner"></div></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const token = sessionStorage.getItem("expense_token");
+  if (!token) window.location.href = "/app";
+
+  function vendorMark(vendor) {
+    const cleaned = (vendor || "").replace(/[^A-Za-z0-9 ]/g, "").trim();
+    if (!cleaned) return "EA";
+    const parts = cleaned.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  function formatMonth(dateStr) {
+    if (!dateStr || dateStr === "unknown") return "Unknown";
+    const [y, m] = dateStr.split("-");
+    return new Date(y, m - 1).toLocaleString("default", { month: "long", year: "numeric" });
+  }
+
+  async function load() {
+    try {
+      const res = await fetch("/api/transactions", { headers: { "Authorization": `Bearer ${token}` } });
+      if (res.status === 401) {
+        window.location.href = "/app";
+        return;
+      }
+      const data = await res.json();
+      render(data.transactions || []);
+    } catch (e) {
+      document.getElementById("listWrap").innerHTML = `<div class="empty"><h3>Could not load transactions</h3><p>Network error. Try refreshing the page.</p></div>`;
+    }
+  }
+
+  function render(txs) {
+    const wrap = document.getElementById("listWrap");
+
+    if (txs.length === 0) {
+      wrap.innerHTML = `<div class="empty"><h3>No transactions yet</h3><p>Upload a batch of screenshots to start building your log.<br /><a href="/app">Go to the app</a></p></div>`;
+      document.getElementById("navCount").textContent = "0 transactions";
+      return;
+    }
+
+    const totalSpend = txs.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+    const months = new Set(txs.map(t => t.date ? t.date.slice(0, 7) : null).filter(Boolean)).size;
+    document.getElementById("sumTotal").textContent = txs.length;
+    document.getElementById("sumSpend").textContent = "$" + totalSpend.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    document.getElementById("sumMonths").textContent = months;
+    document.getElementById("summary").style.display = "grid";
+    document.getElementById("navCount").textContent = txs.length + " transactions";
+
+    const groups = {};
+    for (const t of txs) {
+      const key = t.date ? t.date.slice(0, 7) : "unknown";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(t);
+    }
+
+    let html = "";
+    for (const [monthKey, items] of Object.entries(groups)) {
+      const monthTotal = items.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+      html += `<div class="month-block">`;
+      html += `<div class="month-header"><span>${formatMonth(monthKey)}</span><span>$${monthTotal.toFixed(2)}</span></div>`;
+      html += `<div class="tx-card">`;
+      for (const t of items) {
+        const isPending = t.status === "pending";
+        html += `
+          <div class="tx-row">
+            <div class="tx-mark">${vendorMark(t.vendor)}</div>
+            <div>
+              <div class="tx-vendor">${t.vendor}</div>
+              <div class="tx-meta">${t.card || ""}${t.card && t.date ? " · " : ""}${t.date || ""}</div>
+            </div>
+            <div class="tx-right">
+              <div class="tx-amount">$${parseFloat(t.amount).toFixed(2)}</div>
+              <div class="tx-status ${isPending ? "pending" : ""}">${isPending ? "Pending" : "Settled"}</div>
+            </div>
+          </div>`;
+      }
+      html += `</div></div>`;
+    }
+
+    wrap.innerHTML = html;
+  }
+
+  load();
+</script>
+</body>
+</html>

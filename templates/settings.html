@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - Expense Agent</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --paper: rgba(255, 255, 255, 0.82);
+      --surface: #ffffff;
+      --surface-alt: #f8f6f2;
+      --ink: #18212b;
+      --muted: #5d6872;
+      --line: rgba(24, 33, 43, 0.1);
+      --line-strong: rgba(24, 33, 43, 0.16);
+      --accent: #23425e;
+      --accent-soft: #e6eef5;
+      --success: #24664a;
+      --success-soft: #e4f3ea;
+      --warning: #9a6a20;
+      --warning-soft: #fbf2df;
+      --danger: #a14842;
+      --shadow: 0 24px 60px rgba(24, 33, 43, 0.08);
+      --sans: "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.92), rgba(255,255,255,0) 38%),
+        linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    a { color: inherit; text-decoration: none; }
+    button,
+    input { font: inherit; }
+    button { cursor: pointer; }
+
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .frame {
+      background: var(--paper);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: var(--shadow);
+      border-radius: 36px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 26px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #2f587d, #89a6c0);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+    }
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .nav-link,
+    .nav-danger,
+    .save-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.8);
+      color: var(--ink);
+      transition: transform 0.16s ease, opacity 0.16s ease;
+    }
+    .nav-danger {
+      border-color: rgba(161, 72, 66, 0.18);
+      color: var(--danger);
+    }
+    .save-btn {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
+    }
+    .nav-link:hover,
+    .nav-danger:hover,
+    .save-btn:hover {
+      transform: translateY(-1px);
+    }
+    .save-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .content {
+      padding: 26px;
+      display: grid;
+      gap: 18px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
+      gap: 18px;
+    }
+    .panel {
+      background: rgba(255,255,255,0.76);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 24px;
+    }
+    .panel-soft {
+      background: rgba(248, 246, 242, 0.82);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.8);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #5a7a96;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.3rem, 4vw, 3.3rem);
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      line-height: 0.96;
+      margin-bottom: 14px;
+      max-width: 10ch;
+    }
+    .hero p,
+    .panel p {
+      color: var(--muted);
+      line-height: 1.68;
+    }
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+    .list-item {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+    .list-item:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+    .list-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.92rem;
+    }
+    .list-item span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+
+    .card-title {
+      font-size: 1.18rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .card-desc {
+      color: var(--muted);
+      line-height: 1.64;
+      margin-bottom: 18px;
+    }
+    .key-badge {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .key-badge.set {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+    .key-badge.unset {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+    .field-label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a8390;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .field-wrap {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .api-input {
+      flex: 1;
+      min-width: 0;
+      padding: 14px 15px;
+      border-radius: 18px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.95);
+      outline: none;
+      font-family: "Consolas", "SFMono-Regular", monospace;
+    }
+    .api-input:focus {
+      border-color: rgba(35, 66, 94, 0.42);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .status-msg {
+      display: none;
+      margin-top: 12px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .status-msg.success { color: var(--success); }
+    .status-msg.error { color: var(--danger); }
+    .cost-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.92rem;
+    }
+    .cost-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .cost-row .lbl {
+      color: var(--muted);
+    }
+    .cost-row .val {
+      font-weight: 700;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 860px) {
+      body { padding: 16px; }
+      .nav,
+      .content,
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-actions {
+        width: 100%;
+      }
+      .nav-link,
+      .nav-danger {
+        flex: 1;
+      }
+      .field-wrap {
+        flex-direction: column;
+      }
+      .save-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="frame">
+      <nav class="nav">
+        <a class="brand" href="/app">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Expense Agent</span>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" href="/app">Back to App</a>
+          <button class="nav-danger" onclick="doLogout()">Sign Out</button>
+        </div>
+      </nav>
+
+      <div class="content">
+        <section class="hero">
+          <div class="panel">
+            <div class="eyebrow">Workspace settings</div>
+            <h1>Connect the key that powers extraction.</h1>
+            <p>
+              Expense Agent uses your own Anthropic API key to read screenshots. The app stores that key
+              for your account so you can move straight into the upload flow on future sessions.
+            </p>
+          </div>
+
+          <aside class="panel panel-soft">
+            <div class="list">
+              <div class="list-item">
+                <strong>Why this exists</strong>
+                <span>The product stays free because model costs go directly to your Anthropic account.</span>
+              </div>
+              <div class="list-item">
+                <strong>What is saved</strong>
+                <span>Only your account can use the key stored with your settings record.</span>
+              </div>
+              <div class="list-item">
+                <strong>When to update it</strong>
+                <span>Replace the key here any time you rotate credentials or switch Anthropic accounts.</span>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="panel">
+          <div class="card-title">Anthropic API key</div>
+          <p class="card-desc">
+            Generate a key in the Anthropic console and paste it here. The upload flow will use it for
+            screenshot extraction each time you analyze a batch.
+          </p>
+          <div id="keyBadge" class="key-badge unset">Not set</div>
+          <div class="field-label">API key</div>
+          <div class="field-wrap">
+            <input class="api-input" type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" />
+            <button class="save-btn" id="saveBtn" onclick="saveKey()">Save Key</button>
+          </div>
+          <div class="status-msg" id="statusMsg"></div>
+        </section>
+
+        <section class="panel panel-soft">
+          <div class="card-title">Expected usage cost</div>
+          <p class="card-desc">
+            Charges go directly to your Anthropic account. This page is only showing rough operating ranges
+            so you know what a normal session tends to look like.
+          </p>
+          <div class="cost-row"><span class="lbl">Typical session (3-5 screenshots)</span><span class="val">~$0.05-$0.15</span></div>
+          <div class="cost-row"><span class="lbl">At weekly use, per month</span><span class="val">~$0.25-$0.60</span></div>
+          <div class="cost-row"><span class="lbl">New Anthropic account credit</span><span class="val">$5 free</span></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const token = sessionStorage.getItem("expense_token");
+  if (!token) {
+    window.location.href = "/app";
+  }
+
+  function doLogout() {
+    sessionStorage.removeItem("expense_token");
+    window.location.href = "/app";
+  }
+
+  async function loadKeyStatus() {
+    try {
+      const res = await fetch("/api/settings", { headers: { "Authorization": `Bearer ${token}` } });
+      const data = await res.json();
+      const badge = document.getElementById("keyBadge");
+      badge.style.display = "inline-flex";
+      if (data.has_key) {
+        badge.className = "key-badge set";
+        badge.textContent = "Key saved on this account";
+        document.getElementById("apiKeyInput").placeholder = "Enter a new key to replace the current one";
+      } else {
+        badge.className = "key-badge unset";
+        badge.textContent = "No key saved yet";
+      }
+    } catch (e) {
+    }
+  }
+
+  loadKeyStatus();
+
+  async function saveKey() {
+    const key = document.getElementById("apiKeyInput").value.trim();
+    if (!key) {
+      showStatus("Please enter your API key.", false);
+      return;
+    }
+    if (!key.startsWith("sk-ant-")) {
+      showStatus("That does not look like an Anthropic key. It should start with sk-ant-", false);
+      return;
+    }
+    const btn = document.getElementById("saveBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Saving`;
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ anthropic_api_key: key }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showStatus(data.error, false);
+        return;
+      }
+      showStatus("Key saved. You can go back to the app and upload screenshots.", true);
+      document.getElementById("apiKeyInput").value = "";
+      loadKeyStatus();
+    } catch (e) {
+      showStatus("Network error - please try again.", false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save Key";
+    }
+  }
+
+  function showStatus(msg, ok) {
+    const el = document.getElementById("statusMsg");
+    el.textContent = msg;
+    el.className = "status-msg " + (ok ? "success" : "error");
+    el.style.display = "block";
+    if (ok) setTimeout(() => { el.style.display = "none"; }, 4000);
+  }
+
+  document.getElementById("apiKeyInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") saveKey();
+  });
+</script>
+</body>
+</html>
