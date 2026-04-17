@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - Expense Agent</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --paper: rgba(255, 255, 255, 0.82);
+      --ink: #18212b;
+      --muted: #5d6872;
+      --line: rgba(24, 33, 43, 0.1);
+      --line-strong: rgba(24, 33, 43, 0.16);
+      --accent: #23425e;
+      --success: #24664a;
+      --danger: #a14842;
+      --shadow: 0 24px 60px rgba(24, 33, 43, 0.08);
+      --sans: "Segoe UI", "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    html {
+      scrollbar-gutter: stable;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.92), rgba(255,255,255,0) 38%),
+        linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    a { color: inherit; text-decoration: none; }
+    button,
+    input,
+    select { font: inherit; }
+    button { cursor: pointer; }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .frame {
+      background: var(--paper);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: var(--shadow);
+      border-radius: 36px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 26px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .brand-mark {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(0 2px 5px rgba(35, 66, 94, 0.22));
+    }
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .nav-link,
+    .nav-danger,
+    .nav-pill,
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+    .nav-link,
+    .nav-danger,
+    .nav-pill {
+      padding: 12px 18px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.8);
+      color: var(--ink);
+    }
+    .nav-link:hover,
+    .nav-danger:hover,
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+    .nav-danger {
+      border-color: rgba(161, 72, 66, 0.18);
+      color: var(--danger);
+    }
+    .nav-pill {
+      color: var(--ink);
+      cursor: default;
+    }
+
+    .shell {
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+    }
+    .panel {
+      width: min(940px, 100%);
+      background: rgba(255,255,255,0.82);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 28px;
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      font-weight: 750;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 14px;
+    }
+    .lead {
+      color: var(--muted);
+      max-width: none;
+      white-space: nowrap;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .settings-stack {
+      display: grid;
+      gap: 18px;
+    }
+    .settings-section {
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      padding: 24px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78)),
+        linear-gradient(135deg, rgba(230,238,245,0.16), rgba(255,255,255,0));
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .section-head h2 {
+      font-size: 1.18rem;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .field-label {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a8390;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .form-grid,
+    .card-form-grid {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .card-form-grid {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.9fr);
+      align-items: end;
+    }
+    .brand-control-slot {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .brand-custom-row {
+      display: none;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .brand-custom-row.is-visible {
+      display: flex;
+    }
+    .brand-custom-row .text-input {
+      flex: 1;
+      min-width: 0;
+    }
+    .brand-list-btn {
+      flex: 0 0 auto;
+      padding: 14px 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .brand-list-btn:hover {
+      border-color: rgba(35, 66, 94, 0.28);
+      color: var(--ink);
+    }
+    .text-input,
+    .select-input {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 18px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.98);
+      outline: none;
+      color: var(--ink);
+    }
+    .text-input:focus,
+    .select-input:focus {
+      border-color: rgba(35, 66, 94, 0.42);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .btn {
+      padding: 12px 18px;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.88);
+      color: var(--ink);
+      border-color: var(--line-strong);
+    }
+    .btn-danger {
+      background: rgba(255,255,255,0.86);
+      color: var(--danger);
+      border-color: rgba(161, 72, 66, 0.18);
+    }
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+      border-color: rgba(36, 102, 74, 0.36);
+      box-shadow: 0 14px 28px rgba(36, 102, 74, 0.16);
+    }
+    .btn-primary:disabled,
+    .btn-secondary:disabled,
+    .btn-danger:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .status-msg {
+      display: none;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .status-msg.success {
+      color: var(--success);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .status-msg.success::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      flex: 0 0 auto;
+      box-shadow: 0 0 0 4px rgba(36, 102, 74, 0.12);
+    }
+    .status-msg.error { color: var(--danger); }
+    .note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.6;
+    }
+    .card-list {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 0;
+    }
+    .card-list:not(:empty) {
+      margin-bottom: 18px;
+    }
+    .saved-card {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.9);
+    }
+    .saved-card-label {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .saved-card-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .empty-state {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 18px;
+      font-size: 0.88rem;
+    }
+    .empty-state::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #8aa0b2;
+      flex: 0 0 auto;
+      box-shadow: 0 0 0 4px rgba(138, 160, 178, 0.12);
+    }
+    .empty-state-label {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .empty-state.success {
+      color: var(--success);
+    }
+    .empty-state.success::before {
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(36, 102, 74, 0.12);
+    }
+    .empty-state.success .empty-state-label {
+      color: var(--success);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 980px) {
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-actions {
+        width: 100%;
+      }
+      .nav-link,
+      .nav-danger {
+        flex: 1;
+      }
+    }
+
+    @media (max-width: 860px) {
+      body { padding: 16px; }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        padding: 18px 14px 16px;
+      }
+      .panel {
+        padding: 24px;
+        border-radius: 24px;
+      }
+      .form-grid,
+      .card-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .saved-card,
+      .actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .empty-state {
+        align-items: flex-start;
+      }
+      .btn {
+        width: 100%;
+      }
+      .lead {
+        white-space: normal;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="frame">
+      <nav class="nav">
+        <a class="brand" href="/app">
+          <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="brandMarkGradient" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3a6387"/>
+                <stop offset="100%" stop-color="#89a6c0"/>
+              </linearGradient>
+            </defs>
+            <rect x="3" y="7" width="22" height="14" rx="3" fill="url(#brandMarkGradient)"/>
+            <rect x="3" y="10.5" width="22" height="2.4" fill="#0c1623" opacity="0.32"/>
+            <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
+            <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
+          </svg>
+          <span>Expense Agent</span>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-link" id="workspaceLink" href="/app">Workspace</a>
+          <a class="nav-link" id="historyLink" href="/history">History</a>
+          <span class="nav-pill" aria-current="page">Profile</span>
+          <a class="nav-link" id="apiKeyLink" href="/connect-key?return_to=%2Fapp">API Key</a>
+          <button class="nav-danger" type="button" onclick="doLogout()">Sign Out</button>
+        </div>
+      </nav>
+
+      <div class="shell">
+        <section class="panel">
+          <h1>Manage Your Profile</h1>
+          <p class="lead">Save your display name and card labels so each upload gets filed quickly and consistently.</p>
+
+          <div class="settings-stack">
+            <section class="settings-section">
+              <div class="section-head">
+                <h2>Display Name</h2>
+              </div>
+
+              <div class="form-grid">
+                <div>
+                  <div class="field-label">First name</div>
+                  <input class="text-input" type="text" id="firstNameInput" placeholder="Aviral" autocomplete="given-name" />
+                </div>
+                <div>
+                  <div class="field-label">Last name</div>
+                  <input class="text-input" type="text" id="lastNameInput" placeholder="Agarwal" autocomplete="family-name" />
+                </div>
+              </div>
+
+              <div class="actions">
+                <button class="btn btn-primary" id="saveProfileBtn" type="button" onclick="saveProfile()">Save Name</button>
+                <div class="status-msg" id="profileStatusMsg"></div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <div class="section-head">
+                <h2>Credit Cards</h2>
+              </div>
+
+              <div class="empty-state" id="cardsEmptyState">
+                <span class="empty-state-label">No cards saved yet. Add your first one below.</span>
+              </div>
+              <div class="card-list" id="savedCardsList"></div>
+
+              <div class="card-form-grid">
+                <div>
+                  <div class="field-label">Brand</div>
+                  <div class="brand-control-slot">
+                    <select class="select-input" id="cardBrandSelect" aria-label="Card brand">
+                      <option value="" selected disabled>Select card brand</option>
+                      <option value="American Express">American Express</option>
+                      <option value="Visa">Visa</option>
+                      <option value="Mastercard">Mastercard</option>
+                      <option value="Discover">Discover</option>
+                      <option value="__custom__">Other (Please Specify)</option>
+                    </select>
+                    <div class="brand-custom-row" id="cardBrandCustomRow">
+                      <input
+                        class="text-input"
+                        type="text"
+                        id="cardBrandCustomInput"
+                        placeholder="Type card brand"
+                        maxlength="40"
+                        aria-label="Custom card brand"
+                      />
+                      <button type="button" class="brand-list-btn" id="cardBrandBackToListBtn" title="Back to brand list">
+                        List
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="field-label">Digits shown</div>
+                  <select class="select-input" id="cardHintPositionInput">
+                    <option value="" selected disabled>Select digit position</option>
+                    <option value="ending">Ending in</option>
+                    <option value="starting">Starting with</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="field-label">Reference digits</div>
+                  <input class="text-input" type="text" id="cardDigitHintInput" inputmode="numeric" maxlength="2" placeholder="Optional" />
+                </div>
+              </div>
+
+              <div class="actions">
+                <button class="btn btn-primary" id="saveCardBtn" type="button" onclick="addCard()">Add Card</button>
+                <a class="btn btn-success" id="returnToWorkspaceBtn" href="/app" style="display: none;">Return to Workspace</a>
+                <div class="status-msg" id="cardStatusMsg"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const token = sessionStorage.getItem("expense_token");
+  if (!token) {
+    window.location.href = "/app";
+  }
+
+  let savedCards = [];
+
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = params.get("return_to") || "/app";
+  document.getElementById("apiKeyLink").href = `/connect-key?return_to=${encodeURIComponent(returnTo)}`;
+  document.getElementById("returnToWorkspaceBtn").href = returnTo;
+
+  function doLogout() {
+    sessionStorage.removeItem("expense_token");
+    sessionStorage.removeItem("expense_refresh_token");
+    window.location.href = "/app";
+  }
+
+  async function loadSettings() {
+    try {
+      const res = await fetch("/api/settings", { headers: { "Authorization": `Bearer ${token}` } });
+      if (res.status === 401) {
+        window.location.href = "/app";
+        return;
+      }
+      const data = await res.json();
+      document.getElementById("firstNameInput").value = data.profile?.first_name || "";
+      document.getElementById("lastNameInput").value = data.profile?.last_name || "";
+      savedCards = data.cards || [];
+      renderSavedCards();
+    } catch (e) {
+      showCardStatus("Could not load settings.", false);
+    }
+  }
+
+  function renderSavedCards() {
+    const list = document.getElementById("savedCardsList");
+    const returnBtn = document.getElementById("returnToWorkspaceBtn");
+
+    if (!savedCards.length) {
+      list.innerHTML = "";
+      showCardsBanner("empty");
+      returnBtn.style.display = "none";
+      return;
+    }
+
+    hideCardsBanner();
+    returnBtn.style.display = "inline-flex";
+    list.innerHTML = savedCards.map(card => `
+      <div class="saved-card">
+        <div>
+          <div class="saved-card-label">${escapeHtml(card.label)}</div>
+          <div class="saved-card-meta">Used as the saved card label during upload.</div>
+        </div>
+        <button class="btn btn-danger" type="button" onclick="deleteCard('${card.id}')">Delete</button>
+      </div>
+    `).join("");
+  }
+
+  function showCardsBanner(mode, label = "", detail = "") {
+    const banner = document.getElementById("cardsEmptyState");
+    if (mode === "empty" && !label && !detail) {
+      label = "No cards saved yet. Add your first one below.";
+    }
+    banner.className = "empty-state" + (mode === "success" ? " success" : "");
+    banner.innerHTML = detail
+      ? `<span class="empty-state-label">${escapeHtml(label)}</span><span>${escapeHtml(detail)}</span>`
+      : `<span class="empty-state-label">${escapeHtml(label)}</span>`;
+    banner.style.display = "flex";
+  }
+
+  function hideCardsBanner() {
+    const banner = document.getElementById("cardsEmptyState");
+    banner.style.display = "none";
+    banner.className = "empty-state";
+  }
+
+  function clearCardStatus() {
+    const el = document.getElementById("cardStatusMsg");
+    el.textContent = "";
+    el.style.display = "none";
+    el.className = "status-msg";
+  }
+
+  async function saveProfile() {
+    const firstName = document.getElementById("firstNameInput").value.trim();
+    const lastName = document.getElementById("lastNameInput").value.trim();
+    if (!firstName) {
+      showProfileStatus("First name is required.", false);
+      return;
+    }
+
+    const btn = document.getElementById("saveProfileBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Saving`;
+
+    try {
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ first_name: firstName, last_name: lastName }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showProfileStatus(data.error, false);
+        return;
+      }
+      document.getElementById("firstNameInput").value = data.profile?.first_name || firstName;
+      document.getElementById("lastNameInput").value = data.profile?.last_name || lastName;
+      showProfileStatus("Profile saved.", true);
+    } catch (e) {
+      showProfileStatus("Network error - please try again.", false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save Name";
+    }
+  }
+
+  function getCardBrandValue() {
+    const select = document.getElementById("cardBrandSelect");
+    const customRow = document.getElementById("cardBrandCustomRow");
+    const customInput = document.getElementById("cardBrandCustomInput");
+    if (customRow.classList.contains("is-visible")) {
+      return customInput.value.trim();
+    }
+    return (select.value || "").trim();
+  }
+
+  function resetCardBrandFields() {
+    const select = document.getElementById("cardBrandSelect");
+    const customRow = document.getElementById("cardBrandCustomRow");
+    const customInput = document.getElementById("cardBrandCustomInput");
+    select.value = "";
+    select.style.display = "";
+    customInput.value = "";
+    customRow.classList.remove("is-visible");
+  }
+
+  function showCardBrandCustomMode() {
+    const select = document.getElementById("cardBrandSelect");
+    const customRow = document.getElementById("cardBrandCustomRow");
+    const customInput = document.getElementById("cardBrandCustomInput");
+    select.style.display = "none";
+    customRow.classList.add("is-visible");
+    customInput.focus();
+  }
+
+  function showCardBrandSelectMode() {
+    const select = document.getElementById("cardBrandSelect");
+    const customRow = document.getElementById("cardBrandCustomRow");
+    const customInput = document.getElementById("cardBrandCustomInput");
+    select.style.display = "";
+    select.value = "";
+    customInput.value = "";
+    customRow.classList.remove("is-visible");
+  }
+
+  async function addCard() {
+    const hintPositionSelect = document.getElementById("cardHintPositionInput");
+    const brand = getCardBrandValue();
+    const hintPosition = hintPositionSelect.value;
+    const digitHint = document.getElementById("cardDigitHintInput").value.trim();
+
+    if (!brand) {
+      showCardStatus("Select or enter a card brand.", false);
+      return;
+    }
+    const btn = document.getElementById("saveCardBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span>Saving`;
+    clearCardStatus();
+
+    try {
+      const res = await fetch("/api/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          brand,
+          hint_position: hintPosition || "",
+          digit_hint: digitHint,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        renderSavedCards();
+        showCardStatus(data.error, false);
+        return;
+      }
+
+      savedCards = [...savedCards, data.card];
+      savedCards.sort((a, b) => a.label.localeCompare(b.label));
+      resetCardBrandFields();
+      hintPositionSelect.value = "";
+      document.getElementById("cardDigitHintInput").value = "";
+      renderSavedCards();
+      showCardsBanner("success", "Your card saved. You're good to go!");
+    } catch (e) {
+      renderSavedCards();
+      showCardStatus("Network error - please try again.", false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Add Card";
+    }
+  }
+
+  async function deleteCard(cardId) {
+    try {
+      const res = await fetch(`/api/cards/${cardId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.error) {
+        showCardStatus(data.error, false);
+        return;
+      }
+      savedCards = savedCards.filter(card => card.id !== cardId);
+      renderSavedCards();
+      showCardStatus("Card deleted.", true);
+    } catch (e) {
+      showCardStatus("Network error - please try again.", false);
+    }
+  }
+
+  function showProfileStatus(msg, ok) {
+    const el = document.getElementById("profileStatusMsg");
+    el.textContent = msg;
+    el.className = "status-msg " + (ok ? "success" : "error");
+    el.style.display = ok ? "inline-flex" : "block";
+  }
+
+  function showCardStatus(msg, ok) {
+    const el = document.getElementById("cardStatusMsg");
+    el.textContent = msg;
+    el.className = "status-msg " + (ok ? "success" : "error");
+    el.style.display = ok ? "inline-flex" : "block";
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  document.getElementById("firstNameInput").addEventListener("keydown", event => {
+    if (event.key === "Enter") saveProfile();
+  });
+
+  document.getElementById("lastNameInput").addEventListener("keydown", event => {
+    if (event.key === "Enter") saveProfile();
+  });
+
+  document.getElementById("cardDigitHintInput").addEventListener("keydown", event => {
+    if (event.key === "Enter") addCard();
+  });
+
+  document.getElementById("cardBrandSelect").addEventListener("change", event => {
+    if (event.target.value === "__custom__") {
+      showCardBrandCustomMode();
+    }
+  });
+
+  document.getElementById("cardBrandBackToListBtn").addEventListener("click", () => {
+    showCardBrandSelectMode();
+  });
+
+  document.getElementById("cardBrandCustomInput").addEventListener("keydown", event => {
+    if (event.key === "Enter") addCard();
+  });
+
+  loadSettings();
+</script>
+</body>
+</html>
