@@ -1,6 +1,8 @@
 import os
 import json
 import base64
+import re
+from uuid import uuid4
 import anthropic
 from urllib.parse import urlencode
 from dotenv import load_dotenv
@@ -12,6 +14,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # ── Config ──────────────────────────────────────────────────────────────────
 SUPABASE_URL         = os.environ.get("SUPABASE_URL")
@@ -19,6 +22,9 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 APP_URL              = (os.environ.get("APP_URL") or "").rstrip("/")
 
 supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+CARD_BRANDS = {"Amex", "Visa", "Mastercard", "Discover"}
+CARD_HINT_POSITIONS = {"ending", "starting"}
 
 
 def get_external_app_url(path: str = "/"):
@@ -48,17 +54,222 @@ def get_user_id_from_request():
     return user.id if user else None
 
 
-# ── User settings (BYOA) ─────────────────────────────────────────────────────
-def get_user_api_key(user_id: str):
+def build_empty_user_settings():
+    return {
+        "anthropic_api_key": None,
+        "profile": {"first_name": None, "last_name": None},
+        "cards": [],
+    }
+
+
+def normalize_stored_profile(profile: dict | None):
+    profile = profile or {}
+    return {
+        "first_name": (profile.get("first_name") or "").strip() or None,
+        "last_name": (profile.get("last_name") or "").strip() or None,
+    }
+
+
+def parse_user_settings_blob(raw_value: str | None):
+    settings = build_empty_user_settings()
+    raw_text = (raw_value or "").strip()
+    if not raw_text:
+        return settings
+
+    payload = None
+    if raw_text.startswith("{"):
+        try:
+            payload = json.loads(raw_text)
+        except json.JSONDecodeError:
+            payload = None
+
+    if isinstance(payload, dict):
+        settings["anthropic_api_key"] = (payload.get("anthropic_api_key") or "").strip() or None
+        settings["profile"] = normalize_stored_profile(payload.get("profile"))
+        settings["cards"] = [
+            serialize_user_card(card)
+            for card in (payload.get("cards") or [])
+            if isinstance(card, dict)
+        ]
+        return settings
+
+    settings["anthropic_api_key"] = raw_text
+    return settings
+
+
+def serialize_user_settings_blob(settings: dict):
+    payload = {
+        "anthropic_api_key": (settings.get("anthropic_api_key") or "").strip() or None,
+        "profile": normalize_stored_profile(settings.get("profile")),
+        "cards": [
+            {
+                "id": str(card.get("id") or uuid4()),
+                "brand": normalize_card_brand(card.get("brand")) or (card.get("brand") or "Card").strip(),
+                "digit_hint": normalize_reference_digits(card.get("digit_hint")),
+                "hint_position": (card.get("hint_position") or "ending").strip().lower(),
+            }
+            for card in (settings.get("cards") or [])
+            if isinstance(card, dict)
+        ],
+    }
+    return json.dumps(payload, separators=(",", ":"))
+
+
+def get_user_settings_state_for_user(user_id: str):
     result = (
         supabase_admin.table("user_settings")
         .select("anthropic_api_key")
         .eq("user_id", user_id)
+        .limit(1)
         .execute()
     )
     if result.data:
-        return result.data[0].get("anthropic_api_key") or None
+        return parse_user_settings_blob(result.data[0].get("anthropic_api_key"))
+    return build_empty_user_settings()
+
+
+def save_user_settings_state_for_user(user_id: str, settings: dict):
+    serialized = serialize_user_settings_blob(settings)
+    supabase_admin.table("user_settings").upsert({
+        "user_id": user_id,
+        "anthropic_api_key": serialized,
+    }).execute()
+    return parse_user_settings_blob(serialized)
+
+
+# ── User settings (BYOA) ─────────────────────────────────────────────────────
+def get_user_api_key(user_id: str):
+    return get_user_settings_state_for_user(user_id).get("anthropic_api_key")
+
+
+def normalize_reference_digits(value: str | None, *, max_length: int = 2, align: str = "left") -> str | None:
+    digits = re.sub(r"\D", "", value or "")
+    if not digits:
+        return None
+    if len(digits) <= max_length:
+        return digits
+    if align == "right":
+        return digits[-max_length:]
+    return digits[:max_length]
+
+
+def normalize_card_brand(value: str | None) -> str | None:
+    raw = " ".join((value or "").strip().split()).lower()
+    mapping = {
+        "amex": "Amex",
+        "american express": "Amex",
+        "visa": "Visa",
+        "mastercard": "Mastercard",
+        "master card": "Mastercard",
+        "discover": "Discover",
+        "savor": "Mastercard",
+    }
+    return mapping.get(raw)
+
+
+def format_saved_card_label(brand: str, digit_hint: str | None = None, hint_position: str = "ending") -> str:
+    if digit_hint:
+        return f"{brand} {hint_position} in {digit_hint}"
+    return brand
+
+
+def canonicalize_card_label(value: str | None) -> str | None:
+    raw = " ".join((value or "").strip().split())
+    if not raw:
+        return None
+
+    standard_match = re.match(
+        r"^(Amex|Visa|Mastercard|Discover)(?:\s+(ending|starting)\s+in\s+(\d{1,4}))?$",
+        raw,
+        re.IGNORECASE,
+    )
+    if standard_match:
+        brand = normalize_card_brand(standard_match.group(1))
+        position = (standard_match.group(2) or "ending").lower()
+        digits = normalize_reference_digits(
+            standard_match.group(3),
+            align="right" if position == "ending" else "left",
+        )
+        return format_saved_card_label(brand, digits, position)
+
+    legacy_match = re.match(r"^(.*?)(?:\s*\((\d{1,4})\))?$", raw)
+    if legacy_match:
+        brand = normalize_card_brand(legacy_match.group(1))
+        if brand:
+            digits = normalize_reference_digits(legacy_match.group(2), align="right")
+            return format_saved_card_label(brand, digits, "ending")
+
+    return raw
+
+
+def serialize_user_card(row: dict) -> dict:
+    brand = normalize_card_brand(row.get("brand")) or (row.get("brand") or "Card").strip()
+    hint_position = (row.get("hint_position") or "ending").strip().lower()
+    if hint_position not in CARD_HINT_POSITIONS:
+        hint_position = "ending"
+    digit_hint = normalize_reference_digits(row.get("digit_hint"))
+    return {
+        "id": str(row.get("id") or uuid4()),
+        "brand": brand,
+        "digit_hint": digit_hint,
+        "hint_position": hint_position,
+        "label": format_saved_card_label(brand, digit_hint, hint_position),
+    }
+
+
+def list_user_cards_for_user(user_id: str) -> list:
+    settings = get_user_settings_state_for_user(user_id)
+    return [serialize_user_card(row) for row in (settings.get("cards") or [])]
+
+
+def get_user_card_for_user(user_id: str, card_id: str):
+    for card in list_user_cards_for_user(user_id):
+        if card["id"] == card_id:
+            return card
     return None
+
+
+def create_user_card_for_user(user_id: str, brand: str, digit_hint: str | None, hint_position: str) -> dict:
+    normalized_brand = normalize_card_brand(brand)
+    if normalized_brand not in CARD_BRANDS:
+        raise ValueError("Select a supported card brand.")
+
+    normalized_position = (hint_position or "ending").strip().lower()
+    if normalized_position not in CARD_HINT_POSITIONS:
+        raise ValueError("Choose whether the digits are at the start or end.")
+
+    raw_digits = re.sub(r"\D", "", digit_hint or "")
+    if digit_hint and not raw_digits:
+        raise ValueError("Reference digits must be numeric.")
+    if len(raw_digits) > 2:
+        raise ValueError("Use one or two reference digits only.")
+
+    label = format_saved_card_label(normalized_brand, normalize_reference_digits(raw_digits), normalized_position)
+    settings = get_user_settings_state_for_user(user_id)
+    existing_cards = [serialize_user_card(card) for card in (settings.get("cards") or [])]
+    if any(card["label"] == label for card in existing_cards):
+        raise ValueError("That card is already saved.")
+
+    card = serialize_user_card({
+        "id": str(uuid4()),
+        "brand": normalized_brand,
+        "digit_hint": normalize_reference_digits(raw_digits),
+        "hint_position": normalized_position,
+    })
+    settings["cards"] = existing_cards + [card]
+    save_user_settings_state_for_user(user_id, settings)
+    return card
+
+
+def delete_user_card_for_user(user_id: str, card_id: str) -> bool:
+    settings = get_user_settings_state_for_user(user_id)
+    existing_cards = [serialize_user_card(card) for card in (settings.get("cards") or [])]
+    remaining_cards = [card for card in existing_cards if card["id"] != card_id]
+    if len(remaining_cards) == len(existing_cards):
+        return False
+    settings["cards"] = remaining_cards
+    save_user_settings_state_for_user(user_id, settings)
+    return True
 
 
 def split_name_parts(full_name: str):
@@ -104,33 +315,22 @@ def get_profile_seed_from_user(user):
 
 
 def get_profile_for_user(user_id: str):
-    result = (
-        supabase_admin.table("profiles")
-        .select("first_name,last_name")
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
-    if result.data:
-        row = result.data[0]
-        return {
-            "first_name": (row.get("first_name") or "").strip() or None,
-            "last_name": (row.get("last_name") or "").strip() or None,
-        }
+    profile = get_user_settings_state_for_user(user_id).get("profile") or {}
+    normalized = normalize_stored_profile(profile)
+    if normalized.get("first_name") or normalized.get("last_name"):
+        return normalized
     return None
 
 
 def upsert_profile_for_user(user_id: str, first_name: str | None, last_name: str | None):
-    row = {
-        "user_id": user_id,
+    profile = {
         "first_name": first_name or None,
         "last_name": last_name or None,
     }
-    supabase_admin.table("profiles").upsert(row).execute()
-    return {
-        "first_name": row["first_name"],
-        "last_name": row["last_name"],
-    }
+    settings = get_user_settings_state_for_user(user_id)
+    settings["profile"] = normalize_stored_profile(profile)
+    save_user_settings_state_for_user(user_id, settings)
+    return settings["profile"]
 
 
 def user_has_transactions(user_id: str) -> bool:
@@ -183,7 +383,7 @@ def normalize_vendor(name: str) -> str:
 def get_existing_transactions_for_user(user_id: str) -> list:
     result = (
         supabase_admin.table("transactions")
-        .select("vendor,amount,date")
+        .select("vendor,amount,date,card")
         .eq("user_id", user_id)
         .execute()
     )
@@ -200,7 +400,12 @@ def get_existing_transactions_for_user(user_id: str) -> list:
                 dt = datetime.strptime(row["date"], "%Y-%m-%d")
             except ValueError:
                 pass
-        transactions.append({"vendor": vendor, "amount": amount, "date": dt})
+        transactions.append({
+            "vendor": vendor,
+            "card": canonicalize_card_label(row.get("card")) or "",
+            "amount": amount,
+            "date": dt,
+        })
     return transactions
 
 
@@ -210,7 +415,7 @@ def append_transactions_for_user(user_id: str, transactions: list):
         rows.append({
             "user_id": user_id,
             "vendor":  t["vendor"],
-            "card":    t.get("card"),
+            "card":    canonicalize_card_label(t.get("card")),
             "date":    t.get("date"),
             "amount":  float(str(t["amount"]).replace("$", "").replace(",", "")),
             "status":  t.get("status"),
@@ -238,7 +443,6 @@ Return ONLY a JSON array, no other text, like this:
 [
   {
     "vendor": "Cava",
-    "card": "Savor",
     "date": "2026-02-09",
     "amount": "15.80",
     "status": "settled"
@@ -246,13 +450,13 @@ Return ONLY a JSON array, no other text, like this:
 ]
 
 Rules:
-- vendor: clean merchant name 
-- card: exactly as shown in the app
+- vendor: clean merchant name
 - date: YYYY-MM-DD format. If only month/day shown, assume 2026.
 - amount: numeric string only, no $ sign (e.g. "15.80")
 - status: "pending" or "settled"
 - IGNORE any transactions with a negative amount (credits, autopayments, refunds) — expenses only
 - IGNORE any transaction labeled as "autopay", "payment", "credit", or "refund"
+- DO NOT infer or return the card name. The selected card is attached separately.
 - Include ALL expense transactions you can see across all screenshots""",
     })
 
@@ -270,6 +474,20 @@ Rules:
     return json.loads(raw.strip())
 
 
+def attach_selected_card_to_transactions(transactions: list, card_label: str) -> list:
+    normalized_card = canonicalize_card_label(card_label) or card_label
+    stamped = []
+    for tx in transactions:
+        stamped.append({
+            "vendor": (tx.get("vendor") or "").strip(),
+            "card": normalized_card,
+            "date": (tx.get("date") or "").strip(),
+            "amount": tx.get("amount"),
+            "status": (tx.get("status") or "").strip().lower(),
+        })
+    return stamped
+
+
 # ── Deduplication ────────────────────────────────────────────────────────────
 def classify_transactions(new_txs: list, existing_txs: list):
     definite_new = []
@@ -279,6 +497,7 @@ def classify_transactions(new_txs: list, existing_txs: list):
 
     for t in new_txs:
         vendor = normalize_vendor(t["vendor"])
+        card = canonicalize_card_label(t.get("card")) or ""
         try:
             amount = float(str(t["amount"]).replace("$", "").replace(",", ""))
         except ValueError:
@@ -290,7 +509,7 @@ def classify_transactions(new_txs: list, existing_txs: list):
         except Exception:
             t_date = None
 
-        upload_key = f"{vendor}|{amount}|{t.get('date','')}"
+        upload_key = f"{vendor}|{card}|{amount}|{t.get('date','')}"
         if upload_key in seen_keys:
             definite_dup.append(t)
             continue
@@ -302,6 +521,8 @@ def classify_transactions(new_txs: list, existing_txs: list):
 
         for ex in existing_txs:
             if ex["vendor"] != vendor:
+                continue
+            if ex.get("card", "") != card:
                 continue
             if abs(ex["amount"] - amount) > 0.01:
                 continue
@@ -343,9 +564,14 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/connect-key")
+def connect_key_page():
+    return render_template("settings.html")
+
+
 @app.route("/settings")
 def settings_page():
-    return render_template("settings.html")
+    return render_template("profile_settings.html")
 
 
 @app.route("/auth/google")
@@ -411,7 +637,11 @@ def api_settings_get():
         is_new_user = is_new_user_account(user.id, bool(key), profile)
     except Exception:
         is_new_user = False
-    return jsonify({"has_key": bool(key), "profile": profile, "is_new_user": is_new_user})
+    try:
+        cards = list_user_cards_for_user(user.id)
+    except Exception:
+        cards = []
+    return jsonify({"has_key": bool(key), "profile": profile, "is_new_user": is_new_user, "cards": cards})
 
 
 @app.route("/api/settings", methods=["POST"])
@@ -423,10 +653,9 @@ def api_settings_save():
     api_key = data.get("anthropic_api_key", "").strip()
     if not api_key:
         return jsonify({"error": "API key is required"}), 400
-    supabase_admin.table("user_settings").upsert({
-        "user_id": user_id,
-        "anthropic_api_key": api_key,
-    }).execute()
+    settings = get_user_settings_state_for_user(user_id)
+    settings["anthropic_api_key"] = api_key
+    save_user_settings_state_for_user(user_id, settings)
     return jsonify({"success": True})
 
 
@@ -448,6 +677,44 @@ def api_profile_save():
     except Exception as e:
         return jsonify({"error": f"Failed to save profile: {str(e)}"}), 500
     return jsonify({"success": True, "profile": profile})
+
+
+@app.route("/api/cards", methods=["POST"])
+def api_card_create():
+    user_id = get_user_id_from_request()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    try:
+        card = create_user_card_for_user(
+            user_id,
+            data.get("brand"),
+            data.get("digit_hint"),
+            data.get("hint_position"),
+        )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": f"Failed to save card: {str(e)}"}), 500
+
+    return jsonify({"success": True, "card": card})
+
+
+@app.route("/api/cards/<card_id>", methods=["DELETE"])
+def api_card_delete(card_id: str):
+    user_id = get_user_id_from_request()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        deleted = delete_user_card_for_user(user_id, card_id)
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete card: {str(e)}"}), 500
+
+    if not deleted:
+        return jsonify({"error": "Card not found"}), 404
+    return jsonify({"success": True})
 
 
 @app.route("/api/welcome-seen", methods=["POST"])
@@ -474,6 +741,14 @@ def upload():
     if not api_key:
         return jsonify({"error": "no_api_key"}), 400
 
+    selected_card_id = (request.form.get("selected_card_id") or "").strip()
+    if not selected_card_id:
+        return jsonify({"error": "no_card_selected"}), 400
+
+    selected_card = get_user_card_for_user(user_id, selected_card_id)
+    if not selected_card:
+        return jsonify({"error": "invalid_card"}), 400
+
     files = request.files.getlist("screenshots")
     if not files:
         return jsonify({"error": "No files uploaded"}), 400
@@ -488,7 +763,8 @@ def upload():
         image_data_list.append((b64, mime_type))
 
     try:
-        all_transactions = extract_transactions_from_images(image_data_list, api_key)
+        extracted_transactions = extract_transactions_from_images(image_data_list, api_key)
+        all_transactions = attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
     except Exception as e:
         return jsonify({"error": f"Claude extraction failed: {type(e).__name__}: {str(e)}"}), 500
 
@@ -524,7 +800,10 @@ def api_transactions():
         .order("date", desc=True)
         .execute()
     )
-    return jsonify({"transactions": result.data})
+    rows = result.data or []
+    for row in rows:
+        row["card"] = canonicalize_card_label(row.get("card")) or "Unassigned"
+    return jsonify({"transactions": rows})
 
 
 @app.route("/confirm", methods=["POST"])
