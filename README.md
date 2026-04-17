@@ -1,79 +1,79 @@
 # Expense Agent
 
-Expense Agent is a Flask web app that turns credit card screenshots into a reviewed expense log.
-Users upload screenshots from apps like Amex, Chase, or Capital One, Claude extracts the expense
-transactions, the backend checks them against prior history, and the user confirms what should be saved.
+Turn screenshots of your credit card app into a reviewed, deduplicated expense
+log — in about 30 seconds per batch.
 
-## What it does
+## What it is
 
-- Supports account-based usage with Supabase Auth
-- Stores a separate transaction history for each user
-- Uses each user's own Anthropic API key for screenshot extraction
-- Detects exact duplicates and nearby-date possible duplicates
-- Keeps pending and settled transactions visible during review
-- Shows saved history grouped by month
+Expense Agent is a small web app for people who don't want to type transactions
+into a spreadsheet and don't want a firehose import from every account they
+own. You sign in with Google, screenshot the transaction list in any credit
+card app, pick which card the batch is for, and upload. The app extracts every
+charge, cross-checks it against your history, and asks you to sign off on what
+to save.
 
-## Product flow
+The result is a clean, reviewed log that you actually trust.
 
-1. Sign in with Google
-2. Add an Anthropic API key in Settings
-3. Upload card screenshots
-4. Review new transactions, skipped duplicates, and possible duplicates
-5. Confirm what should be written to the log
-6. Inspect saved history on the History page
+## Why it exists
 
-## Stack
+Most expense tools either import nothing (you type it in) or everything (noisy
+Plaid feeds you still have to clean up). Expense Agent sits in between:
 
-- Backend: Python, Flask
-- Frontend: server-rendered HTML, CSS, vanilla JavaScript
-- AI extraction: Anthropic Claude Vision
-- Auth and database: Supabase Auth + Postgres
-- Deployment target: Google Cloud Run
+- **You** decide when to capture expenses.
+- **You** decide which card each upload is for.
+- **You** confirm every line before it lands in history.
+- The AI only handles the tedious part — reading charges off the screen and
+  flagging duplicates.
 
-## Local development
+## What a typical session looks like
 
-### Requirements
+1. Sign in with Google.
+2. Save your display name, at least one card, and your Anthropic API key.
+3. Pick a saved card and drop in one or more screenshots.
+4. The app shows three lists:
+   - **New** — charges not in your history. Stage them.
+   - **Skipped** — exact matches already in your history. Hidden by default.
+   - **Needs review** — same vendor, card, and amount within a day of an
+     existing entry. You decide whether it's a real second charge or a
+     duplicate.
+5. Confirm. Approved rows are saved to your history.
+6. The History page shows everything grouped by month, with spend trends and a
+   per-card breakdown.
 
-- Python 3.11+
-- A Supabase project with the expected tables
+## Why bring-your-own API key
 
-### Environment variables
+Every user connects their own Anthropic key in Settings. That means:
 
-Copy `.env.example` to `.env` and fill in:
+- Usage bills directly to your Anthropic account.
+- Your data doesn't pass through a shared key or a shared budget.
+- The app scales to any number of users without a central cost center.
 
-```env
-SUPABASE_URL=...
-SUPABASE_SERVICE_KEY=...
-APP_URL=http://localhost:5000
-```
+## Tech, at a glance
 
-Notes:
+- Python + Flask backend
+- Server-rendered HTML + vanilla JavaScript (no build step)
+- Anthropic Claude Vision for extraction
+- Supabase for Google auth and per-user data
+- Deployed as a container (Google Cloud Run-ready)
 
-- in the product flow, users normally supply their own Anthropic API key
-- `SUPABASE_ANON_KEY` is not required by the current server-rendered frontend
-- `APP_URL` should be the public origin of the Flask app so Google OAuth redirects back to the
-  right callback and `/app` URLs in both local and deployed environments
-- in Supabase Google auth settings, allow the exact callback URL `APP_URL/auth/callback`
-
-For local development, sign in with a Google account in the app and save an Anthropic API key
-through the Settings page before using the upload flow.
-
-### Run
+## Running it locally
 
 ```bash
 pip install -r requirements.txt
 python app.py
 ```
 
-Then open `http://localhost:5000`.
+Then open `http://localhost:5000`. You'll need a Supabase project with Google
+auth enabled and a few environment variables filled in — see `.env.example`.
+Once the server is up, sign in with Google, save an Anthropic API key in
+Settings, save at least one card, and you're ready to upload.
 
-## Project status
+## Status
 
-This project is actively being refined. The current implementation is focused on:
+Actively being refined. The core flow — screenshots → extraction →
+deduplication → reviewed history — is fully working. Next up: a History screen
+refresh and CSV export.
 
-- clean screenshot-to-log review flow
-- user-specific transaction storage
-- duplicate handling
-- simple mobile-friendly UI
+## Author
 
-Planned improvements include deletion from history, CSV export, and more production polish.
+Aviral Agarwal
