@@ -24,6 +24,10 @@
       --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
     }
 
+    html {
+      scrollbar-gutter: stable;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: var(--sans);
@@ -37,7 +41,7 @@
     a { color: inherit; text-decoration: none; }
 
     .page {
-      max-width: 1220px;
+      max-width: 1180px;
       margin: 0 auto;
     }
 
@@ -54,7 +58,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 22px 28px;
+      padding: 22px 26px;
       border-bottom: 1px solid var(--line);
     }
     .brand {
@@ -66,11 +70,11 @@
       letter-spacing: 0.02em;
     }
     .brand-mark {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      background: linear-gradient(135deg, #2f587d, #89a6c0);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(0 2px 5px rgba(35, 66, 94, 0.22));
     }
     .nav-actions {
       display: flex;
@@ -115,11 +119,11 @@
       display: grid;
       grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
       gap: 32px;
-      padding: 34px 28px 24px;
+      padding: 28px 28px 14px;
       align-items: stretch;
     }
     .hero-copy {
-      padding: 20px 8px 16px;
+      padding: 14px 8px 8px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -146,25 +150,25 @@
     }
     .hero h1 {
       font-family: var(--serif);
-      font-size: clamp(2.8rem, 5.4vw, 4.7rem);
+      font-size: clamp(2.6rem, 5.1vw, 4.4rem);
       font-weight: 600;
       line-height: 1.01;
       letter-spacing: -0.045em;
       max-width: 11ch;
-      margin-bottom: 22px;
+      margin-bottom: 18px;
     }
     .hero p {
       max-width: 38ch;
       color: var(--muted);
       font-size: 1.06rem;
-      line-height: 1.72;
-      margin-bottom: 26px;
+      line-height: 1.66;
+      margin-bottom: 20px;
     }
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 28px;
+      margin-bottom: 22px;
     }
     .hero-meta {
       display: flex;
@@ -297,6 +301,10 @@
       padding: 28px;
       display: grid;
       gap: 16px;
+    }
+    .section:first-of-type {
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
     }
     .section-header {
       display: flex;
@@ -492,8 +500,11 @@
       text-transform: uppercase;
     }
 
-    @media (max-width: 980px) {
+    @media (max-width: 860px) {
       body { padding: 16px; }
+    }
+
+    @media (max-width: 980px) {
       .hero,
       .value-grid,
       .workflow,
@@ -551,7 +562,18 @@
     <div class="frame">
       <nav class="nav">
         <a class="brand" href="/">
-          <span class="brand-mark" aria-hidden="true"></span>
+          <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="brandMarkGradient" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3a6387"/>
+                <stop offset="100%" stop-color="#89a6c0"/>
+              </linearGradient>
+            </defs>
+            <rect x="3" y="7" width="22" height="14" rx="3" fill="url(#brandMarkGradient)"/>
+            <rect x="3" y="10.5" width="22" height="2.4" fill="#0c1623" opacity="0.32"/>
+            <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
+            <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
+          </svg>
           <span>Expense Agent</span>
         </a>
         <div class="nav-actions">
@@ -593,7 +615,7 @@
               <div class="summary-item">
                 <div>
                   <strong>Sweetgreen</strong>
-                  <span>Savor · 2026-04-11 · captured from screenshot</span>
+                  <span>Mastercard · 2026-04-11 · captured from screenshot</span>
                 </div>
                 <div class="summary-pill">Ready to add</div>
               </div>

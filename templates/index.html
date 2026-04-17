@@ -31,6 +31,10 @@
       --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
     }
 
+    html {
+      scrollbar-gutter: stable;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: var(--sans);
@@ -73,11 +77,11 @@
       text-decoration: none;
     }
     .brand-mark {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      background: linear-gradient(135deg, #2f587d, #89a6c0);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(0 2px 5px rgba(35, 66, 94, 0.22));
     }
     .eyebrow {
       display: inline-flex;
@@ -103,8 +107,8 @@
     .panel {
       background: rgba(255,255,255,0.72);
       border: 1px solid var(--line);
-      border-radius: 28px;
-      padding: 22px;
+      border-radius: 30px;
+      padding: 28px;
     }
     .panel-soft {
       background: rgba(248, 246, 242, 0.78);
@@ -130,6 +134,7 @@
       font-size: 0.92rem;
       font-weight: 700;
       letter-spacing: 0.01em;
+      text-decoration: none;
       transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease, border-color 0.16s ease;
     }
     .btn:hover:not(:disabled) {
@@ -155,8 +160,9 @@
       box-shadow: 0 14px 28px rgba(36, 102, 74, 0.16);
     }
     .btn-warning {
-      background: var(--warning);
+      background: #be5f7c;
       color: #ffffff;
+      box-shadow: 0 14px 28px rgba(190, 95, 124, 0.2);
     }
     .btn-danger {
       background: transparent;
@@ -189,7 +195,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 22px 28px;
+      padding: 22px 26px;
       border-bottom: 1px solid var(--line);
     }
     .auth-nav-link {
@@ -397,7 +403,7 @@
     }
 
     .main-app {
-      padding: 22px;
+      padding: 24px;
       display: grid;
       gap: 18px;
     }
@@ -406,21 +412,14 @@
       justify-content: space-between;
       align-items: center;
       gap: 18px;
-      padding: 8px 2px 4px;
+      padding: 22px 26px;
+      border-bottom: 1px solid var(--line);
     }
     .top-bar-left {
       display: flex;
       align-items: center;
       gap: 16px;
       min-width: 0;
-    }
-    .top-bar-left .helper {
-      color: var(--muted);
-      font-size: 0.84rem;
-      min-width: 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     .top-bar-actions {
       display: flex;
@@ -432,14 +431,21 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 11px 16px;
+      padding: 12px 18px;
       border-radius: 999px;
       border: 1px solid var(--line-strong);
       color: var(--ink);
       text-decoration: none;
       background: rgba(255,255,255,0.78);
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       font-weight: 700;
+    }
+    .top-link.is-current {
+      cursor: default;
+    }
+    .top-link-danger {
+      border-color: rgba(161, 72, 66, 0.2);
+      color: var(--danger);
     }
     .workspace-section {
       display: none;
@@ -447,6 +453,12 @@
     }
     .workspace-section.visible {
       display: grid;
+    }
+    #workspaceView.results-first {
+      gap: 12px;
+    }
+    #workspaceView.results-first #resultsBox {
+      padding-top: 22px;
     }
     .loading-panel {
       min-height: 440px;
@@ -464,6 +476,32 @@
       border-width: 3px;
       border-color: rgba(35, 43, 41, 0.14);
       border-top-color: var(--ink);
+    }
+    .loading-success-mark {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      background: var(--success-soft);
+      color: var(--success);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+      animation: success-pop 0.28s ease-out;
+    }
+    .loading-success-mark svg {
+      width: 26px;
+      height: 26px;
+    }
+    @keyframes success-pop {
+      0% {
+        opacity: 0;
+        transform: scale(0.84);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
     .loading-text {
       display: flex;
@@ -586,24 +624,29 @@
       display: grid;
       grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
       gap: 18px;
-      align-items: start;
+      align-items: stretch;
     }
     .setup-main {
       padding: 38px 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     .setup-main h1 {
-      font-family: var(--serif);
+      font-family: var(--sans);
       font-size: clamp(2.3rem, 3.8vw, 3.1rem);
-      font-weight: 600;
-      letter-spacing: -0.05em;
-      line-height: 1.02;
+      font-weight: 750;
+      letter-spacing: -0.03em;
+      line-height: 1.06;
       margin-bottom: 18px;
     }
     .setup-main p {
       color: var(--muted);
-      max-width: 44ch;
       line-height: 1.72;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
+    }
+    #cardSetupGrid .setup-main p {
+      max-width: 58ch;
     }
     .setup-actions {
       display: flex;
@@ -612,6 +655,14 @@
     }
     .setup-details {
       padding: 10px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    @media (min-width: 981px) {
+      .setup-grid {
+        min-height: calc(100vh - 170px);
+      }
     }
     .setup-detail {
       padding: 22px 0;
@@ -706,21 +757,114 @@
       display: grid;
       gap: 18px;
     }
+    .upload-panel.hidden {
+      display: none;
+    }
     .upload-header {
       display: flex;
       justify-content: space-between;
       gap: 18px;
       align-items: flex-start;
     }
+    .upload-header-copy {
+      display: grid;
+      gap: 6px;
+      padding-top: 2px;
+      flex: 1;
+      min-width: 0;
+    }
     .upload-header h2 {
       font-size: 1.28rem;
-      margin-bottom: 6px;
+      margin: 0;
     }
-    .upload-header p {
+    .upload-header-copy p {
       color: var(--muted);
-      line-height: 1.6;
-      font-size: 0.92rem;
-      max-width: 55ch;
+      line-height: 1.55;
+      font-size: 0.9rem;
+      max-width: none;
+      white-space: nowrap;
+      margin: 0;
+    }
+    .upload-card-picker {
+      min-width: min(320px, 100%);
+      display: grid;
+      gap: 8px;
+    }
+    .picker-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a8390;
+      font-weight: 700;
+    }
+    .upload-card-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+    .upload-card-select {
+      flex: 1;
+      min-width: 190px;
+      padding: 13px 46px 13px 15px;
+      border-radius: 16px;
+      border: 1px solid var(--line-strong);
+      background:
+        rgba(255,255,255,0.96)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.25 4.5 6 8.25 9.75 4.5' stroke='%23616c76' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 16px center;
+      background-size: 12px 12px;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-weight: 600;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+    .upload-card-select:focus {
+      border-color: rgba(35, 66, 94, 0.42);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .upload-card-select:disabled {
+      opacity: 1;
+      color: var(--muted);
+      -webkit-text-fill-color: var(--muted);
+      background: rgba(255,255,255,0.82);
+      cursor: not-allowed;
+    }
+    .mini-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.88);
+      color: var(--ink);
+      font-size: 0.86rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .card-empty-state {
+      display: none;
+      gap: 6px;
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(154, 106, 32, 0.32);
+      background: var(--warning-soft);
+      color: var(--ink);
+      box-shadow: 0 12px 28px rgba(154, 106, 32, 0.08);
+    }
+    .card-empty-state strong {
+      color: var(--ink);
+      font-size: 0.98rem;
+      letter-spacing: -0.01em;
+    }
+    .card-empty-state span {
+      color: var(--warning);
+      font-size: 0.88rem;
+      line-height: 1.55;
     }
     .upload-zone {
       border: 1.5px dashed rgba(35, 66, 94, 0.25);
@@ -803,15 +947,10 @@
     }
     .upload-actions {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       gap: 14px;
       flex-wrap: wrap;
-    }
-    .upload-caption {
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.5;
     }
 
     .status {
@@ -831,6 +970,11 @@
       font-size: 1.15rem;
       letter-spacing: -0.02em;
       margin-bottom: 6px;
+    }
+    .status-title-main {
+      font-size: 1.28rem;
+      font-weight: 700;
+      margin: 0 0 6px;
     }
     .status-subtitle {
       color: var(--muted);
@@ -853,6 +997,7 @@
       font-size: 1.3rem;
       letter-spacing: -0.03em;
       margin-bottom: 5px;
+      color: var(--ink);
     }
     .metric-card span {
       display: block;
@@ -860,10 +1005,22 @@
       font-size: 0.8rem;
       line-height: 1.48;
     }
-    .metric-card.success strong { color: var(--success); }
-    .metric-card.warning strong { color: var(--warning); }
-    .metric-card.neutral strong { color: #64707b; }
-    .metric-card.accent strong { color: var(--accent); }
+    .metric-card.success {
+      background: rgba(36, 102, 74, 0.14);
+      border-color: rgba(36, 102, 74, 0.3);
+    }
+    .metric-card.warning {
+      background: rgba(154, 106, 32, 0.13);
+      border-color: rgba(154, 106, 32, 0.28);
+    }
+    .metric-card.neutral {
+      background: rgba(53, 98, 146, 0.13);
+      border-color: rgba(53, 98, 146, 0.28);
+    }
+    .metric-card.accent {
+      background: rgba(99, 84, 167, 0.13);
+      border-color: rgba(99, 84, 167, 0.28);
+    }
 
     .transaction-list,
     .possible-list {
@@ -932,12 +1089,135 @@
       cursor: not-allowed;
       box-shadow: none;
     }
+    .tx-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 150px;
+    }
+    .btn-action {
+      border: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+    }
+    .btn-action:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    .btn-action:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .btn-action svg {
+      width: 16px;
+      height: 16px;
+    }
+    .btn-add-one {
+      background: var(--accent);
+      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
+    }
+    .btn-remove-one {
+      background: var(--danger);
+      box-shadow: 0 14px 28px rgba(161, 72, 66, 0.2);
+    }
+    .tx.resolved .tx-vendor,
+    .tx.resolved .tx-meta,
+    .tx.resolved .tx-amount {
+      opacity: 0.5;
+      transition: opacity 0.18s ease;
+    }
+    .tx-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tx-status-pill::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+    .tx-status-pill.added {
+      background: rgba(36, 102, 74, 0.12);
+      color: var(--success);
+    }
+    .tx-status-pill.added::before {
+      background: var(--success);
+    }
+    .tx-status-pill.removed {
+      background: rgba(161, 72, 66, 0.1);
+      color: var(--danger);
+    }
+    .tx-status-pill.removed::before {
+      background: var(--danger);
+    }
+    .tx-status-pill.skipped {
+      background: rgba(24, 33, 43, 0.07);
+      color: var(--muted);
+    }
+    .tx-status-pill.skipped::before {
+      background: #8aa0b2;
+    }
+    .tx-status-pill .spinner {
+      width: 10px;
+      height: 10px;
+      border-width: 2px;
+      border-top-color: currentColor;
+    }
+    .btn-undo {
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--ink);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.16s ease, transform 0.16s ease;
+    }
+    .btn-undo:hover:not(:disabled) {
+      border-color: rgba(35, 66, 94, 0.28);
+      transform: translateY(-1px);
+    }
+    .btn-undo:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .btn-undo .spinner {
+      width: 10px;
+      height: 10px;
+      border-width: 2px;
+      border-top-color: currentColor;
+    }
 
     .possible-tx {
       background: rgba(255,255,255,0.9);
       border: 1px solid rgba(154, 106, 32, 0.22);
       border-radius: 22px;
       padding: 18px;
+      transition: opacity 0.18s ease;
+    }
+    .possible-tx.resolved .possible-state,
+    .possible-tx.resolved .tx-vendor,
+    .possible-tx.resolved .tx-meta {
+      opacity: 0.5;
+      transition: opacity 0.18s ease;
     }
     .possible-state {
       display: inline-flex;
@@ -1002,7 +1282,6 @@
     }
 
     @media (max-width: 980px) {
-      body { padding: 16px; }
       .setup-grid,
       .hero-grid,
       .metrics-grid {
@@ -1017,15 +1296,23 @@
         flex-direction: column;
         align-items: flex-start;
       }
+      .upload-header-copy p {
+        white-space: normal;
+      }
       .top-bar-actions {
         justify-content: flex-start;
       }
     }
 
+    @media (max-width: 860px) {
+      body { padding: 16px; }
+    }
+
     @media (max-width: 700px) {
       .auth-card,
       .auth-shell,
-      .main-app {
+      .main-app,
+      .top-bar {
         padding-left: 18px;
         padding-right: 18px;
       }
@@ -1048,7 +1335,15 @@
       .upload-actions .btn,
       .results-actions .btn,
       .auth-btn,
-      .top-link {
+      .top-link,
+      .mini-link {
+        width: 100%;
+      }
+      .upload-card-row {
+        width: 100%;
+        flex-direction: column;
+      }
+      .upload-card-select {
         width: 100%;
       }
       .setup-actions .btn {
@@ -1069,7 +1364,18 @@
       <div class="frame" style="width: 100%; max-width: 1180px;">
         <nav class="auth-nav">
           <a class="brand" href="/">
-            <span class="brand-mark" aria-hidden="true"></span>
+            <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="brandMarkGradientAuth" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#3a6387"/>
+                  <stop offset="100%" stop-color="#89a6c0"/>
+                </linearGradient>
+              </defs>
+              <rect x="3" y="7" width="22" height="14" rx="3" fill="url(#brandMarkGradientAuth)"/>
+              <rect x="3" y="10.5" width="22" height="2.4" fill="#0c1623" opacity="0.32"/>
+              <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
+              <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
+            </svg>
             <span>Expense Agent</span>
           </a>
           <a class="auth-nav-link" href="/">Home</a>
@@ -1114,25 +1420,42 @@
     </div>
 
     <div id="mainApp" class="frame" style="display:none;">
-      <div class="main-app">
-        <div class="top-bar">
-          <div class="top-bar-left">
-            <a class="brand" href="/">
-              <span class="brand-mark" aria-hidden="true"></span>
-              <span>Expense Agent</span>
-            </a>
-            <span id="userEmail" class="helper"></span>
-          </div>
-          <div class="top-bar-actions">
-            <a class="top-link" href="/history">History</a>
-            <a class="top-link" href="/settings?return_to=%2Fapp">Settings</a>
-            <button class="top-link" style="border-color: rgba(161, 72, 66, 0.2); color: var(--danger);" onclick="doLogout()">Sign Out</button>
-          </div>
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <span class="brand" aria-label="Expense Agent">
+            <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="brandMarkGradientApp" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#3a6387"/>
+                  <stop offset="100%" stop-color="#89a6c0"/>
+                </linearGradient>
+              </defs>
+              <rect x="3" y="7" width="22" height="14" rx="3" fill="url(#brandMarkGradientApp)"/>
+              <rect x="3" y="10.5" width="22" height="2.4" fill="#0c1623" opacity="0.32"/>
+              <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
+              <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
+            </svg>
+            <span>Expense Agent</span>
+          </span>
         </div>
+        <div class="top-bar-actions">
+          <span class="top-link is-current" aria-current="page">Workspace</span>
+          <a class="top-link" href="/history">History</a>
+          <a class="top-link" href="/settings?return_to=%2Fapp">Profile</a>
+          <a class="top-link" href="/connect-key?return_to=%2Fapp">API Key</a>
+          <button class="top-link top-link-danger" type="button" onclick="doLogout()">Sign Out</button>
+        </div>
+      </div>
 
+      <div class="main-app">
         <section id="loadingView" class="workspace-section">
           <section class="panel loading-panel">
             <span class="spinner" aria-hidden="true"></span>
+            <div class="loading-success-mark" id="loadingSuccessMark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.5 9.2 16.7 19 7"></path>
+              </svg>
+            </div>
             <div class="loading-text">
               <div class="eyebrow" style="margin-bottom: 0;">One moment</div>
               <div class="loading-title" id="loadingTitle">Opening your workspace.</div>
@@ -1148,11 +1471,10 @@
                 <div class="eyebrow">New account</div>
                 <h1 id="welcomeHeadline">Welcome to Expense Agent.</h1>
                 <p class="welcome-copy">
-                  Your Google account is connected and your private workspace is ready. Next, add your Anthropic key so screenshot uploads can start working.
+                  Your Google account is connected and your private workspace is ready. Next, add your Anthropic key and save a card so screenshot uploads can start working.
                 </p>
                 <div class="welcome-actions">
                   <button class="btn btn-primary" id="welcomeContinueBtn" type="button" onclick="completeWelcome()">Continue Setup</button>
-                  <button class="btn btn-secondary" type="button" onclick="completeWelcome('/settings?return_to=%2Fapp')">Open Settings</button>
                 </div>
               </div>
               <div class="welcome-status">
@@ -1167,11 +1489,11 @@
                 <div class="welcome-points">
                   <div class="welcome-point">
                     <strong>Same Google account, same history</strong>
-                    <span>Future sign-ins return to your existing workspace and transaction log.</span>
+                    <span>Future sign-ins return to your existing workspace and transaction history.</span>
                   </div>
                   <div class="welcome-point">
                     <strong>This is your first-time setup</strong>
-                    <span>You only need to connect an Anthropic key once before uploads unlock.</span>
+                    <span>Connect an Anthropic key and save a card, a one-time setup before uploads unlock.</span>
                   </div>
                   <div class="welcome-point">
                     <strong>Your data stays account-specific</strong>
@@ -1184,34 +1506,80 @@
         </section>
 
         <section id="setupView" class="workspace-section">
-          <div class="setup-grid">
+          <div class="setup-grid" id="keySetupGrid">
             <div class="panel setup-main">
               <h1>Connect your Anthropic key to unlock uploads.</h1>
-              <p>Save it once to your account. The workspace turns on as soon as the key lands.</p>
+              <p>Save it once to your account and the workspace is activated.</p>
               <div class="setup-actions">
-                <a class="btn btn-primary" href="/settings?return_to=%2Fapp">Connect API Key</a>
+                <a class="btn btn-primary" href="/connect-key?return_to=%2Fapp">Connect API Key</a>
               </div>
             </div>
 
             <aside class="panel panel-soft setup-details">
               <div class="setup-detail">
-                <strong>Where to get a key</strong>
-                <p>Create one in the <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>. Sign in, open API keys, generate a key, then paste it on the next screen.</p>
+                <strong>Where to get your key</strong>
+                <p>Create one in the <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>. Sign in, open your organizaiton, generate an API key, and paste it on the next screen.</p>
               </div>
               <div class="setup-detail">
                 <strong>What each screenshot costs</strong>
-                <p>Anthropic bills your own account as the workspace runs — typically about a penny per screenshot.</p>
+                <p>Anthropic bills roughly $0.01 per screenshot from your account.</p>
               </div>
               <div class="setup-detail">
                 <strong>Where your key lives</strong>
-                <p>Saved only to your Expense Agent account, used only to read screenshots. Replace or remove it from Settings any time.</p>
+                <p>Encrypted in Supabase and used only to read and extract screenshots. Replace or remove any time.</p>
+              </div>
+            </aside>
+          </div>
+
+          <div class="setup-grid" id="cardSetupGrid" style="display:none;">
+            <div class="panel setup-main">
+              <h1>Save a card to file your screenshots under.</h1>
+              <p>Each upload batch is filed to one saved card. Pick the brand once, then uploads unlock immediately after.</p>
+              <div class="setup-actions">
+                <a class="btn btn-primary" href="/settings?return_to=%2Fapp">Add a Card</a>
+              </div>
+            </div>
+
+            <aside class="panel panel-soft setup-details">
+              <div class="setup-detail">
+                <strong>Why a saved card</strong>
+                <p>Each screenshot batch gets labeled with the right card so duplicate detection stays scoped correctly.</p>
+              </div>
+              <div class="setup-detail">
+                <strong>What to enter</strong>
+                <p>Just the brand: American Express, Visa, Mastercard, or Discover. Add one or two reference digits if you carry more than one of the same brand.</p>
+              </div>
+              <div class="setup-detail">
+                <strong>Change anytime</strong>
+                <p>Add, replace, or remove saved cards from Settings whenever your wallet changes.</p>
               </div>
             </aside>
           </div>
         </section>
 
         <div id="workspaceView" class="workspace-section">
-          <section class="panel upload-panel">
+          <section class="panel upload-panel" id="uploadPanel">
+            <div class="upload-header">
+              <div class="upload-header-copy">
+                <h2>Upload screenshots</h2>
+                <p id="uploadHeaderHint">Choose the saved card, then drop the batch.</p>
+              </div>
+              <div class="upload-card-picker">
+                <div class="picker-label">Saved card</div>
+                <div class="upload-card-row">
+                  <select class="upload-card-select" id="uploadCardSelect">
+                    <option value="">Select a card</option>
+                  </select>
+                  <a class="mini-link" href="/settings?return_to=%2Fapp">Manage cards</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-empty-state" id="cardEmptyState">
+              <strong>Add a saved card before you analyze.</strong>
+              <span>Save an American Express, Visa, Mastercard, or Discover card in Settings, then come back here.</span>
+            </div>
+
             <div class="upload-zone" id="dropZone">
               <input type="file" id="fileInput" accept="image/*" multiple />
               <div class="upload-mark" id="uploadMark">EA</div>
@@ -1229,8 +1597,8 @@
           <section class="panel status" id="resultsBox">
             <div class="status-header">
               <div>
-                <div class="status-title">Analysis summary</div>
-                <div class="status-subtitle">New items are ready to log. Possible duplicates stay separate until you decide.</div>
+                <h2 class="status-title status-title-main">Analysis summary</h2>
+                <div class="status-subtitle" id="resultsSubtitle">New items are ready to log. We leave the final call to you.</div>
               </div>
             </div>
 
@@ -1268,7 +1636,8 @@
 
           <div class="results-actions">
             <button class="btn btn-success" id="confirmBtn" style="display:none">Add to Log</button>
-            <button class="btn btn-secondary" id="resetBtn" style="display:none">Start Over</button>
+            <a class="btn btn-success" id="viewHistoryBtn" href="/history" style="display:none">View in History</a>
+            <button class="btn btn-primary" id="resetBtn" style="display:none">Start Over</button>
           </div>
         </div>
       </div>
@@ -1281,8 +1650,11 @@
   let sessionToken = sessionStorage.getItem("expense_token") || "";
   let sessionRefreshToken = sessionStorage.getItem("expense_refresh_token") || "";
   let hasApiKey = false;
+  let savedCards = [];
+  let selectedCardId = "";
   let profileFirstName = "";
   let isNewAccount = false;
+  let shouldFlashLoginSuccess = false;
   const authError = new URLSearchParams(window.location.search).get("auth_error");
   const loadingView = document.getElementById("loadingView");
   const welcomeView = document.getElementById("welcomeView");
@@ -1290,12 +1662,32 @@
   const workspaceView = document.getElementById("workspaceView");
   const mainApp = document.getElementById("mainApp");
   const authScreen = document.getElementById("authScreen");
-  const userEmailEl = document.getElementById("userEmail");
   const uploadMarkEl = document.getElementById("uploadMark");
+  const uploadPanel = document.getElementById("uploadPanel");
+  const uploadCardSelect = document.getElementById("uploadCardSelect");
+  const uploadHeaderHintEl = document.getElementById("uploadHeaderHint");
+  const cardEmptyStateEl = document.getElementById("cardEmptyState");
+  const loadingSpinnerEl = document.querySelector("#loadingView .spinner");
+  const loadingSuccessMarkEl = document.getElementById("loadingSuccessMark");
   const loadingTitleEl = document.getElementById("loadingTitle");
   const loadingCopyEl = document.getElementById("loadingCopy");
   const welcomeHeadlineEl = document.getElementById("welcomeHeadline");
   const welcomeContinueBtn = document.getElementById("welcomeContinueBtn");
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("fileInput");
+  const previewGrid = document.getElementById("previewGrid");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  const resultsBox = document.getElementById("resultsBox");
+  const confirmBtn = document.getElementById("confirmBtn");
+  const viewHistoryBtn = document.getElementById("viewHistoryBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const toast = document.getElementById("toast");
+
+  let files = [];
+  let newTransactions = [];
+  let possibleTransactions = [];
+  let txStatuses = [];
+  let possibleStatuses = [];
 
   (async function handleAuthRedirect() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -1304,6 +1696,7 @@
     if (accessToken) {
       sessionToken = accessToken;
       sessionRefreshToken = refreshToken || "";
+      shouldFlashLoginSuccess = true;
       sessionStorage.setItem("expense_token", sessionToken);
       sessionStorage.setItem("expense_refresh_token", sessionRefreshToken);
       window.history.replaceState(null, "", "/app");
@@ -1346,6 +1739,8 @@
     sessionToken = "";
     sessionRefreshToken = "";
     hasApiKey = false;
+    savedCards = [];
+    selectedCardId = "";
     profileFirstName = "";
     isNewAccount = false;
     sessionStorage.removeItem("expense_token");
@@ -1375,13 +1770,115 @@
     return key ? localStorage.getItem(key) === "1" : false;
   }
 
+  function getSavedCardKey() {
+    const userId = getUserIdFromToken(sessionToken);
+    return userId ? `expense_saved_card_${userId}` : "";
+  }
+
+  function persistSelectedCard(cardId) {
+    const key = getSavedCardKey();
+    if (!key) return;
+    if (cardId) {
+      localStorage.setItem(key, cardId);
+    } else {
+      localStorage.removeItem(key);
+    }
+  }
+
+  function getPersistedSelectedCard() {
+    const key = getSavedCardKey();
+    return key ? localStorage.getItem(key) || "" : "";
+  }
+
+  function findSavedCard(cardId) {
+    return savedCards.find(card => card.id === cardId) || null;
+  }
+
+  function updateUploadHint() {
+    const selectedCard = findSavedCard(selectedCardId);
+    if (!selectedCard) {
+      uploadHeaderHintEl.textContent = "Choose the saved card, then drop the batch.";
+      return;
+    }
+    uploadHeaderHintEl.textContent = `This batch will be filed under ${selectedCard.label}.`;
+  }
+
+  function updateAnalyzeAvailability() {
+    analyzeBtn.disabled = files.length === 0 || !hasApiKey || !selectedCardId;
+    updateUploadHint();
+  }
+
+  function syncSelectedCard() {
+    const persistedCardId = getPersistedSelectedCard();
+    if (selectedCardId && findSavedCard(selectedCardId)) {
+    } else if (persistedCardId && findSavedCard(persistedCardId)) {
+      selectedCardId = persistedCardId;
+    } else if (savedCards.length === 1) {
+      selectedCardId = savedCards[0].id;
+    } else {
+      selectedCardId = "";
+    }
+
+    if (selectedCardId) {
+      persistSelectedCard(selectedCardId);
+    } else {
+      persistSelectedCard("");
+    }
+
+    uploadCardSelect.value = selectedCardId;
+    updateAnalyzeAvailability();
+  }
+
+  function renderSavedCardOptions() {
+    uploadCardSelect.innerHTML = "";
+
+    if (savedCards.length > 1) {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select a card";
+      uploadCardSelect.appendChild(placeholder);
+    }
+
+    if (!savedCards.length) {
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "No saved cards";
+      uploadCardSelect.appendChild(emptyOption);
+      cardEmptyStateEl.style.display = "grid";
+      uploadCardSelect.disabled = true;
+      selectedCardId = "";
+      updateAnalyzeAvailability();
+      return;
+    }
+
+    savedCards.forEach(card => {
+      const option = document.createElement("option");
+      option.value = card.id;
+      option.textContent = card.label;
+      uploadCardSelect.appendChild(option);
+    });
+
+    cardEmptyStateEl.style.display = "none";
+    uploadCardSelect.disabled = false;
+    syncSelectedCard();
+  }
+
+  function syncSavedCards(cards) {
+    savedCards = Array.isArray(cards) ? cards : [];
+    renderSavedCardOptions();
+  }
+
+  function renderTopBarIdentity() {
+    const firstName = profileFirstName || getFirstNameFromToken(sessionToken);
+    uploadMarkEl.textContent = firstName ? firstName + "\u2019s Expenses" : "EA";
+  }
+
   function showAuthenticatedShell() {
     authScreen.style.display = "none";
     mainApp.style.display = "block";
-    const email = getEmailFromToken(sessionToken);
-    userEmailEl.textContent = email;
-    const firstName = profileFirstName || getFirstNameFromToken(sessionToken);
-    uploadMarkEl.textContent = firstName ? firstName + "\u2019s Expenses" : "EA";
+    renderTopBarIdentity();
+    loadingSpinnerEl.style.display = "inline-block";
+    loadingSuccessMarkEl.style.display = "none";
     loadingTitleEl.textContent = "Opening your workspace.";
     loadingCopyEl.textContent = "Checking your account and loading your saved setup.";
     loadingView.classList.add("visible");
@@ -1401,8 +1898,10 @@
       }
       const data = await res.json();
       hasApiKey = data.has_key;
+      syncSavedCards(data.cards || []);
       profileFirstName = (data.profile && data.profile.first_name) || getFirstNameFromToken(sessionToken);
       isNewAccount = Boolean(data.is_new_user) && !hasSeenWelcomeLocally();
+      await flashLoginSuccessIfNeeded();
       showMainApp();
     } catch (e) {
       loadingTitleEl.textContent = "Could not load the workspace.";
@@ -1410,13 +1909,21 @@
     }
   }
 
+  async function flashLoginSuccessIfNeeded() {
+    if (!shouldFlashLoginSuccess) return;
+    shouldFlashLoginSuccess = false;
+    loadingSpinnerEl.style.display = "none";
+    loadingSuccessMarkEl.style.display = "inline-flex";
+    loadingTitleEl.textContent = "Signed in.";
+    loadingCopyEl.textContent = "Your workspace is ready.";
+    await new Promise(resolve => setTimeout(resolve, 550));
+  }
+
   function showMainApp() {
     authScreen.style.display = "none";
     mainApp.style.display = "block";
-    const email = getEmailFromToken(sessionToken);
-    userEmailEl.textContent = email;
+    renderTopBarIdentity();
     const firstName = profileFirstName || getFirstNameFromToken(sessionToken);
-    uploadMarkEl.textContent = firstName ? firstName + "\u2019s Expenses" : "EA";
     loadingView.classList.remove("visible");
     if (isNewAccount) {
       const welcomeName = firstName ? `Welcome to Expense Agent, ${firstName}.` : "Welcome to Expense Agent.";
@@ -1427,8 +1934,16 @@
       return;
     }
     welcomeView.classList.remove("visible");
-    setupView.classList.toggle("visible", !hasApiKey);
-    workspaceView.classList.toggle("visible", hasApiKey);
+
+    const needsKey = !hasApiKey;
+    const needsCard = hasApiKey && !savedCards.length;
+    const setupStep = needsKey ? "key" : (needsCard ? "card" : null);
+
+    setupView.classList.toggle("visible", setupStep !== null);
+    workspaceView.classList.toggle("visible", setupStep === null);
+
+    document.getElementById("keySetupGrid").style.display = setupStep === "key" ? "grid" : "none";
+    document.getElementById("cardSetupGrid").style.display = setupStep === "card" ? "grid" : "none";
   }
 
   async function completeWelcome(targetUrl = "") {
@@ -1462,22 +1977,8 @@
     window.location.href = "/app";
   }
 
-  const dropZone = document.getElementById("dropZone");
-  const fileInput = document.getElementById("fileInput");
-  const previewGrid = document.getElementById("previewGrid");
-  const analyzeBtn = document.getElementById("analyzeBtn");
-  const resultsBox = document.getElementById("resultsBox");
-  const confirmBtn = document.getElementById("confirmBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const toast = document.getElementById("toast");
-
-  let files = [];
-  let newTransactions = [];
-  let possibleTransactions = [];
-  let submittedIndices = new Set();
-
   function updateConfirmBtn() {
-    const remaining = newTransactions.filter((_, i) => !submittedIndices.has(i));
+    const remaining = newTransactions.filter((_, i) => !txStatuses[i] || txStatuses[i].state === null);
     if (remaining.length === 0) {
       confirmBtn.style.display = "none";
     } else {
@@ -1488,6 +1989,11 @@
 
   dropZone.addEventListener("click", () => fileInput.click());
   fileInput.addEventListener("change", e => handleFiles(e.target.files));
+  uploadCardSelect.addEventListener("change", event => {
+    selectedCardId = event.target.value;
+    persistSelectedCard(selectedCardId);
+    updateAnalyzeAvailability();
+  });
   dropZone.addEventListener("dragover", e => {
     e.preventDefault();
     dropZone.classList.add("dragover");
@@ -1502,7 +2008,7 @@
   function handleFiles(incoming) {
     files = [...files, ...incoming];
     renderPreviews();
-    analyzeBtn.disabled = files.length === 0;
+    updateAnalyzeAvailability();
   }
 
   function renderPreviews() {
@@ -1518,7 +2024,7 @@
       del.onclick = () => {
         files.splice(i, 1);
         renderPreviews();
-        analyzeBtn.disabled = files.length === 0;
+        updateAnalyzeAvailability();
       };
       wrapper.appendChild(img);
       wrapper.appendChild(del);
@@ -1527,6 +2033,10 @@
   }
 
   function redirectToSettingsForKey() {
+    window.location.href = "/connect-key?return_to=%2Fapp";
+  }
+
+  function redirectToSettingsForCards() {
     window.location.href = "/settings?return_to=%2Fapp";
   }
 
@@ -1534,18 +2044,22 @@
     files = [];
     newTransactions = [];
     possibleTransactions = [];
-    submittedIndices = new Set();
+    txStatuses = [];
+    possibleStatuses = [];
     previewGrid.innerHTML = "";
     resultsBox.classList.remove("visible");
     document.getElementById("possibleBox").classList.remove("visible");
     document.getElementById("possibleList").innerHTML = "";
     confirmBtn.style.display = "none";
+    viewHistoryBtn.style.display = "none";
     resetBtn.style.display = "none";
     analyzeBtn.style.display = "inline-flex";
-    analyzeBtn.disabled = true;
     dropZone.style.display = "block";
     previewGrid.style.display = "grid";
+    uploadPanel.classList.remove("hidden");
+    workspaceView.classList.remove("results-first");
     fileInput.value = "";
+    updateAnalyzeAvailability();
   }
 
   analyzeBtn.addEventListener("click", async () => {
@@ -1554,9 +2068,20 @@
       setTimeout(redirectToSettingsForKey, 500);
       return;
     }
+    if (!savedCards.length) {
+      showToast("Add a saved card in Settings before analyzing screenshots.");
+      setTimeout(redirectToSettingsForCards, 500);
+      return;
+    }
+    if (!selectedCardId) {
+      showToast("Choose a saved card for this batch before analyzing.");
+      uploadCardSelect.focus();
+      return;
+    }
     analyzeBtn.innerHTML = `<span class="spinner"></span>Analyzing`;
     analyzeBtn.disabled = true;
     const formData = new FormData();
+    formData.append("selected_card_id", selectedCardId);
     files.forEach(f => formData.append("screenshots", f));
     try {
       const res = await fetch("/upload", {
@@ -1570,17 +2095,35 @@
         setTimeout(redirectToSettingsForKey, 500);
         return;
       }
+      if (data.error === "no_card_selected") {
+        showToast("Choose a saved card for this batch before analyzing.");
+        uploadCardSelect.focus();
+        return;
+      }
+      if (data.error === "invalid_card") {
+        showToast("That saved card is no longer available. Refreshing your settings.");
+        await checkApiKeyAndEnter();
+        setTimeout(redirectToSettingsForCards, 500);
+        return;
+      }
       if (data.error) {
         showToast("Error: " + data.error);
         return;
       }
       newTransactions = data.new;
       possibleTransactions = data.possible || [];
-      submittedIndices = new Set();
+      txStatuses = newTransactions.map(() => ({ state: null, id: null }));
+      possibleStatuses = possibleTransactions.map(() => ({ state: null, id: null }));
       document.getElementById("newCount").textContent = data.new.length;
       document.getElementById("possibleCount").textContent = possibleTransactions.length;
       document.getElementById("skipCount").textContent = data.skipped.length;
       document.getElementById("totalCount").textContent = data.total_extracted;
+      const subtitleEl = document.getElementById("resultsSubtitle");
+      if (subtitleEl) {
+        subtitleEl.textContent = possibleTransactions.length > 0
+          ? "New items are ready to log. We flag possible duplicates for a second look. We leave the final call to you."
+          : "New items are ready to log. We leave the final call to you.";
+      }
       renderTransactions(data.new, data.skipped);
       renderPossible(possibleTransactions);
       resultsBox.classList.add("visible");
@@ -1589,14 +2132,17 @@
       }
       updateConfirmBtn();
       resetBtn.style.display = "inline-flex";
+      viewHistoryBtn.style.display = "inline-flex";
       analyzeBtn.style.display = "none";
       dropZone.style.display = "none";
       previewGrid.style.display = "none";
+      uploadPanel.classList.add("hidden");
+      workspaceView.classList.add("results-first");
     } catch (err) {
       showToast("Network error - is the server running?");
     } finally {
       analyzeBtn.innerHTML = "Analyze Screenshots";
-      analyzeBtn.disabled = false;
+      updateAnalyzeAvailability();
     }
   });
 
@@ -1612,38 +2158,103 @@
         <div class="tx-vendor">${t.vendor}</div>
         <div class="tx-meta">Screenshot date ${t.date} · $${parseFloat(t.amount).toFixed(2)} · ${t.card}</div>
         <div class="tx-meta" style="margin-top:6px;">Similar entry already logged on ${t.possible_match?.date || "a nearby date"}.</div>
-        <div class="possible-actions">
-          <button class="btn-add" onclick="approvePossible(${i})">Add It</button>
-          <button class="btn-skip" onclick="skipPossible(${i})">Skip</button>
-        </div>`;
+        <div class="possible-actions" id="possible-actions-${i}"></div>`;
       list.appendChild(div);
     });
+    txs.forEach((_, i) => renderPossibleActions(i));
   }
 
-  function approvePossible(i) {
-    newTransactions.push(possibleTransactions[i]);
-    const el = document.getElementById(`possible-${i}`);
-    el.style.opacity = "0.45";
-    el.style.pointerEvents = "none";
-    el.querySelector(".possible-actions").innerHTML = `<span style="font-size:0.82rem; color:var(--success); font-weight:700;">Marked to add</span>`;
+  function renderPossibleActions(i) {
+    const slot = document.getElementById(`possible-actions-${i}`);
+    if (!slot) return;
+    const status = possibleStatuses[i] || { state: null, id: null };
+    const rowEl = document.getElementById(`possible-${i}`);
+
+    if (status.state === null) {
+      if (rowEl) rowEl.classList.remove("resolved");
+      slot.innerHTML = `
+        <button class="btn-add" onclick="approvePossible(${i})">Add It</button>
+        <button class="btn-skip" onclick="skipPossible(${i})">Skip</button>`;
+      return;
+    }
+
+    if (rowEl) rowEl.classList.add("resolved");
+    const label = status.state === "added" ? "Added" : "Skipped";
+    const pillClass = status.state === "added" ? "added" : "skipped";
+    slot.innerHTML = `
+      <span class="tx-status-pill ${pillClass}">${label}</span>
+      <button class="btn-undo" id="possible-undobtn-${i}" onclick="undoPossible(${i})" title="Undo">${ICON_UNDO}<span>Undo</span></button>`;
+  }
+
+  async function approvePossible(i) {
+    if (!possibleStatuses[i] || possibleStatuses[i].state !== null) return;
+    const slot = document.getElementById(`possible-actions-${i}`);
+    if (slot) {
+      slot.innerHTML = `<span class="tx-status-pill added" style="opacity:0.75;">Adding<span class="spinner"></span></span>`;
+    }
+    try {
+      const res = await fetch("/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionToken}`,
+        },
+        body: JSON.stringify({ transactions: [possibleTransactions[i]] }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showToast("Error: " + data.error);
+        renderPossibleActions(i);
+        return;
+      }
+      const insertedIds = data.ids || [];
+      possibleStatuses[i] = { state: "added", id: insertedIds[0] || null };
+      renderPossibleActions(i);
+      markHistoryAvailable();
+      showToast(`${possibleTransactions[i].vendor} added.`);
+    } catch (err) {
+      showToast("Network error");
+      renderPossibleActions(i);
+    }
   }
 
   function skipPossible(i) {
-    const el = document.getElementById(`possible-${i}`);
-    el.querySelector(".tx-vendor").style.opacity = "0.35";
-    el.querySelectorAll(".tx-meta").forEach(m => m.style.opacity = "0.35");
-    el.querySelector(".possible-actions").innerHTML = `
-      <span style="font-size:0.82rem; color:var(--muted); font-weight:700;">Skipped for now</span>
-      <button class="btn-add" style="background:var(--warning);" onclick="undoSkip(${i})">Undo</button>`;
+    if (!possibleStatuses[i] || possibleStatuses[i].state !== null) return;
+    possibleStatuses[i] = { state: "skipped", id: null };
+    renderPossibleActions(i);
   }
 
-  function undoSkip(i) {
-    const el = document.getElementById(`possible-${i}`);
-    el.querySelector(".tx-vendor").style.opacity = "1";
-    el.querySelectorAll(".tx-meta").forEach(m => m.style.opacity = "1");
-    el.querySelector(".possible-actions").innerHTML = `
-      <button class="btn-add" onclick="approvePossible(${i})">Add It</button>
-      <button class="btn-skip" onclick="skipPossible(${i})">Skip</button>`;
+  async function undoPossible(i) {
+    const status = possibleStatuses[i];
+    if (!status || status.state === null) return;
+
+    const undoBtn = document.getElementById(`possible-undobtn-${i}`);
+    if (undoBtn) {
+      undoBtn.disabled = true;
+      undoBtn.innerHTML = `<span class="spinner"></span><span>Undoing</span>`;
+    }
+
+    if (status.state === "added" && status.id) {
+      try {
+        const res = await fetch(`/api/transactions/${status.id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${sessionToken}` },
+        });
+        const data = await res.json();
+        if (data.error) {
+          showToast("Couldn't undo: " + data.error);
+          renderPossibleActions(i);
+          return;
+        }
+      } catch (err) {
+        showToast("Network error");
+        renderPossibleActions(i);
+        return;
+      }
+    }
+
+    possibleStatuses[i] = { state: null, id: null };
+    renderPossibleActions(i);
   }
 
   function renderTransactions(newTx, skipped) {
@@ -1655,6 +2266,7 @@
       heading.textContent = "Ready to add";
       list.appendChild(heading);
       newTx.forEach((t, i) => list.appendChild(makeTxEl(t, false, i)));
+      newTx.forEach((_, i) => renderTxActions(i));
     }
     if (skipped.length > 0) {
       const heading = document.createElement("div");
@@ -1671,8 +2283,8 @@
     div.className = "tx" + (muted ? " muted" : "");
     if (idx !== null) div.id = `tx-${idx}`;
     const isPending = t.status === "pending";
-    const sendBtn = idx !== null
-      ? `<button class="btn-send-one" id="sendbtn-${idx}" onclick="sendOne(${idx})" title="Add just this transaction">Add</button>`
+    const actionsSlot = idx !== null
+      ? `<div class="tx-actions" id="tx-actions-${idx}"></div>`
       : "";
     div.innerHTML = `
       <div>
@@ -1680,14 +2292,42 @@
         <div class="tx-meta">${isPending ? '<span class="pending-dot"></span>Pending · ' : ""}${t.card} · ${t.date}</div>
       </div>
       <div class="tx-amount">$${parseFloat(t.amount).toFixed(2)}</div>
-      ${sendBtn}`;
+      ${actionsSlot}`;
     return div;
   }
 
+  const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 L9.2 16.7 L19 7"/></svg>';
+  const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>';
+  const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 L4 9 L9 4"/><path d="M4 9 h10 a6 6 0 0 1 0 12 h-3"/></svg>';
+
+  function renderTxActions(i) {
+    const slot = document.getElementById(`tx-actions-${i}`);
+    if (!slot) return;
+    const status = txStatuses[i] || { state: null, id: null };
+    const rowEl = document.getElementById(`tx-${i}`);
+
+    if (status.state === null) {
+      if (rowEl) rowEl.classList.remove("resolved");
+      slot.innerHTML = `
+        <button class="btn-action btn-remove-one" id="removebtn-${i}" onclick="removeOne(${i})" title="Dismiss this transaction" aria-label="Dismiss">${ICON_X}</button>
+        <button class="btn-action btn-add-one" id="sendbtn-${i}" onclick="sendOne(${i})" title="Add this transaction" aria-label="Add">${ICON_CHECK}</button>`;
+      return;
+    }
+
+    if (rowEl) rowEl.classList.add("resolved");
+    const label = status.state === "added" ? "Added" : "Dismissed";
+    const pillClass = status.state === "added" ? "added" : "removed";
+    slot.innerHTML = `
+      <span class="tx-status-pill ${pillClass}">${label}</span>
+      <button class="btn-undo" id="undobtn-${i}" onclick="undoOne(${i})" title="Undo">${ICON_UNDO}<span>Undo</span></button>`;
+  }
+
   async function sendOne(i) {
-    const btn = document.getElementById(`sendbtn-${i}`);
-    btn.disabled = true;
-    btn.textContent = "...";
+    if (!txStatuses[i] || txStatuses[i].state !== null) return;
+    const slot = document.getElementById(`tx-actions-${i}`);
+    if (slot) {
+      slot.innerHTML = `<span class="tx-status-pill added" style="opacity:0.75;">Adding<span class="spinner"></span></span>`;
+    }
     try {
       const res = await fetch("/confirm", {
         method: "POST",
@@ -1700,25 +2340,68 @@
       const data = await res.json();
       if (data.error) {
         showToast("Error: " + data.error);
-        btn.disabled = false;
-        btn.textContent = "Add";
+        renderTxActions(i);
         return;
       }
-      submittedIndices.add(i);
-      document.getElementById(`tx-${i}`).style.opacity = "0.42";
-      btn.textContent = "Saved";
-      showToast(`${newTransactions[i].vendor} added.`);
+      const insertedIds = data.ids || [];
+      txStatuses[i] = { state: "added", id: insertedIds[0] || null };
+      renderTxActions(i);
       updateConfirmBtn();
+      markHistoryAvailable();
+      showToast(`${newTransactions[i].vendor} added.`);
     } catch (err) {
       showToast("Network error");
-      btn.disabled = false;
-      btn.textContent = "Add";
+      renderTxActions(i);
     }
   }
 
+  function removeOne(i) {
+    if (!txStatuses[i] || txStatuses[i].state !== null) return;
+    txStatuses[i] = { state: "removed", id: null };
+    renderTxActions(i);
+    updateConfirmBtn();
+  }
+
+  async function undoOne(i) {
+    const status = txStatuses[i];
+    if (!status || status.state === null) return;
+
+    const undoBtn = document.getElementById(`undobtn-${i}`);
+    if (undoBtn) {
+      undoBtn.disabled = true;
+      undoBtn.innerHTML = `<span class="spinner"></span><span>Undoing</span>`;
+    }
+
+    if (status.state === "added" && status.id) {
+      try {
+        const res = await fetch(`/api/transactions/${status.id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${sessionToken}` },
+        });
+        const data = await res.json();
+        if (data.error) {
+          showToast("Couldn't undo: " + data.error);
+          renderTxActions(i);
+          return;
+        }
+      } catch (err) {
+        showToast("Network error");
+        renderTxActions(i);
+        return;
+      }
+    }
+
+    txStatuses[i] = { state: null, id: null };
+    renderTxActions(i);
+    updateConfirmBtn();
+  }
+
   confirmBtn.addEventListener("click", async () => {
-    const remaining = newTransactions.filter((_, i) => !submittedIndices.has(i));
-    if (remaining.length === 0) return;
+    const pendingIdx = newTransactions
+      .map((_, i) => i)
+      .filter(i => !txStatuses[i] || txStatuses[i].state === null);
+    if (pendingIdx.length === 0) return;
+    const payload = pendingIdx.map(i => newTransactions[i]);
     confirmBtn.innerHTML = `<span class="spinner"></span>Saving`;
     confirmBtn.disabled = true;
     try {
@@ -1728,27 +2411,22 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${sessionToken}`,
         },
-        body: JSON.stringify({ transactions: remaining }),
+        body: JSON.stringify({ transactions: payload }),
       });
       const data = await res.json();
       if (data.error) {
         showToast("Error: " + data.error);
         return;
       }
-      newTransactions.forEach((_, i) => {
-        if (!submittedIndices.has(i)) {
-          submittedIndices.add(i);
-          const el = document.getElementById(`tx-${i}`);
-          if (el) el.style.opacity = "0.42";
-          const btn = document.getElementById(`sendbtn-${i}`);
-          if (btn) {
-            btn.textContent = "Saved";
-            btn.disabled = true;
-          }
-        }
+      const insertedIds = data.ids || [];
+      pendingIdx.forEach((i, j) => {
+        txStatuses[i] = { state: "added", id: insertedIds[j] || null };
+        renderTxActions(i);
       });
-      showToast(`${data.added} transactions logged.`);
-      confirmBtn.style.display = "none";
+      const addedCount = typeof data.added === "number" ? data.added : payload.length;
+      markHistoryAvailable();
+      showToast(`${addedCount} transaction${addedCount === 1 ? "" : "s"} logged.`);
+      updateConfirmBtn();
     } catch (err) {
       showToast("Network error");
     } finally {
@@ -1763,6 +2441,10 @@
     toast.textContent = msg;
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 3000);
+  }
+
+  function markHistoryAvailable() {
+    if (viewHistoryBtn) viewHistoryBtn.style.display = "inline-flex";
   }
 
   if (authError) {

@@ -8,22 +8,22 @@
     :root {
       --bg: #f4f1eb;
       --paper: rgba(255, 255, 255, 0.82);
-      --surface: #ffffff;
-      --surface-alt: #f8f6f2;
       --ink: #18212b;
       --muted: #5d6872;
       --line: rgba(24, 33, 43, 0.1);
       --line-strong: rgba(24, 33, 43, 0.16);
       --accent: #23425e;
-      --accent-soft: #e6eef5;
       --success: #24664a;
       --success-soft: #e4f3ea;
       --warning: #9a6a20;
       --warning-soft: #fbf2df;
       --danger: #a14842;
       --shadow: 0 24px 60px rgba(24, 33, 43, 0.08);
-      --sans: "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", sans-serif;
-      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --sans: "Segoe UI", "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    html {
+      scrollbar-gutter: stable;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,11 +69,11 @@
       letter-spacing: 0.02em;
     }
     .brand-mark {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      background: linear-gradient(135deg, #2f587d, #89a6c0);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(0 2px 5px rgba(35, 66, 94, 0.22));
     }
     .nav-actions {
       display: flex;
@@ -82,18 +82,21 @@
     }
     .nav-link,
     .nav-danger,
+    .nav-pill,
     .btn,
-    .secondary-link {
+    .inline-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       border-radius: 999px;
       font-size: 0.9rem;
       font-weight: 700;
-      transition: transform 0.16s ease, border-color 0.16s ease;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
     }
     .nav-link,
-    .nav-danger {
+    .nav-danger,
+    .nav-pill,
+    .inline-link {
       padding: 12px 18px;
       border: 1px solid var(--line-strong);
       background: rgba(255,255,255,0.8);
@@ -102,169 +105,179 @@
     .nav-link:hover,
     .nav-danger:hover,
     .btn:hover,
-    .secondary-link:hover {
+    .inline-link:hover {
       transform: translateY(-1px);
     }
     .nav-danger {
       border-color: rgba(161, 72, 66, 0.18);
       color: var(--danger);
     }
-
-    .settings-shell {
-      padding: 34px 28px 30px;
-      display: grid;
-      gap: 18px;
+    .nav-pill {
+      color: var(--ink);
+      cursor: default;
     }
-    .intro {
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
-      gap: 18px;
+
+    .shell {
+      padding: 24px;
+      display: flex;
+      justify-content: center;
     }
     .panel {
-      background: rgba(255,255,255,0.78);
+      width: min(940px, 100%);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.86)),
+        linear-gradient(135deg, rgba(230,238,245,0.26), rgba(255,255,255,0));
       border: 1px solid var(--line);
-      border-radius: 28px;
+      border-radius: 30px;
       padding: 28px;
     }
-    .panel-soft {
-      background: rgba(248, 246, 242, 0.82);
-    }
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.8);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--muted);
-      margin-bottom: 18px;
-    }
-    .eyebrow::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #5a7a96;
-    }
-    .intro h1 {
-      font-family: var(--serif);
-      font-size: clamp(2.4rem, 4vw, 3.4rem);
-      font-weight: 600;
-      letter-spacing: -0.05em;
-      line-height: 0.96;
-      max-width: 12ch;
-      margin-bottom: 16px;
-    }
-    .intro p,
-    .card-copy,
-    .meta-copy,
-    .detail-item span,
-    .status-note {
-      color: var(--muted);
-      line-height: 1.68;
-    }
-    .summary-stack {
-      display: grid;
-      gap: 12px;
-      align-content: start;
-    }
-    .summary-row {
-      background: rgba(255,255,255,0.8);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 15px 16px;
-    }
-    .summary-row strong {
-      display: block;
-      font-size: 0.92rem;
-      margin-bottom: 4px;
-    }
-    .summary-row span {
-      color: var(--muted);
-      font-size: 0.84rem;
-      line-height: 1.55;
-    }
 
-    .connect-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.02fr) minmax(300px, 0.98fr);
-      gap: 18px;
-      align-items: start;
+    @media (min-width: 861px) and (min-height: 760px) {
+      .panel {
+        min-height: clamp(480px, calc(100vh - 220px), 560px);
+      }
     }
-    .primary-card {
-      background: rgba(255,255,255,0.88);
-    }
-    .card-title {
-      font-size: 1.15rem;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-    .card-copy {
-      margin-bottom: 20px;
-    }
-    .key-badge {
+    .key-status {
       display: none;
       align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 0.8rem;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 13px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      margin-bottom: 16px;
+      background: rgba(255,255,255,0.82);
+    }
+    .key-status-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .key-status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      background: #9a6a20;
+      box-shadow: 0 0 0 4px rgba(154, 106, 32, 0.14);
+    }
+    .key-status-title {
+      font-size: 0.95rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 2px;
+    }
+    .key-status-copy {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+    #statusReturnLink {
+      display: none;
+    }
+    .key-status.set {
+      background: linear-gradient(180deg, rgba(228,243,234,0.92), rgba(255,255,255,0.92));
+      border-color: rgba(36, 102, 74, 0.26);
+    }
+    .key-status.set #statusReturnLink {
+      display: inline-flex;
+    }
+    .key-status.set .key-status-dot {
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(36, 102, 74, 0.14);
+    }
+    .key-status.replacing {
+      background: linear-gradient(180deg, rgba(243, 228, 226, 0.92), rgba(255, 255, 255, 0.92));
+      border-color: rgba(161, 72, 66, 0.28);
+    }
+    .key-status.replacing .key-status-dot {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(161, 72, 66, 0.14);
+    }
+    .key-status.replacing .key-status-title {
+      color: var(--danger);
+    }
+    .key-status.replacing .key-status-copy {
+      color: rgba(161, 72, 66, 0.88);
+    }
+    .key-status.replacing #statusReturnLink {
+      display: none;
+    }
+    .key-status.unset {
+      background: linear-gradient(180deg, rgba(251,242,223,0.92), rgba(255,255,255,0.92));
+      border-color: rgba(154, 106, 32, 0.24);
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 760;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
       margin-bottom: 16px;
     }
-    .key-badge.set {
-      background: var(--success-soft);
-      color: var(--success);
+    .lead {
+      color: var(--muted);
+      line-height: 1.72;
+      font-size: 0.98rem;
+      margin-bottom: 20px;
     }
-    .key-badge.unset {
-      background: var(--warning-soft);
-      color: var(--warning);
+    .field-shell {
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 26px;
+      border: 1px solid rgba(35, 66, 94, 0.12);
+      background:
+        linear-gradient(180deg, rgba(230,238,245,0.58), rgba(255,255,255,0.92)),
+        #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.62);
+    }
+    .field-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
     }
     .field-label {
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
       color: #7a8390;
       font-weight: 700;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    .field-wrap {
+    .field-copy {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .field-copy a {
+      color: var(--accent);
+      text-decoration: underline;
+      font-weight: 700;
+    }
+    .input-row,
+    .action-row {
       display: flex;
       gap: 12px;
       align-items: stretch;
+      flex-wrap: wrap;
     }
     .api-input {
       flex: 1;
       min-width: 0;
-      padding: 14px 15px;
-      border-radius: 18px;
+      min-height: 60px;
+      padding: 0 18px;
+      border-radius: 20px;
       border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,0.96);
+      background: rgba(255,255,255,0.98);
       outline: none;
       font-family: "Consolas", "SFMono-Regular", monospace;
+      font-size: 0.98rem;
     }
     .api-input:focus {
       border-color: rgba(35, 66, 94, 0.42);
       box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
-    }
-    .text-input {
-      width: 100%;
-      padding: 14px 15px;
-      border-radius: 18px;
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,0.96);
-      outline: none;
-      margin-bottom: 12px;
-    }
-    .text-input:focus {
-      border-color: rgba(35, 66, 94, 0.42);
-      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
-    }
-    .profile-actions {
-      margin-top: 6px;
     }
     .btn {
       padding: 12px 18px;
@@ -275,62 +288,35 @@
       color: #ffffff;
       box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
     }
-    .btn-primary:disabled {
+    .btn-ghost {
+      background: rgba(255,255,255,0.84);
+      color: var(--ink);
+      border-color: var(--line-strong);
+      box-shadow: none;
+    }
+    .btn-large {
+      min-height: 56px;
+      min-width: 190px;
+      padding: 15px 24px;
+    }
+    .btn-primary:disabled,
+    .btn-ghost:disabled {
       opacity: 0.45;
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
     }
-    .secondary-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-    .secondary-link {
-      padding: 11px 16px;
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,0.8);
-      color: var(--ink);
-    }
-    .secondary-link.primary-return {
-      background: var(--success-soft);
-      border-color: rgba(36, 102, 74, 0.18);
-      color: var(--success);
+    .return-link {
+      display: none;
     }
     .status-msg {
       display: none;
-      margin-top: 14px;
       font-size: 0.86rem;
       font-weight: 700;
       line-height: 1.5;
     }
     .status-msg.success { color: var(--success); }
     .status-msg.error { color: var(--danger); }
-    .status-note {
-      margin-top: 12px;
-      font-size: 0.82rem;
-    }
-    .detail-list {
-      display: grid;
-      gap: 12px;
-    }
-    .detail-item {
-      background: rgba(255,255,255,0.8);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 15px 16px;
-    }
-    .detail-item strong {
-      display: block;
-      font-size: 0.92rem;
-      margin-bottom: 4px;
-    }
-    .meta-copy {
-      font-size: 0.84rem;
-      margin-top: 14px;
-    }
-
     .spinner {
       display: inline-block;
       width: 14px;
@@ -342,12 +328,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media (max-width: 920px) {
-      body { padding: 16px; }
-      .intro,
-      .connect-grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 980px) {
       .nav {
         flex-direction: column;
         align-items: stretch;
@@ -361,16 +342,39 @@
       }
     }
 
+    @media (max-width: 860px) {
+      body { padding: 16px; }
+    }
+
     @media (max-width: 640px) {
-      .settings-shell {
-        padding: 22px 18px 20px;
+      .shell {
+        padding: 18px 14px 16px;
       }
-      .field-wrap,
-      .secondary-actions {
+      .panel {
+        padding: 22px;
+        border-radius: 24px;
+      }
+      h1 {
+        max-width: none;
+      }
+      .lead {
+        white-space: normal;
+      }
+      .field-shell {
+        padding: 18px;
+      }
+      .field-copy {
+        white-space: normal;
+      }
+      .input-row,
+      .action-row {
         flex-direction: column;
       }
+      .key-status {
+        align-items: stretch;
+      }
       .btn,
-      .secondary-link {
+      .inline-link {
         width: 100%;
       }
     }
@@ -381,114 +385,71 @@
     <div class="frame">
       <nav class="nav">
         <a class="brand" href="/app">
-          <span class="brand-mark" aria-hidden="true"></span>
+          <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="brandMarkGradient" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3a6387"/>
+                <stop offset="100%" stop-color="#89a6c0"/>
+              </linearGradient>
+            </defs>
+            <rect x="3" y="7" width="22" height="14" rx="3" fill="url(#brandMarkGradient)"/>
+            <rect x="3" y="10.5" width="22" height="2.4" fill="#0c1623" opacity="0.32"/>
+            <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
+            <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
+          </svg>
           <span>Expense Agent</span>
         </a>
         <div class="nav-actions">
-          <a class="nav-link" id="backLink" href="/app">Back to App</a>
-          <button class="nav-danger" onclick="doLogout()">Sign Out</button>
+          <a class="nav-link" id="workspaceLink" href="/app">Workspace</a>
+          <a class="nav-link" id="historyLink" href="/history">History</a>
+          <a class="nav-link" id="profileLink" href="/settings?return_to=%2Fapp">Profile</a>
+          <span class="nav-pill" aria-current="page">API Key</span>
+          <button class="nav-danger" type="button" onclick="doLogout()">Sign Out</button>
         </div>
       </nav>
 
-      <div class="settings-shell">
-        <section class="intro">
-          <div class="panel">
-            <div class="eyebrow">Connect Anthropic</div>
-            <h1>Unlock screenshot uploads with one account key.</h1>
-            <p>
-              Expense Agent uses your Anthropic API key only when you ask it to read screenshots.
-              Until a key is connected, upload actions stay blocked, but the rest of the app remains available.
-            </p>
-          </div>
-
-          <aside class="panel panel-soft">
-            <div class="summary-stack">
-              <div class="summary-row">
-                <strong>Needed for</strong>
-                <span>Screenshot extraction and transaction parsing</span>
-              </div>
-              <div class="summary-row">
-                <strong>Saved to</strong>
-                <span>Your own account settings so you do not need to paste it every session</span>
-              </div>
-              <div class="summary-row">
-                <strong>After setup</strong>
-                <span>You return to the workspace and the upload surface becomes active</span>
+      <div class="shell">
+        <section class="panel">
+          <div id="keyStatus" class="key-status unset">
+            <div class="key-status-main">
+              <span class="key-status-dot" aria-hidden="true"></span>
+              <div>
+                <div class="key-status-title" id="keyStatusTitle">No API key saved</div>
+                <div class="key-status-copy" id="keyStatusCopy">Add your Anthropic key to unlock screenshot uploads.</div>
               </div>
             </div>
-          </aside>
-        </section>
+            <a class="inline-link" id="statusReturnLink" href="/app">Return to Workspace</a>
+          </div>
 
-        <section class="connect-grid">
-          <div class="panel primary-card">
-            <div id="keyBadge" class="key-badge unset">No key saved yet</div>
-            <div class="card-title">Anthropic API key</div>
-            <p class="card-copy">
-              Generate a key in the
-              <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:underline;">Anthropic console</a>,
-              paste it here, and save it to your Expense Agent account.
-            </p>
+          <h1>Connect your Anthropic API key.</h1>
+          <p class="lead">
+            Save it once to your account and uploads are ready immediately.
+          </p>
 
-            <div class="field-label">API key</div>
-            <div class="field-wrap">
+          <div class="field-shell">
+            <div class="field-head">
+              <div>
+                <div class="field-label">Anthropic API key</div>
+                <p class="field-copy">
+                  Create one in the
+                  <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic console</a>,
+                  paste it here, and save it to your account.
+                </p>
+              </div>
+              <a class="inline-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open Console</a>
+            </div>
+
+            <div class="input-row">
               <input class="api-input" type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off" />
-              <button class="btn btn-primary" id="saveBtn" onclick="saveKey()">Save Key</button>
+              <button class="btn btn-ghost" id="toggleKeyBtn" type="button" onclick="toggleKeyVisibility()">Show</button>
+            </div>
+
+            <div class="action-row">
+              <button class="btn btn-primary btn-large" id="saveBtn" type="button" onclick="onPrimaryKeyAction()">Save Key</button>
+              <a class="nav-link return-link" id="returnLink" href="/app">Return to Workspace</a>
             </div>
 
             <div class="status-msg" id="statusMsg"></div>
-            <div class="status-note">You can replace this key at any time.</div>
-
-            <div class="secondary-actions">
-              <a class="secondary-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open Anthropic Console</a>
-              <a class="secondary-link primary-return" id="returnLink" href="/app" style="display:none;">Return to Workspace</a>
-            </div>
-          </div>
-
-          <div class="detail-list">
-            <section class="panel">
-              <div class="card-title">Profile name</div>
-              <p class="card-copy">Used for labels like "Aviral's Expenses" throughout the workspace.</p>
-
-              <div class="field-label">First name</div>
-              <input class="text-input" type="text" id="firstNameInput" placeholder="Aviral" autocomplete="given-name" />
-
-              <div class="field-label">Last name</div>
-              <input class="text-input" type="text" id="lastNameInput" placeholder="Agarwal" autocomplete="family-name" />
-
-              <div class="profile-actions">
-                <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">Save Name</button>
-              </div>
-
-              <div class="status-msg" id="profileStatusMsg"></div>
-              <div class="meta-copy">Google can seed this automatically, but you can override it here.</div>
-            </section>
-
-            <section class="panel">
-              <div class="card-title">What this unlocks</div>
-              <div class="detail-item">
-                <strong>Upload and analyze screenshots</strong>
-                <span>The main workspace will accept files and call Anthropic to extract transactions.</span>
-              </div>
-              <div class="detail-item">
-                <strong>Duplicate-aware review</strong>
-                <span>New, skipped, and possible-duplicate transactions stay separated before you confirm anything.</span>
-              </div>
-            </section>
-
-            <section class="panel panel-soft">
-              <div class="card-title">How your key is handled</div>
-              <div class="detail-item">
-                <strong>Stored for your account</strong>
-                <span>The server saves it to your user settings so the workspace can use it later.</span>
-              </div>
-              <div class="detail-item">
-                <strong>Used only for extraction</strong>
-                <span>Expense Agent uses the key to call Anthropic for screenshot parsing and nothing else.</span>
-              </div>
-              <div class="meta-copy">
-                If you rotate credentials, just save a new key here and the old one is replaced.
-              </div>
-            </section>
           </div>
         </section>
       </div>
@@ -503,10 +464,22 @@
 
   const params = new URLSearchParams(window.location.search);
   const returnTo = params.get("return_to") || "/app";
-  const backLink = document.getElementById("backLink");
   const returnLink = document.getElementById("returnLink");
-  backLink.href = returnTo;
+  const statusReturnLink = document.getElementById("statusReturnLink");
+  const profileLink = document.getElementById("profileLink");
+  const keyStatus = document.getElementById("keyStatus");
+  const keyStatusTitle = document.getElementById("keyStatusTitle");
+  const keyStatusCopy = document.getElementById("keyStatusCopy");
+  const apiKeyInput = document.getElementById("apiKeyInput");
+  const saveBtn = document.getElementById("saveBtn");
+  const toggleKeyBtn = document.getElementById("toggleKeyBtn");
+
+  let replaceMode = false;
+  let serverHasKey = false;
+
   returnLink.href = returnTo;
+  statusReturnLink.href = returnTo;
+  profileLink.href = `/settings?return_to=${encodeURIComponent(returnTo)}`;
 
   function doLogout() {
     sessionStorage.removeItem("expense_token");
@@ -518,6 +491,60 @@
     returnLink.style.display = "inline-flex";
   }
 
+  function refreshSaveButton() {
+    if (!serverHasKey) {
+      saveBtn.textContent = "Save Key";
+      return;
+    }
+    saveBtn.textContent = replaceMode ? "Save Key" : "Replace";
+  }
+
+  function syncKeyBanner() {
+    if (!serverHasKey) return;
+    if (replaceMode) {
+      keyStatus.className = "key-status replacing";
+      keyStatusTitle.textContent = "Replacing your API key";
+      keyStatusCopy.textContent = "Paste your new key below. The current key stays active until you save.";
+      apiKeyInput.placeholder = "sk-ant-...";
+      return;
+    }
+    keyStatus.className = "key-status set";
+    keyStatusTitle.textContent = "API key connected";
+    keyStatusCopy.textContent = "Your key is saved and screenshot uploads are unlocked.";
+    apiKeyInput.placeholder = "Paste a new key to replace your current one";
+    showReturnLink();
+  }
+
+  function updateKeyUi(hasKey) {
+    serverHasKey = hasKey;
+    keyStatus.style.display = "flex";
+    if (hasKey) {
+      syncKeyBanner();
+      refreshSaveButton();
+      return;
+    }
+
+    replaceMode = false;
+    keyStatus.className = "key-status unset";
+    keyStatusTitle.textContent = "No API key saved";
+    keyStatusCopy.textContent = "Add your Anthropic key to unlock screenshot uploads.";
+    apiKeyInput.placeholder = "sk-ant-...";
+    refreshSaveButton();
+    requestAnimationFrame(() => apiKeyInput.focus());
+  }
+
+  function onPrimaryKeyAction() {
+    if (serverHasKey && !replaceMode) {
+      replaceMode = true;
+      syncKeyBanner();
+      refreshSaveButton();
+      showStatus("Please add your API Key.", false);
+      apiKeyInput.focus();
+      return;
+    }
+    saveKey();
+  }
+
   async function loadKeyStatus() {
     try {
       const res = await fetch("/api/settings", { headers: { "Authorization": `Bearer ${token}` } });
@@ -526,39 +553,31 @@
         return;
       }
       const data = await res.json();
-      const badge = document.getElementById("keyBadge");
-      badge.style.display = "inline-flex";
-      if (data.has_key) {
-        badge.className = "key-badge set";
-        badge.textContent = "Key already connected";
-        document.getElementById("apiKeyInput").placeholder = "Enter a new key to replace the current one";
-        showReturnLink();
-      } else {
-        badge.className = "key-badge unset";
-        badge.textContent = "No key saved yet";
-      }
-
-      document.getElementById("firstNameInput").value = data.profile?.first_name || "";
-      document.getElementById("lastNameInput").value = data.profile?.last_name || "";
+      updateKeyUi(Boolean(data.has_key));
     } catch (e) {
     }
   }
 
   loadKeyStatus();
 
+  function toggleKeyVisibility() {
+    const showing = apiKeyInput.type === "text";
+    apiKeyInput.type = showing ? "password" : "text";
+    toggleKeyBtn.textContent = showing ? "Show" : "Hide";
+  }
+
   async function saveKey() {
-    const key = document.getElementById("apiKeyInput").value.trim();
+    const key = apiKeyInput.value.trim();
     if (!key) {
-      showStatus("Please enter your API key.", false);
+      showStatus("Please add your API Key.", false);
       return;
     }
     if (!key.startsWith("sk-ant-")) {
       showStatus("That does not look like an Anthropic key. It should start with sk-ant-", false);
       return;
     }
-    const btn = document.getElementById("saveBtn");
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span>Saving`;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `<span class="spinner"></span>Saving`;
     try {
       const res = await fetch("/api/settings", {
         method: "POST",
@@ -570,15 +589,17 @@
         showStatus(data.error, false);
         return;
       }
-      document.getElementById("apiKeyInput").value = "";
-      showStatus("Key saved. Your workspace is ready.", true);
-      showReturnLink();
-      loadKeyStatus();
+      apiKeyInput.value = "";
+      apiKeyInput.type = "password";
+      toggleKeyBtn.textContent = "Show";
+      replaceMode = false;
+      showStatus("Key saved. Screenshot uploads are now unlocked.", true);
+      updateKeyUi(true);
     } catch (e) {
       showStatus("Network error - please try again.", false);
     } finally {
-      btn.disabled = false;
-      btn.textContent = "Save Key";
+      saveBtn.disabled = false;
+      refreshSaveButton();
     }
   }
 
@@ -589,55 +610,8 @@
     el.style.display = "block";
   }
 
-  async function saveProfile() {
-    const firstName = document.getElementById("firstNameInput").value.trim();
-    const lastName = document.getElementById("lastNameInput").value.trim();
-    if (!firstName) {
-      showProfileStatus("First name is required.", false);
-      return;
-    }
-    const btn = document.getElementById("saveProfileBtn");
-    btn.disabled = true;
-    btn.innerHTML = `<span class="spinner"></span>Saving`;
-    try {
-      const res = await fetch("/api/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ first_name: firstName, last_name: lastName }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        showProfileStatus(data.error, false);
-        return;
-      }
-      document.getElementById("firstNameInput").value = data.profile?.first_name || firstName;
-      document.getElementById("lastNameInput").value = data.profile?.last_name || lastName;
-      showProfileStatus("Profile saved.", true);
-    } catch (e) {
-      showProfileStatus("Network error - please try again.", false);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Save Name";
-    }
-  }
-
-  function showProfileStatus(msg, ok) {
-    const el = document.getElementById("profileStatusMsg");
-    el.textContent = msg;
-    el.className = "status-msg " + (ok ? "success" : "error");
-    el.style.display = "block";
-  }
-
-  document.getElementById("apiKeyInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") saveKey();
-  });
-
-  document.getElementById("firstNameInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") saveProfile();
-  });
-
-  document.getElementById("lastNameInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") saveProfile();
+  apiKeyInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") onPrimaryKeyAction();
   });
 </script>
 </body>

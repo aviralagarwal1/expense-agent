@@ -8,19 +8,27 @@
     :root {
       --bg: #f4f1eb;
       --paper: rgba(255, 255, 255, 0.82);
-      --surface: #ffffff;
-      --surface-alt: #f8f6f2;
+      --surface: rgba(255, 255, 255, 0.82);
+      --surface-strong: rgba(255, 255, 255, 0.94);
+      --surface-soft: rgba(248, 246, 242, 0.82);
       --ink: #18212b;
       --muted: #5d6872;
       --line: rgba(24, 33, 43, 0.1);
       --line-strong: rgba(24, 33, 43, 0.16);
       --accent: #23425e;
       --accent-soft: #e6eef5;
+      --success: #24664a;
+      --success-soft: #e4f3ea;
       --warning: #9a6a20;
+      --warning-soft: #fbf2df;
       --danger: #a14842;
       --shadow: 0 24px 60px rgba(24, 33, 43, 0.08);
       --sans: "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", sans-serif;
       --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    html {
+      scrollbar-gutter: stable;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,11 +41,14 @@
       min-height: 100vh;
       padding: 24px;
     }
-    button { font: inherit; cursor: pointer; }
     a { color: inherit; text-decoration: none; }
+    button,
+    input,
+    select { font: inherit; }
+    button { cursor: pointer; }
 
     .page {
-      max-width: 1100px;
+      max-width: 1180px;
       margin: 0 auto;
     }
     .frame {
@@ -64,20 +75,21 @@
       letter-spacing: 0.02em;
     }
     .brand-mark {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      background: linear-gradient(135deg, #2f587d, #89a6c0);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(0 2px 5px rgba(35, 66, 94, 0.22));
     }
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     .nav-link,
-    .nav-count {
+    .nav-pill,
+    .filter-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -87,201 +99,473 @@
       font-weight: 700;
       border: 1px solid var(--line-strong);
       background: rgba(255,255,255,0.8);
+      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
     }
-    .nav-count {
-      color: var(--muted);
+    .nav-link:hover,
+    .filter-btn:hover {
+      transform: translateY(-1px);
+    }
+    .nav-pill {
+      color: var(--ink);
+      cursor: default;
+    }
+    .nav-danger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 1px solid rgba(161, 72, 66, 0.18);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--danger);
+      cursor: pointer;
+      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+    }
+    .nav-danger:hover {
+      transform: translateY(-1px);
     }
 
     .content {
-      padding: 26px;
+      padding: 24px;
       display: grid;
-      gap: 18px;
-    }
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
       gap: 18px;
     }
     .panel {
-      background: rgba(255,255,255,0.76);
+      background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: 28px;
-      padding: 24px;
+      border-radius: 30px;
+      padding: 28px;
     }
     .panel-soft {
-      background: rgba(248, 246, 242, 0.82);
+      background: var(--surface-soft);
     }
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.8);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--muted);
-      margin-bottom: 18px;
+    .headline {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.86)),
+        linear-gradient(135deg, rgba(230,238,245,0.3), rgba(255,255,255,0));
     }
-    .eyebrow::before {
-      content: "";
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #5a7a96;
-    }
-    .hero h1 {
+    .headline h1 {
       font-family: var(--serif);
-      font-size: clamp(2.3rem, 4vw, 3.3rem);
+      font-size: clamp(2.4rem, 4vw, 3.5rem);
       font-weight: 600;
       letter-spacing: -0.05em;
       line-height: 0.96;
-      margin-bottom: 14px;
-      max-width: 10ch;
+      margin-bottom: 12px;
     }
-    .hero p,
-    .panel p {
-      color: var(--muted);
-      line-height: 1.68;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .summary-card {
-      background: rgba(255,255,255,0.82);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 18px;
-    }
-    .summary-card .val {
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 6px;
-    }
-    .summary-card .lbl {
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1.45;
-    }
-
-    .month-block {
-      display: grid;
-      gap: 10px;
-    }
-    .month-header {
+    .scope-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
-      padding: 0 4px;
-      color: #7a8390;
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-weight: 700;
-    }
-    .tx-card {
-      background: rgba(255,255,255,0.82);
-      border: 1px solid var(--line);
-      border-radius: 26px;
-      overflow: hidden;
-    }
-    .tx-row {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr) auto;
       gap: 14px;
-      align-items: center;
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
     }
-    .tx-row:last-child {
-      border-bottom: none;
+    .scope-summary {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
     }
-    .tx-mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      display: flex;
+    .clear-link {
+      display: none;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      flex-shrink: 0;
-    }
-    .tx-vendor {
+      border-radius: 999px;
+      padding: 10px 14px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.84);
+      color: var(--ink);
+      font-size: 0.84rem;
       font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      transition: transform 0.16s ease, border-color 0.16s ease;
     }
-    .tx-meta {
-      color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1.5;
-    }
-    .tx-right {
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .tx-amount {
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 4px;
-    }
-    .tx-status {
-      font-size: 0.76rem;
-      font-weight: 700;
-      color: #7a8390;
-    }
-    .tx-status.pending {
-      color: var(--warning);
+    .clear-link:hover {
+      transform: translateY(-1px);
     }
 
-    .empty,
-    .spinner-wrap {
+    .state-panel {
       text-align: center;
-      padding: 64px 20px;
+      padding: 72px 24px;
     }
-    .empty h3 {
-      font-size: 1.1rem;
+    .state-panel h2 {
+      font-size: 1.2rem;
       letter-spacing: -0.02em;
       margin-bottom: 8px;
     }
-    .empty p {
+    .state-panel p {
       color: var(--muted);
       line-height: 1.68;
     }
-    .empty a {
+    .state-panel a {
       color: var(--accent);
       font-weight: 700;
     }
     .spinner {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border: 3px solid rgba(24, 33, 43, 0.12);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       display: inline-block;
+      margin-bottom: 18px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media (max-width: 860px) {
-      body { padding: 16px; }
-      .hero,
-      .summary {
+    .dashboard {
+      display: grid;
+      gap: 18px;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+      min-height: 118px;
+    }
+    .metric-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a8390;
+      font-weight: 700;
+    }
+    .metric-value {
+      font-size: clamp(1.5rem, 2.3vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+    .metric-note {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.55;
+      margin-top: auto;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .section-head h2 {
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+    .section-head span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .trend-list,
+    .rollup-list,
+    .merchant-list,
+    .card-list {
+      display: grid;
+      gap: 12px;
+    }
+    .interactive-row {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 18px;
+      transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+    }
+    .interactive-row:hover {
+      background: rgba(255,255,255,0.7);
+      border-color: var(--line);
+      transform: translateY(-1px);
+    }
+    .interactive-row.active {
+      background: rgba(230, 238, 245, 0.72);
+      border-color: rgba(35, 66, 94, 0.18);
+    }
+    .trend-row,
+    .rollup-row,
+    .merchant-row,
+    .card-row {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+    }
+    .trend-row {
+      grid-template-columns: 98px minmax(0, 1fr) auto;
+    }
+    .trend-label,
+    .rollup-label,
+    .merchant-label,
+    .card-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .trend-track,
+    .share-track {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(24, 33, 43, 0.08);
+      overflow: hidden;
+    }
+    .trend-fill,
+    .share-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2b5376, #7f9cb8);
+    }
+    .trend-value,
+    .rollup-value,
+    .merchant-value,
+    .card-value {
+      font-size: 0.92rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .rollup-row,
+    .card-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+    .rollup-row:first-child,
+    .card-row:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+    .rollup-meta,
+    .card-meta,
+    .merchant-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .merchant-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+    .merchant-row:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+    .merchant-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .merchant-right {
+      text-align: right;
+    }
+    .merchant-share {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 3px;
+    }
+    .mini-empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.65;
+      padding: 10px 0 2px;
+    }
+
+    .ledger-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+    .ledger-top {
+      padding: 24px 24px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.9);
+      display: grid;
+      gap: 16px;
+    }
+    .ledger-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 14px;
+    }
+    .ledger-head h2 {
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+    .ledger-count {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+    .ledger-tools {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(190px, 0.8fr);
+      gap: 12px;
+      align-items: end;
+    }
+    .control {
+      display: grid;
+      gap: 8px;
+    }
+    .control label {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a8390;
+      font-weight: 700;
+    }
+    .search-input,
+    .card-select {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 15px;
+      border-radius: 16px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.96);
+      color: var(--ink);
+      outline: none;
+    }
+    .search-input:focus,
+    .card-select:focus {
+      border-color: rgba(35, 66, 94, 0.42);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 11px 14px;
+      font-size: 0.84rem;
+      min-height: 48px;
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.16);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead th {
+      text-align: left;
+      padding: 15px 24px;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a8390;
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+      background: rgba(248,246,242,0.7);
+    }
+    tbody td {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      font-size: 0.94rem;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .merchant-cell {
+      display: grid;
+      gap: 4px;
+    }
+    .merchant-name {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .merchant-sub {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+    .amount-cell {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      text-align: right;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.82);
+      white-space: nowrap;
+    }
+    .status-pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+    .status-pill.pending {
+      background: var(--warning-soft);
+      color: var(--warning);
+      border-color: rgba(154, 106, 32, 0.18);
+    }
+    .status-pill.pending::before {
+      background: var(--warning);
+    }
+
+    .ledger-empty {
+      padding: 48px 24px 52px;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    @media (max-width: 1180px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .insight-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .insight-grid > .panel:last-child {
+        grid-column: 1 / -1;
+      }
+      .ledger-tools {
         grid-template-columns: 1fr;
       }
+    }
+
+    @media (max-width: 980px) {
       .nav {
         flex-direction: column;
         align-items: stretch;
@@ -290,18 +574,88 @@
         width: 100%;
       }
       .nav-link,
-      .nav-count {
+      .nav-pill {
         flex: 1;
       }
     }
 
-    @media (max-width: 640px) {
-      .tx-row {
-        grid-template-columns: auto minmax(0, 1fr);
+    @media (max-width: 860px) {
+      body { padding: 16px; }
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr;
       }
-      .tx-right {
-        grid-column: 2;
+      .insight-grid {
+        grid-template-columns: 1fr;
+      }
+      .insight-grid > .panel:last-child {
+        grid-column: auto;
+      }
+      .trend-row {
+        grid-template-columns: 82px minmax(0, 1fr) auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .content {
+        padding: 18px;
+      }
+      .panel {
+        padding: 20px;
+        border-radius: 24px;
+      }
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      .ledger-top {
+        padding: 20px 20px 16px;
+      }
+      .ledger-head {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      thead {
+        display: none;
+      }
+      table,
+      tbody,
+      tr,
+      td {
+        display: block;
+        width: 100%;
+      }
+      tbody tr {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+      }
+      tbody td {
+        padding: 0;
+        border-bottom: none;
+        margin-top: 12px;
+      }
+      tbody td:first-child {
+        margin-top: 0;
+      }
+      tbody td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #7a8390;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      .amount-cell {
         text-align: left;
+      }
+      .trend-row {
+        grid-template-columns: 1fr;
+      }
+      .trend-track {
+        order: 3;
+      }
+      .trend-value {
+        order: 2;
       }
     }
   </style>
@@ -311,53 +665,156 @@
     <div class="frame">
       <nav class="nav">
         <a class="brand" href="/app">
-          <span class="brand-mark" aria-hidden="true"></span>
+          <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="brandMarkGradient" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3a6387"/>
+                <stop offset="100%" stop-color="#89a6c0"/>
+              </linearGradient>
+            </defs>
+            <rect x="3" y="7" width="22" height="14" rx="3" fill="url(#brandMarkGradient)"/>
+            <rect x="3" y="10.5" width="22" height="2.4" fill="#0c1623" opacity="0.32"/>
+            <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
+            <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
+          </svg>
           <span>Expense Agent</span>
         </a>
         <div class="nav-actions">
-          <a class="nav-link" href="/app">Back to App</a>
-          <button class="nav-link" type="button" onclick="doLogout()">Sign Out</button>
-          <span class="nav-count" id="navCount">Loading</span>
+          <a class="nav-link" href="/app">Workspace</a>
+          <span class="nav-pill" aria-current="page">History</span>
+          <a class="nav-link" href="/settings?return_to=%2Fhistory">Profile</a>
+          <a class="nav-link" href="/connect-key?return_to=%2Fhistory">API Key</a>
+          <button class="nav-danger" type="button" onclick="doLogout()">Sign Out</button>
         </div>
       </nav>
 
       <div class="content">
-        <section class="hero">
-          <div class="panel">
-            <div class="eyebrow">Transaction history</div>
-            <h1>Your running log, grouped by month.</h1>
-            <p>
-              This view keeps the stored expenses simple: monthly totals, recent activity, and status labels
-              for pending entries that may settle later.
-            </p>
-          </div>
-
-          <aside class="panel panel-soft">
-            <p>
-              History is read from your account only. Exact duplicates should already be filtered before they
-              reach this screen, so this page is mainly for review and recall.
-            </p>
-          </aside>
-        </section>
-
-        <section class="summary" id="summary" style="display:none;">
-          <div class="summary-card">
-            <div class="val" id="sumTotal">-</div>
-            <div class="lbl">Transactions stored in your log</div>
-          </div>
-          <div class="summary-card">
-            <div class="val" id="sumSpend">-</div>
-            <div class="lbl">Total amount across visible history</div>
-          </div>
-          <div class="summary-card">
-            <div class="val" id="sumMonths">-</div>
-            <div class="lbl">Distinct months represented</div>
+        <section class="panel headline">
+          <div>
+            <h1>Transaction History</h1>
+            <div class="scope-bar">
+              <div class="scope-summary" id="scopeSummary">All transactions</div>
+              <button class="clear-link" id="clearFiltersBtn" type="button">Clear Filters</button>
+            </div>
           </div>
         </section>
 
-        <section class="panel" id="listWrap">
-          <div class="spinner-wrap"><div class="spinner"></div></div>
+        <section class="panel state-panel" id="loadingState">
+          <div class="spinner" aria-hidden="true"></div>
+          <h2>Loading your history</h2>
+          <p>Pulling every transaction on record.</p>
         </section>
+
+        <section class="panel state-panel" id="emptyState" style="display:none;">
+          <h2>No transactions yet</h2>
+          <p><a href="/app">Go back to the app</a> and add a batch of screenshots to start building your ledger.</p>
+        </section>
+
+        <div class="dashboard" id="dashboard" style="display:none;">
+          <section class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Latest Month</div>
+              <div class="metric-value" id="metricLatestMonth">$0</div>
+              <div class="metric-note" id="metricLatestMonthNote">-</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Visible Spend</div>
+              <div class="metric-value" id="metricVisibleSpend">$0</div>
+              <div class="metric-note" id="metricVisibleSpendNote">-</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Transactions</div>
+              <div class="metric-value" id="metricTransactions">0</div>
+              <div class="metric-note" id="metricTransactionsNote">-</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Pending</div>
+              <div class="metric-value" id="metricPending">$0</div>
+              <div class="metric-note" id="metricPendingNote">-</div>
+            </div>
+          </section>
+
+          <section class="insight-grid">
+            <section class="panel">
+              <div class="section-head">
+                <h2>Spend Trend</h2>
+                <span id="trendSpan">Latest months</span>
+              </div>
+              <div class="trend-list" id="trendList"></div>
+            </section>
+
+            <section class="panel panel-soft">
+              <div class="section-head">
+                <h2>Monthly Rollup</h2>
+                <span id="rollupSpan">Recent months</span>
+              </div>
+              <div class="rollup-list" id="rollupList"></div>
+            </section>
+
+            <section class="panel">
+              <div class="section-head">
+                <h2>Cards</h2>
+                <span id="cardsSpan">Distribution by card</span>
+              </div>
+              <div class="card-list" id="cardList"></div>
+            </section>
+          </section>
+
+          <section class="panel">
+            <div class="section-head">
+              <h2>Top Merchants</h2>
+              <span id="merchantSpan">Highest spend concentration</span>
+            </div>
+            <div class="merchant-list" id="merchantList"></div>
+          </section>
+
+          <section class="panel ledger-panel">
+            <div class="ledger-top">
+              <div class="ledger-head">
+                <h2>Transactions</h2>
+                <div class="ledger-count" id="ledgerCount">0 shown</div>
+              </div>
+
+              <div class="ledger-tools">
+                <div class="control">
+                  <label for="searchInput">Search</label>
+                  <input class="search-input" id="searchInput" type="search" placeholder="Search merchant or card" />
+                </div>
+
+                <div class="control">
+                  <label>Status</label>
+                  <div class="filter-row" id="statusFilters">
+                    <button class="filter-btn active" type="button" data-status="all">All</button>
+                    <button class="filter-btn" type="button" data-status="settled">Settled</button>
+                    <button class="filter-btn" type="button" data-status="pending">Pending</button>
+                  </div>
+                </div>
+
+                <div class="control">
+                  <label for="cardFilter">Card</label>
+                  <select class="card-select" id="cardFilter">
+                    <option value="all">All cards</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Merchant</th>
+                    <th>Card</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="ledgerBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </div>
@@ -366,24 +823,412 @@
   const token = sessionStorage.getItem("expense_token");
   if (!token) window.location.href = "/app";
 
+  const currencyWhole = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+  const currencyExact = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const integerFormat = new Intl.NumberFormat("en-US");
+
+  let allTransactions = [];
+  const dashboardState = {
+    search: "",
+    status: "all",
+    card: "all",
+    month: "all",
+    merchant: "all",
+  };
+
+  function pluralize(count, singular, plural = `${singular}s`) {
+    return `${integerFormat.format(count)} ${count === 1 ? singular : plural}`;
+  }
+
   function doLogout() {
     sessionStorage.removeItem("expense_token");
     sessionStorage.removeItem("expense_refresh_token");
     window.location.href = "/app";
   }
 
-  function vendorMark(vendor) {
-    const cleaned = (vendor || "").replace(/[^A-Za-z0-9 ]/g, "").trim();
-    if (!cleaned) return "EA";
-    const parts = cleaned.split(/\s+/).filter(Boolean);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+  function safeAmount(value) {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  function formatMonth(dateStr) {
-    if (!dateStr || dateStr === "unknown") return "Unknown";
-    const [y, m] = dateStr.split("-");
-    return new Date(y, m - 1).toLocaleString("default", { month: "long", year: "numeric" });
+  function parseTxDate(tx) {
+    const rawDate = (tx.date || "").trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      const [year, month, day] = rawDate.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    const fallback = (tx.created_at || "").trim();
+    if (!fallback) return null;
+    const parsed = new Date(fallback);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function monthKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  function monthLabel(key) {
+    if (!key || key === "Unknown") return "Unknown";
+    const [year, month] = key.split("-").map(Number);
+    if (!year || !month) return "Unknown";
+    return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  function shortDate(date) {
+    if (!date) return "Unknown";
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  function normalizeTransactions(raw) {
+    return raw
+      .map((tx, index) => {
+        const parsedDate = parseTxDate(tx);
+        const amount = safeAmount(tx.amount);
+        const vendor = (tx.vendor || "Unknown merchant").trim();
+        const card = (tx.card || "Unassigned").trim();
+        const status = tx.status === "pending" ? "pending" : "settled";
+        return {
+          ...tx,
+          id: tx.id || `${vendor}-${card}-${index}`,
+          amount,
+          vendor,
+          card,
+          status,
+          parsedDate,
+          monthKey: parsedDate ? monthKey(parsedDate) : null,
+          searchBlob: `${vendor} ${card} ${status} ${parsedDate ? shortDate(parsedDate) : ""}`.toLowerCase(),
+          sortStamp: parsedDate ? parsedDate.getTime() : 0,
+        };
+      })
+      .sort((a, b) => b.sortStamp - a.sortStamp || b.amount - a.amount);
+  }
+
+  function sumAmounts(items) {
+    return items.reduce((sum, item) => sum + item.amount, 0);
+  }
+
+  function getMonthlyData(txs) {
+    const map = new Map();
+    for (const tx of txs) {
+      const key = tx.monthKey || "Unknown";
+      if (!map.has(key)) {
+        map.set(key, { key, total: 0, count: 0, pending: 0 });
+      }
+      const bucket = map.get(key);
+      bucket.total += tx.amount;
+      bucket.count += 1;
+      if (tx.status === "pending") bucket.pending += tx.amount;
+    }
+
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.key === "Unknown" && b.key === "Unknown") return 0;
+      if (a.key === "Unknown") return 1;
+      if (b.key === "Unknown") return -1;
+      return a.key < b.key ? 1 : -1;
+    });
+  }
+
+  function getTopVendors(txs) {
+    const map = new Map();
+    for (const tx of txs) {
+      const key = tx.vendor;
+      if (!map.has(key)) {
+        map.set(key, { name: key, total: 0, count: 0 });
+      }
+      const vendor = map.get(key);
+      vendor.total += tx.amount;
+      vendor.count += 1;
+    }
+
+    return Array.from(map.values()).sort((a, b) => b.total - a.total).slice(0, 6);
+  }
+
+  function getCardMix(txs) {
+    const map = new Map();
+    for (const tx of txs) {
+      const key = tx.card;
+      if (!map.has(key)) {
+        map.set(key, { name: key, total: 0, count: 0, pending: 0 });
+      }
+      const card = map.get(key);
+      card.total += tx.amount;
+      card.count += 1;
+      if (tx.status === "pending") card.pending += tx.amount;
+    }
+
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }
+
+  function getFilteredTransactions(overrides = {}) {
+    const filters = { ...dashboardState, ...overrides };
+    const query = filters.search.trim().toLowerCase();
+
+    return allTransactions.filter(tx => {
+      if (filters.status !== "all" && tx.status !== filters.status) return false;
+      if (filters.card !== "all" && tx.card !== filters.card) return false;
+      if (filters.month !== "all" && tx.monthKey !== filters.month) return false;
+      if (filters.merchant !== "all" && tx.vendor !== filters.merchant) return false;
+      if (query && !tx.searchBlob.includes(query)) return false;
+      return true;
+    });
+  }
+
+  function ensureValidState() {
+    const months = new Set(getFilteredTransactions({ month: "all" }).map(tx => tx.monthKey).filter(Boolean));
+    if (dashboardState.month !== "all" && !months.has(dashboardState.month)) {
+      dashboardState.month = "all";
+    }
+
+    const cards = new Set(getFilteredTransactions({ card: "all" }).map(tx => tx.card));
+    if (dashboardState.card !== "all" && !cards.has(dashboardState.card)) {
+      dashboardState.card = "all";
+    }
+
+    const merchants = new Set(getFilteredTransactions({ merchant: "all" }).map(tx => tx.vendor));
+    if (dashboardState.merchant !== "all" && !merchants.has(dashboardState.merchant)) {
+      dashboardState.merchant = "all";
+    }
+  }
+
+  function setScopeSummary(selected) {
+    const parts = [];
+    if (dashboardState.month !== "all") parts.push(monthLabel(dashboardState.month));
+    if (dashboardState.card !== "all") parts.push(dashboardState.card);
+    if (dashboardState.merchant !== "all") parts.push(dashboardState.merchant);
+    if (dashboardState.status !== "all") parts.push(dashboardState.status === "pending" ? "Pending" : "Settled");
+    if (dashboardState.search) parts.push(`Search: "${dashboardState.search}"`);
+
+    const scopeEl = document.getElementById("scopeSummary");
+    const clearBtn = document.getElementById("clearFiltersBtn");
+
+    if (!parts.length) {
+      scopeEl.textContent = "All transactions";
+      clearBtn.style.display = "none";
+      return;
+    }
+
+    scopeEl.textContent = `${parts.join(" · ")} - ${pluralize(selected.length, "transaction")}`;
+    clearBtn.style.display = "inline-flex";
+  }
+
+  function syncControls() {
+    document.getElementById("searchInput").value = dashboardState.search;
+    document.querySelectorAll("#statusFilters .filter-btn").forEach(item => {
+      item.classList.toggle("active", item.dataset.status === dashboardState.status);
+    });
+    const cardFilter = document.getElementById("cardFilter");
+    if ([...cardFilter.options].some(option => option.value === dashboardState.card)) {
+      cardFilter.value = dashboardState.card;
+    } else {
+      cardFilter.value = "all";
+    }
+  }
+
+  function renderMetrics(txs) {
+    const monthly = getMonthlyData(txs);
+    const latestMonth = monthly[0];
+    const pending = txs.filter(tx => tx.status === "pending");
+    const settled = txs.filter(tx => tx.status === "settled");
+    const totalSpend = sumAmounts(txs);
+
+    document.getElementById("metricLatestMonth").textContent = latestMonth ? currencyWhole.format(latestMonth.total) : "$0";
+    document.getElementById("metricLatestMonthNote").textContent = latestMonth ? monthLabel(latestMonth.key) : "No matching month";
+    document.getElementById("metricVisibleSpend").textContent = currencyWhole.format(totalSpend);
+    document.getElementById("metricVisibleSpendNote").textContent = txs.length ? "Across current selection" : "No matching transactions";
+    document.getElementById("metricPending").textContent = currencyWhole.format(sumAmounts(pending));
+    document.getElementById("metricPendingNote").textContent = pending.length ? pluralize(pending.length, "pending transaction") : "Nothing waiting to settle";
+    document.getElementById("metricTransactions").textContent = integerFormat.format(txs.length);
+    document.getElementById("metricTransactionsNote").textContent = txs.length ? `${pluralize(settled.length, "settled transaction")} · ${pluralize(pending.length, "pending transaction")}` : "No matching transactions";
+  }
+
+  function renderTrend(contextTxs, activeMonth) {
+    const monthly = getMonthlyData(contextTxs).slice(0, 6).reverse();
+    const max = Math.max(...monthly.map(item => item.total), 1);
+    document.getElementById("trendSpan").textContent = monthly.length ? pluralize(monthly.length, "month") : "No monthly data";
+
+    if (!monthly.length) {
+      document.getElementById("trendList").innerHTML = `<div class="mini-empty">No month data for the current view.</div>`;
+      return;
+    }
+
+    document.getElementById("trendList").innerHTML = monthly.map(item => `
+      <button type="button" class="trend-row interactive-row ${activeMonth === item.key ? "active" : ""}" data-filter-key="month" data-filter-value="${escapeHtml(item.key)}" aria-pressed="${activeMonth === item.key ? "true" : "false"}">
+        <div class="trend-label">${monthLabel(item.key)}</div>
+        <div class="trend-track"><span class="trend-fill" style="width:${(item.total / max) * 100}%"></span></div>
+        <div class="trend-value">${currencyWhole.format(item.total)}</div>
+      </button>
+    `).join("");
+  }
+
+  function renderRollup(contextTxs, activeMonth) {
+    const monthly = getMonthlyData(contextTxs).slice(0, 6);
+    document.getElementById("rollupSpan").textContent = monthly.length ? `${pluralize(monthly.length, "period")} on record` : "No monthly data";
+
+    if (!monthly.length) {
+      document.getElementById("rollupList").innerHTML = `<div class="mini-empty">No rollup data for the current view.</div>`;
+      return;
+    }
+
+    document.getElementById("rollupList").innerHTML = monthly.map(item => `
+      <button type="button" class="rollup-row interactive-row ${activeMonth === item.key ? "active" : ""}" data-filter-key="month" data-filter-value="${escapeHtml(item.key)}" aria-pressed="${activeMonth === item.key ? "true" : "false"}">
+        <div>
+          <div class="rollup-label">${monthLabel(item.key)}</div>
+          <div class="rollup-meta">${integerFormat.format(item.count)} transactions${item.pending ? ` - ${currencyWhole.format(item.pending)} pending` : ""}</div>
+        </div>
+        <div class="rollup-value">${currencyExact.format(item.total)}</div>
+      </button>
+    `).join("");
+  }
+
+  function renderCards(contextTxs, activeCard) {
+    const cards = getCardMix(contextTxs);
+    const total = sumAmounts(contextTxs) || 1;
+    document.getElementById("cardsSpan").textContent = pluralize(cards.length, "card");
+
+    if (!cards.length) {
+      document.getElementById("cardList").innerHTML = `<div class="mini-empty">No card data for the current view.</div>`;
+      return;
+    }
+
+    document.getElementById("cardList").innerHTML = cards.map(card => `
+      <button type="button" class="card-row interactive-row ${activeCard === card.name ? "active" : ""}" data-filter-key="card" data-filter-value="${escapeHtml(card.name)}" aria-pressed="${activeCard === card.name ? "true" : "false"}">
+        <div>
+          <div class="card-label">${card.name}</div>
+          <div class="card-meta">${integerFormat.format(card.count)} transactions - ${Math.round((card.total / total) * 100)}% of spend${card.pending ? ` - ${currencyWhole.format(card.pending)} pending` : ""}</div>
+        </div>
+        <div class="card-value">${currencyExact.format(card.total)}</div>
+      </button>
+    `).join("");
+  }
+
+  function renderMerchants(contextTxs, activeMerchant) {
+    const vendors = getTopVendors(contextTxs);
+    const total = sumAmounts(contextTxs) || 1;
+    document.getElementById("merchantSpan").textContent = vendors.length ? `${pluralize(vendors.length, "merchant")} by spend` : "No merchant data";
+
+    if (!vendors.length) {
+      document.getElementById("merchantList").innerHTML = `<div class="mini-empty">No merchant data for the current view.</div>`;
+      return;
+    }
+
+    document.getElementById("merchantList").innerHTML = vendors.map(vendor => `
+      <button type="button" class="merchant-row interactive-row ${activeMerchant === vendor.name ? "active" : ""}" data-filter-key="merchant" data-filter-value="${escapeHtml(vendor.name)}" aria-pressed="${activeMerchant === vendor.name ? "true" : "false"}">
+        <div>
+          <div class="merchant-top">
+            <div class="merchant-label">${vendor.name}</div>
+            <div class="merchant-right">
+              <div class="merchant-value">${currencyExact.format(vendor.total)}</div>
+              <div class="merchant-share">${Math.round((vendor.total / total) * 100)}% of spend</div>
+            </div>
+          </div>
+          <div class="share-track"><span class="share-fill" style="width:${(vendor.total / total) * 100}%"></span></div>
+          <div class="merchant-meta">${integerFormat.format(vendor.count)} transactions</div>
+        </div>
+      </button>
+    `).join("");
+  }
+
+  function populateCardFilter(contextTxs) {
+    const select = document.getElementById("cardFilter");
+    const cards = getCardMix(contextTxs);
+    select.innerHTML = `<option value="all">All cards</option>` + cards.map(card => `
+      <option value="${escapeHtml(card.name)}">${escapeHtml(card.name)}</option>
+    `).join("");
+  }
+
+  function updateStatusFilterCounts(contextTxs) {
+    const settledCount = contextTxs.filter(tx => tx.status === "settled").length;
+    const pendingCount = contextTxs.filter(tx => tx.status === "pending").length;
+    document.querySelector('[data-status="all"]').textContent = `All (${integerFormat.format(contextTxs.length)})`;
+    document.querySelector('[data-status="settled"]').textContent = `Settled (${integerFormat.format(settledCount)})`;
+    document.querySelector('[data-status="pending"]').textContent = `Pending (${integerFormat.format(pendingCount)})`;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderLedger(txs) {
+    const body = document.getElementById("ledgerBody");
+    const totalFilteredSpend = sumAmounts(txs);
+    document.getElementById("ledgerCount").textContent = `${integerFormat.format(txs.length)} shown - ${currencyWhole.format(totalFilteredSpend)}`;
+
+    if (!txs.length) {
+      body.innerHTML = `<tr><td colspan="5"><div class="ledger-empty">No transactions match the current filters.</div></td></tr>`;
+      return;
+    }
+
+    body.innerHTML = txs.map(tx => `
+      <tr>
+        <td data-label="Date">${escapeHtml(shortDate(tx.parsedDate))}</td>
+        <td data-label="Merchant">
+          <div class="merchant-cell">
+            <div class="merchant-name">${escapeHtml(tx.vendor)}</div>
+            <div class="merchant-sub">${escapeHtml(tx.monthKey ? monthLabel(tx.monthKey) : "Undated entry")}</div>
+          </div>
+        </td>
+        <td data-label="Card">${escapeHtml(tx.card)}</td>
+        <td data-label="Status"><span class="status-pill ${tx.status === "pending" ? "pending" : ""}">${tx.status === "pending" ? "Pending" : "Settled"}</span></td>
+        <td data-label="Amount" class="amount-cell">${escapeHtml(currencyExact.format(tx.amount))}</td>
+      </tr>
+    `).join("");
+  }
+
+  function setHeader(_txs) {
+  }
+
+  function clearFilters() {
+    dashboardState.search = "";
+    dashboardState.status = "all";
+    dashboardState.card = "all";
+    dashboardState.month = "all";
+    dashboardState.merchant = "all";
+    renderDashboard();
+  }
+
+  function renderDashboard() {
+    ensureValidState();
+
+    const selected = getFilteredTransactions();
+    const monthContext = getFilteredTransactions({ month: "all" });
+    const cardContext = getFilteredTransactions({ card: "all" });
+    const merchantContext = getFilteredTransactions({ merchant: "all" });
+    const statusContext = getFilteredTransactions({ status: "all" });
+
+    setHeader(selected);
+    setScopeSummary(selected);
+    renderMetrics(selected);
+    renderTrend(monthContext, dashboardState.month);
+    renderRollup(monthContext, dashboardState.month);
+    renderCards(cardContext, dashboardState.card);
+    renderMerchants(merchantContext, dashboardState.merchant);
+    populateCardFilter(cardContext);
+    updateStatusFilterCounts(statusContext);
+    syncControls();
+    renderLedger(selected);
   }
 
   async function load() {
@@ -393,63 +1238,51 @@
         window.location.href = "/app";
         return;
       }
+
       const data = await res.json();
-      render(data.transactions || []);
-    } catch (e) {
-      document.getElementById("listWrap").innerHTML = `<div class="empty"><h3>Could not load transactions</h3><p>Network error. Try refreshing the page.</p></div>`;
-    }
-  }
+      allTransactions = normalizeTransactions(data.transactions || []);
 
-  function render(txs) {
-    const wrap = document.getElementById("listWrap");
+      document.getElementById("loadingState").style.display = "none";
 
-    if (txs.length === 0) {
-      wrap.innerHTML = `<div class="empty"><h3>No transactions yet</h3><p>Upload a batch of screenshots to start building your log.<br /><a href="/app">Go to the app</a></p></div>`;
-      document.getElementById("navCount").textContent = "0 transactions";
-      return;
-    }
-
-    const totalSpend = txs.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
-    const months = new Set(txs.map(t => t.date ? t.date.slice(0, 7) : null).filter(Boolean)).size;
-    document.getElementById("sumTotal").textContent = txs.length;
-    document.getElementById("sumSpend").textContent = "$" + totalSpend.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-    document.getElementById("sumMonths").textContent = months;
-    document.getElementById("summary").style.display = "grid";
-    document.getElementById("navCount").textContent = txs.length + " transactions";
-
-    const groups = {};
-    for (const t of txs) {
-      const key = t.date ? t.date.slice(0, 7) : "unknown";
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(t);
-    }
-
-    let html = "";
-    for (const [monthKey, items] of Object.entries(groups)) {
-      const monthTotal = items.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
-      html += `<div class="month-block">`;
-      html += `<div class="month-header"><span>${formatMonth(monthKey)}</span><span>$${monthTotal.toFixed(2)}</span></div>`;
-      html += `<div class="tx-card">`;
-      for (const t of items) {
-        const isPending = t.status === "pending";
-        html += `
-          <div class="tx-row">
-            <div class="tx-mark">${vendorMark(t.vendor)}</div>
-            <div>
-              <div class="tx-vendor">${t.vendor}</div>
-              <div class="tx-meta">${t.card || ""}${t.card && t.date ? " · " : ""}${t.date || ""}</div>
-            </div>
-            <div class="tx-right">
-              <div class="tx-amount">$${parseFloat(t.amount).toFixed(2)}</div>
-              <div class="tx-status ${isPending ? "pending" : ""}">${isPending ? "Pending" : "Settled"}</div>
-            </div>
-          </div>`;
+      if (!allTransactions.length) {
+        document.getElementById("emptyState").style.display = "block";
+        return;
       }
-      html += `</div></div>`;
-    }
 
-    wrap.innerHTML = html;
+      document.getElementById("dashboard").style.display = "grid";
+      renderDashboard();
+    } catch (e) {
+      document.getElementById("loadingState").innerHTML = `<h2>Could not load your history</h2><p>Network error. Refresh and try again.</p>`;
+    }
   }
+
+  document.getElementById("searchInput").addEventListener("input", event => {
+    dashboardState.search = event.target.value.trim();
+    renderDashboard();
+  });
+
+  document.getElementById("cardFilter").addEventListener("change", event => {
+    dashboardState.card = event.target.value;
+    renderDashboard();
+  });
+
+  document.getElementById("statusFilters").addEventListener("click", event => {
+    const button = event.target.closest("[data-status]");
+    if (!button) return;
+    dashboardState.status = button.dataset.status;
+    renderDashboard();
+  });
+
+  document.addEventListener("click", event => {
+    const target = event.target.closest("[data-filter-key]");
+    if (!target) return;
+    const key = target.dataset.filterKey;
+    const value = target.dataset.filterValue;
+    dashboardState[key] = dashboardState[key] === value ? "all" : value;
+    renderDashboard();
+  });
+
+  document.getElementById("clearFiltersBtn").addEventListener("click", clearFilters);
 
   load();
 </script>
