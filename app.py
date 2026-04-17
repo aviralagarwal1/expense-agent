@@ -23,8 +23,25 @@ APP_URL              = (os.environ.get("APP_URL") or "").rstrip("/")
 
 supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
-CARD_BRANDS = {"Amex", "Visa", "Mastercard", "Discover"}
 CARD_HINT_POSITIONS = {"ending", "starting"}
+
+# Payment-network synonyms only (spacing, punctuation, shorthand). We do not map
+# issuer or product names (e.g. Capital One, Savor) to a network — those banks
+# issue both Visa and Mastercard cards, so collapsing them would be wrong.
+_NETWORK_BRAND_ALIASES: dict[str, str] = {
+    "american express": "American Express",
+    "americanexpress": "American Express",
+    "amex": "American Express",
+    "visa": "Visa",
+    "visa card": "Visa",
+    "visacard": "Visa",
+    "mastercard": "Mastercard",
+    "master card": "Mastercard",
+    "mc": "Mastercard",
+    "discover": "Discover",
+    "discover card": "Discover",
+    "discovercard": "Discover",
+}
 
 
 def get_external_app_url(path: str = "/"):
@@ -153,18 +170,58 @@ def normalize_reference_digits(value: str | None, *, max_length: int = 2, align:
     return digits[:max_length]
 
 
+def _network_brand_lookup_keys(value: str | None) -> list[str]:
+    text = (value or "").strip()
+    if not text:
+        return []
+    spaced = " ".join(text.split()).lower()
+    compact = re.sub(r"[^a-z0-9]", "", spaced)
+    keys = [spaced]
+    if compact and compact not in keys:
+        keys.append(compact)
+    return keys
+
+
 def normalize_card_brand(value: str | None) -> str | None:
-    raw = " ".join((value or "").strip().split()).lower()
-    mapping = {
-        "amex": "Amex",
-        "american express": "Amex",
-        "visa": "Visa",
-        "mastercard": "Mastercard",
-        "master card": "Mastercard",
-        "discover": "Discover",
-        "savor": "Mastercard",
-    }
-    return mapping.get(raw)
+    for key in _network_brand_lookup_keys(value):
+        canonical = _NETWORK_BRAND_ALIASES.get(key)
+        if canonical:
+            return canonical
+    return None
+
+
+def _title_case_token(token: str) -> str:
+    if not token:
+        return token
+    return token[0].upper() + token[1:].lower()
+
+
+def present_custom_card_brand(name: str) -> str:
+    """Title-case issuer / custom labels. Networks use normalize_card_brand instead."""
+    text = " ".join(name.strip().split())
+    if not text:
+        return text
+    parts = []
+    for word in text.split():
+        if "-" in word:
+            parts.append("-".join(_title_case_token(p) for p in word.split("-") if p))
+        else:
+            parts.append(_title_case_token(word))
+    return " ".join(parts)
+
+
+def clean_card_brand(value: str | None) -> str | None:
+    canonical = normalize_card_brand(value)
+    if canonical:
+        return canonical
+
+    cleaned = " ".join((value or "").strip().split())
+    if not cleaned:
+        return None
+
+    if len(cleaned) > 40:
+        cleaned = cleaned[:40].rstrip()
+    return present_custom_card_brand(cleaned)
 
 
 def format_saved_card_label(brand: str, digit_hint: str | None = None, hint_position: str = "ending") -> str:
@@ -179,7 +236,7 @@ def canonicalize_card_label(value: str | None) -> str | None:
         return None
 
     standard_match = re.match(
-        r"^(Amex|Visa|Mastercard|Discover)(?:\s+(ending|starting)\s+in\s+(\d{1,4}))?$",
+        r"^(American Express|Visa|Mastercard|Discover)(?:\s+(ending|starting)\s+in\s+(\d{1,4}))?$",
         raw,
         re.IGNORECASE,
     )
@@ -203,7 +260,9 @@ def canonicalize_card_label(value: str | None) -> str | None:
 
 
 def serialize_user_card(row: dict) -> dict:
-    brand = normalize_card_brand(row.get("brand")) or (row.get("brand") or "Card").strip()
+    raw_brand = (row.get("brand") or "Card").strip()
+    net = normalize_card_brand(raw_brand)
+    brand = net if net else present_custom_card_brand(raw_brand) or "Card"
     hint_position = (row.get("hint_position") or "ending").strip().lower()
     if hint_position not in CARD_HINT_POSITIONS:
         hint_position = "ending"
@@ -230,13 +289,9 @@ def get_user_card_for_user(user_id: str, card_id: str):
 
 
 def create_user_card_for_user(user_id: str, brand: str, digit_hint: str | None, hint_position: str) -> dict:
-    normalized_brand = normalize_card_brand(brand)
-    if normalized_brand not in CARD_BRANDS:
-        raise ValueError("Select a supported card brand.")
-
-    normalized_position = (hint_position or "ending").strip().lower()
-    if normalized_position not in CARD_HINT_POSITIONS:
-        raise ValueError("Choose whether the digits are at the start or end.")
+    cleaned_brand = clean_card_brand(brand)
+    if not cleaned_brand:
+        raise ValueError("Select or enter a card brand.")
 
     raw_digits = re.sub(r"\D", "", digit_hint or "")
     if digit_hint and not raw_digits:
@@ -244,16 +299,27 @@ def create_user_card_for_user(user_id: str, brand: str, digit_hint: str | None, 
     if len(raw_digits) > 2:
         raise ValueError("Use one or two reference digits only.")
 
-    label = format_saved_card_label(normalized_brand, normalize_reference_digits(raw_digits), normalized_position)
+    normalized_position = (hint_position or "").strip().lower()
+    if raw_digits and normalized_position not in CARD_HINT_POSITIONS:
+        raise ValueError("Choose whether the digits are at the start or end.")
+    if normalized_position not in CARD_HINT_POSITIONS:
+        normalized_position = "ending"
+
+    normalized_digit_hint = normalize_reference_digits(raw_digits)
+    label = format_saved_card_label(cleaned_brand, normalized_digit_hint, normalized_position)
     settings = get_user_settings_state_for_user(user_id)
     existing_cards = [serialize_user_card(card) for card in (settings.get("cards") or [])]
+    if not normalized_digit_hint and any(card["brand"].lower() == cleaned_brand.lower() for card in existing_cards):
+        raise ValueError(
+            f"You already have a {cleaned_brand} registered. Remove the existing one or add 1-2 reference digits so we can tell them apart."
+        )
     if any(card["label"] == label for card in existing_cards):
         raise ValueError("That card is already saved.")
 
     card = serialize_user_card({
         "id": str(uuid4()),
-        "brand": normalized_brand,
-        "digit_hint": normalize_reference_digits(raw_digits),
+        "brand": cleaned_brand,
+        "digit_hint": normalized_digit_hint,
         "hint_position": normalized_position,
     })
     settings["cards"] = existing_cards + [card]
@@ -409,7 +475,7 @@ def get_existing_transactions_for_user(user_id: str) -> list:
     return transactions
 
 
-def append_transactions_for_user(user_id: str, transactions: list):
+def append_transactions_for_user(user_id: str, transactions: list) -> list:
     rows = []
     for t in transactions:
         rows.append({
@@ -420,7 +486,8 @@ def append_transactions_for_user(user_id: str, transactions: list):
             "amount":  float(str(t["amount"]).replace("$", "").replace(",", "")),
             "status":  t.get("status"),
         })
-    supabase_admin.table("transactions").insert(rows).execute()
+    result = supabase_admin.table("transactions").insert(rows).execute()
+    return [row.get("id") for row in (result.data or []) if row.get("id")]
 
 
 # ── Claude Vision ────────────────────────────────────────────────────────────
@@ -819,11 +886,35 @@ def confirm():
         return jsonify({"error": "No transactions to add"}), 400
 
     try:
-        append_transactions_for_user(user_id, transactions)
+        inserted_ids = append_transactions_for_user(user_id, transactions)
     except Exception as e:
         return jsonify({"error": f"Failed to write to database: {str(e)}"}), 500
 
-    return jsonify({"success": True, "added": len(transactions)})
+    return jsonify({
+        "success": True,
+        "added": len(transactions),
+        "ids": inserted_ids,
+    })
+
+
+@app.route("/api/transactions/<tx_id>", methods=["DELETE"])
+def api_transaction_delete(tx_id: str):
+    user_id = get_user_id_from_request()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        (
+            supabase_admin.table("transactions")
+            .delete()
+            .eq("id", tx_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete transaction: {str(e)}"}), 500
+
+    return jsonify({"success": True})
 
 
 if __name__ == "__main__":
