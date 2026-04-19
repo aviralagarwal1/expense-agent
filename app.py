@@ -784,13 +784,18 @@ def api_settings_save():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
+    if data.get("clear_api_key") is True:
+        settings = get_user_settings_state_for_user(user_id)
+        settings["anthropic_api_key"] = None
+        save_user_settings_state_for_user(user_id, settings)
+        return jsonify({"success": True, "has_key": False})
     api_key = data.get("anthropic_api_key", "").strip()
     if not api_key:
         return jsonify({"error": "API key is required"}), 400
     settings = get_user_settings_state_for_user(user_id)
     settings["anthropic_api_key"] = api_key
     save_user_settings_state_for_user(user_id, settings)
-    return jsonify({"success": True})
+    return jsonify({"success": True, "has_key": True})
 
 
 @app.route("/api/profile", methods=["POST"])

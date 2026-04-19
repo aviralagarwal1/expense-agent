@@ -116,6 +116,15 @@
       color: var(--ink);
       cursor: default;
     }
+    a.nav-link.is-disabled {
+      pointer-events: none;
+      cursor: default;
+      opacity: 0.52;
+      color: var(--muted);
+    }
+    a.nav-link.is-disabled:hover {
+      transform: none;
+    }
 
     .shell {
       padding: 24px;
@@ -204,9 +213,20 @@
     .key-status.replacing #statusReturnLink {
       display: none;
     }
+    /* No key: strong warning (red) so it reads as blocked, not a soft prompt. */
     .key-status.unset {
-      background: linear-gradient(180deg, rgba(251,242,223,0.92), rgba(255,255,255,0.92));
-      border-color: rgba(154, 106, 32, 0.24);
+      background: linear-gradient(180deg, rgba(243, 228, 226, 0.92), rgba(255, 255, 255, 0.92));
+      border-color: rgba(161, 72, 66, 0.28);
+    }
+    .key-status.unset .key-status-dot {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(161, 72, 66, 0.14);
+    }
+    .key-status.unset .key-status-title {
+      color: var(--danger);
+    }
+    .key-status.unset .key-status-copy {
+      color: rgba(161, 72, 66, 0.88);
     }
     h1 {
       font-size: clamp(2rem, 4vw, 2.8rem);
@@ -467,6 +487,7 @@
   const returnLink = document.getElementById("returnLink");
   const statusReturnLink = document.getElementById("statusReturnLink");
   const profileLink = document.getElementById("profileLink");
+  const workspaceLink = document.getElementById("workspaceLink");
   const keyStatus = document.getElementById("keyStatus");
   const keyStatusTitle = document.getElementById("keyStatusTitle");
   const keyStatusCopy = document.getElementById("keyStatusCopy");
@@ -474,11 +495,11 @@
   const saveBtn = document.getElementById("saveBtn");
   const toggleKeyBtn = document.getElementById("toggleKeyBtn");
 
-  let replaceMode = false;
   let serverHasKey = false;
 
   returnLink.href = returnTo;
   statusReturnLink.href = returnTo;
+  workspaceLink.href = returnTo;
   profileLink.href = `/settings?return_to=${encodeURIComponent(returnTo)}`;
 
   function doLogout() {
@@ -492,57 +513,87 @@
   }
 
   function refreshSaveButton() {
-    if (!serverHasKey) {
-      saveBtn.textContent = "Save Key";
-      return;
+    saveBtn.textContent = serverHasKey ? "Clear Key" : "Save Key";
+  }
+
+  function syncWorkspaceNav() {
+    if (serverHasKey) {
+      workspaceLink.classList.remove("is-disabled");
+      workspaceLink.removeAttribute("aria-disabled");
+      workspaceLink.removeAttribute("tabindex");
+      workspaceLink.href = returnTo;
+    } else {
+      workspaceLink.classList.add("is-disabled");
+      workspaceLink.setAttribute("aria-disabled", "true");
+      workspaceLink.setAttribute("tabindex", "-1");
+      workspaceLink.removeAttribute("href");
     }
-    saveBtn.textContent = replaceMode ? "Save Key" : "Replace";
   }
 
   function syncKeyBanner() {
     if (!serverHasKey) return;
-    if (replaceMode) {
-      keyStatus.className = "key-status replacing";
-      keyStatusTitle.textContent = "Replacing your API key";
-      keyStatusCopy.textContent = "Paste your new key below. The current key stays active until you save.";
-      apiKeyInput.placeholder = "sk-ant-...";
-      return;
-    }
     keyStatus.className = "key-status set";
     keyStatusTitle.textContent = "API key connected";
     keyStatusCopy.textContent = "Your key is saved and screenshot uploads are unlocked.";
-    apiKeyInput.placeholder = "Paste a new key to replace your current one";
+    apiKeyInput.placeholder = "Click Clear Key to remove your key, or paste a new key and press Enter to replace it.";
     showReturnLink();
   }
 
   function updateKeyUi(hasKey) {
     serverHasKey = hasKey;
     keyStatus.style.display = "flex";
+    syncWorkspaceNav();
     if (hasKey) {
       syncKeyBanner();
       refreshSaveButton();
       return;
     }
 
-    replaceMode = false;
     keyStatus.className = "key-status unset";
     keyStatusTitle.textContent = "No API key saved";
-    keyStatusCopy.textContent = "Add your Anthropic key to unlock screenshot uploads.";
+    keyStatusCopy.textContent = "Screenshot uploads are locked until you save an Anthropic key below—or leave this empty if you are done with the app.";
     apiKeyInput.placeholder = "sk-ant-...";
+    returnLink.style.display = "none";
     refreshSaveButton();
     requestAnimationFrame(() => apiKeyInput.focus());
   }
 
   function onPrimaryKeyAction() {
-    if (serverHasKey && !replaceMode) {
-      replaceMode = true;
-      syncKeyBanner();
-      refreshSaveButton();
-      showStatus("Please add your API Key.", false);
-      apiKeyInput.focus();
+    if (serverHasKey) {
+      clearApiKey();
       return;
     }
     saveKey();
+  }
+
+  async function clearApiKey() {
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Clearing key…";
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ clear_api_key: true }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showStatus(data.error, false);
+        return;
+      }
+      apiKeyInput.value = "";
+      apiKeyInput.type = "password";
+      toggleKeyBtn.textContent = "Show";
+      showStatus("API key removed from this app. Workspace stays locked until you save a new key.", true);
+      updateKeyUi(false);
+    } catch (e) {
+      showStatus("Network error - please try again.", false);
+    } finally {
+      saveBtn.disabled = false;
+      refreshSaveButton();
+    }
   }
 
   async function loadKeyStatus() {
@@ -592,7 +643,6 @@
       apiKeyInput.value = "";
       apiKeyInput.type = "password";
       toggleKeyBtn.textContent = "Show";
-      replaceMode = false;
       showStatus("Key saved. Screenshot uploads are now unlocked.", true);
       updateKeyUi(true);
     } catch (e) {
@@ -611,7 +661,15 @@
   }
 
   apiKeyInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") onPrimaryKeyAction();
+    if (e.key !== "Enter") return;
+    if (serverHasKey) {
+      const k = apiKeyInput.value.trim();
+      if (k.startsWith("sk-ant-")) {
+        saveKey();
+      }
+      return;
+    }
+    saveKey();
   });
 </script>
 </body>
