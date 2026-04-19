@@ -334,9 +334,20 @@
       font-size: 0.86rem;
       font-weight: 700;
       line-height: 1.5;
+      padding: 13px 16px;
+      border-radius: 16px;
     }
-    .status-msg.success { color: var(--success); }
-    .status-msg.error { color: var(--danger); }
+    /* Match .key-status.set / .key-status.unset — green when key is saved, red when removed or invalid. */
+    .status-msg.success {
+      color: var(--success);
+      background: linear-gradient(180deg, rgba(228, 243, 234, 0.92), rgba(255, 255, 255, 0.92));
+      border: 1px solid rgba(36, 102, 74, 0.26);
+    }
+    .status-msg.error {
+      color: var(--danger);
+      background: linear-gradient(180deg, rgba(243, 228, 226, 0.92), rgba(255, 255, 255, 0.92));
+      border: 1px solid rgba(161, 72, 66, 0.28);
+    }
     .spinner {
       display: inline-block;
       width: 14px;
@@ -535,7 +546,7 @@
     keyStatus.className = "key-status set";
     keyStatusTitle.textContent = "API key connected";
     keyStatusCopy.textContent = "Your key is saved and screenshot uploads are unlocked.";
-    apiKeyInput.placeholder = "Click Clear Key to remove your key, or paste a new key and press Enter to replace it.";
+    apiKeyInput.placeholder = "sk-ant-...";
     showReturnLink();
   }
 
@@ -586,7 +597,7 @@
       apiKeyInput.value = "";
       apiKeyInput.type = "password";
       toggleKeyBtn.textContent = "Show";
-      showStatus("API key removed from this app. Workspace stays locked until you save a new key.", true);
+      showStatus("API key removed from this app. Workspace stays locked until you save a new key.", false);
       updateKeyUi(false);
     } catch (e) {
       showStatus("Network error - please try again.", false);
