@@ -27,3 +27,6 @@ Thumbs.db
 .claude/
 CLAUDE.md
 .cursor/
+
+# Local diagnostics
+scripts/auth_doctor.py
