@@ -116,6 +116,14 @@
       color: var(--ink);
       cursor: default;
     }
+    .nav-pill[aria-current="page"] {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(230, 238, 245, 0.65));
+      border-color: rgba(35, 66, 94, 0.34);
+      box-shadow:
+        0 0 0 1px rgba(35, 66, 94, 0.06),
+        0 4px 16px rgba(35, 66, 94, 0.1);
+      color: var(--accent);
+    }
     a.nav-link.is-disabled {
       pointer-events: none;
       cursor: default;
@@ -452,7 +460,7 @@
             <a class="inline-link" id="statusReturnLink" href="/app">Return to Workspace</a>
           </div>
 
-          <h1>Connect your Anthropic API key.</h1>
+          <h1>Connect Your API Key.</h1>
           <p class="lead">
             Save it once to your account and uploads are ready immediately.
           </p>
@@ -544,7 +552,7 @@
   function syncKeyBanner() {
     if (!serverHasKey) return;
     keyStatus.className = "key-status set";
-    keyStatusTitle.textContent = "API key connected";
+    keyStatusTitle.textContent = "API Key Connected";
     keyStatusCopy.textContent = "Your key is saved and screenshot uploads are unlocked.";
     apiKeyInput.placeholder = "sk-ant-...";
     showReturnLink();
