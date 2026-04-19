@@ -492,6 +492,66 @@ def append_transactions_for_user(user_id: str, transactions: list, batch_id: str
 
 
 # ── Claude Vision ────────────────────────────────────────────────────────────
+# Same entry point linked from settings.html and index onboarding copy.
+ANTHROPIC_CONSOLE_KEYS_URL = "https://console.anthropic.com/settings/keys"
+
+
+def user_facing_extraction_error(exc: Exception) -> tuple[str, str]:
+    """Map Claude/API failures to a safe message. Never expose raw exception text to clients."""
+    url = ANTHROPIC_CONSOLE_KEYS_URL
+    if isinstance(exc, json.JSONDecodeError):
+        return (
+            "We could not read the analysis result. Try again with clear card-app screenshots.",
+            url,
+        )
+    if isinstance(exc, anthropic.AuthenticationError):
+        return (
+            "Anthropic rejected your API key. Add a valid key from the Anthropic Console under Settings in this app.",
+            url,
+        )
+    if isinstance(exc, anthropic.RateLimitError):
+        return (
+            "Anthropic is rate limiting requests. Wait a minute and try again, or check usage in the Anthropic Console.",
+            url,
+        )
+    if isinstance(exc, anthropic.BadRequestError):
+        return (
+            "Anthropic could not process these screenshots. Try fewer or smaller images, then try again.",
+            url,
+        )
+    if isinstance(exc, (anthropic.APIConnectionError, anthropic.APITimeoutError)):
+        return (
+            "Could not reach Anthropic. Check your connection and try again.",
+            url,
+        )
+    if isinstance(exc, anthropic.APIStatusError):
+        code = getattr(exc, "status_code", None)
+        if code == 402:
+            return (
+                "Anthropic could not bill this request. Add credits or a payment method in the Anthropic Console.",
+                url,
+            )
+        if code in (401, 403):
+            return (
+                "Anthropic rejected this request. Confirm your API key in Settings and in the Anthropic Console.",
+                url,
+            )
+        if code == 413:
+            return (
+                "The upload was too large for Anthropic. Try fewer screenshots or smaller files.",
+                url,
+            )
+        if code is not None and code >= 500:
+            return (
+                "Anthropic had a temporary problem. Try again in a moment.",
+                url,
+            )
+    return (
+        "Screenshot analysis could not finish. Check your API key, usage, and billing in the Anthropic Console, then try again.",
+        url,
+    )
+
+
 def extract_transactions_from_images(image_data_list: list, api_key: str) -> list:
     client = anthropic.Anthropic(api_key=api_key, timeout=90.0)
 
@@ -840,7 +900,9 @@ def upload():
         extracted_transactions = extract_transactions_from_images(image_data_list, api_key)
         all_transactions = attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
     except Exception as e:
-        return jsonify({"error": f"Claude extraction failed: {type(e).__name__}: {str(e)}"}), 500
+        app.logger.exception("Claude extraction failed for user_id=%s", user_id)
+        msg, help_url = user_facing_extraction_error(e)
+        return jsonify({"error": msg, "help_url": help_url}), 500
 
     try:
         existing_txs = get_existing_transactions_for_user(user_id)

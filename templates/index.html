@@ -1307,6 +1307,23 @@
       opacity: 1;
       transform: translateX(-50%) translateY(-2px);
     }
+    .toast.toast--rich {
+      white-space: normal;
+      max-width: min(440px, calc(100vw - 40px));
+      border-radius: 20px;
+      line-height: 1.45;
+      pointer-events: auto;
+      text-align: left;
+    }
+    .toast.toast--rich a {
+      color: #c8daf4;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .toast.toast--rich a:hover {
+      color: #ffffff;
+    }
 
     @media (max-width: 980px) {
       .setup-grid,
@@ -2149,7 +2166,11 @@
         return;
       }
       if (data.error) {
-        showToast("Error: " + data.error);
+        if (data.help_url) {
+          showToast(data.error, data.help_url);
+        } else {
+          showToast("Error: " + data.error);
+        }
         return;
       }
       currentBatchId = data.batch_id || "";
@@ -2480,10 +2501,40 @@
 
   resetBtn.addEventListener("click", resetWorkspace);
 
-  function showToast(msg) {
-    toast.textContent = msg;
+  const ALLOWED_TOAST_HELP_URLS = new Set([
+    "https://console.anthropic.com/settings/keys",
+  ]);
+
+  let toastHideTimer = null;
+
+  function showToast(msg, helpUrl) {
+    if (toastHideTimer) {
+      clearTimeout(toastHideTimer);
+      toastHideTimer = null;
+    }
+    toast.classList.remove("toast--rich");
+    const safeHelp = helpUrl && ALLOWED_TOAST_HELP_URLS.has(helpUrl) ? helpUrl : "";
+    if (safeHelp) {
+      toast.classList.add("toast--rich");
+      toast.textContent = "";
+      const line = document.createElement("span");
+      line.textContent = msg + " ";
+      const a = document.createElement("a");
+      a.href = safeHelp;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = "Open Anthropic Console";
+      toast.appendChild(line);
+      toast.appendChild(a);
+    } else {
+      toast.textContent = msg;
+    }
     toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
+    const ms = safeHelp ? 11000 : 3000;
+    toastHideTimer = setTimeout(() => {
+      toast.classList.remove("show");
+      toastHideTimer = null;
+    }, ms);
   }
 
   function markHistoryAvailable() {
