@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Expense Agent</title>
+  <style>
+    :root {
+      --bg: #f4f1eb;
+      --paper: rgba(255, 255, 255, 0.82);
+      --surface: #ffffff;
+      --surface-alt: #f8f6f2;
+      --ink: #18212b;
+      --muted: #5e6873;
+      --line: rgba(24, 33, 43, 0.1);
+      --line-strong: rgba(24, 33, 43, 0.16);
+      --accent: #23425e;
+      --accent-soft: #e6eef5;
+      --shadow: 0 24px 60px rgba(24, 33, 43, 0.08);
+      --sans: "Segoe UI Variable Text", "SF Pro Text", "Helvetica Neue", sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    html { scrollbar-gutter: stable; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.92), rgba(255,255,255,0) 38%),
+        linear-gradient(180deg, #fbfaf7 0%, var(--bg) 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    a { color: inherit; text-decoration: none; }
+    .about-copy a {
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .about-copy a:hover {
+      color: var(--ink);
+    }
+
+    .page { max-width: 1180px; margin: 0 auto; }
+    .frame {
+      background: var(--paper);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: var(--shadow);
+      border-radius: 36px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 22px 26px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .brand-mark {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      display: block;
+      filter: drop-shadow(0 2px 5px rgba(35, 66, 94, 0.22));
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .nav-link,
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      padding: 12px 18px;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+    }
+    .nav-link {
+      border: 1px solid rgba(35, 66, 94, 0.28);
+      color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 2px 10px rgba(35, 66, 94, 0.06);
+    }
+    .nav-link:hover {
+      transform: translateY(-1px);
+      background: #d9e6f2;
+      border-color: rgba(35, 66, 94, 0.4);
+    }
+    .nav-cta {
+      color: #ffffff;
+      background: var(--accent);
+      border: 1px solid transparent;
+      box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
+    }
+    .nav-cta:hover { transform: translateY(-1px); }
+    /* White pill — matches landing; on About page this is "Home" back to /. */
+    .nav-about {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      padding: 12px 18px;
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(24, 33, 43, 0.05);
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+    .nav-about:hover {
+      transform: translateY(-1px);
+      border-color: rgba(35, 66, 94, 0.28);
+      box-shadow: 0 6px 16px rgba(24, 33, 43, 0.08);
+    }
+
+    .about-main {
+      padding: clamp(28px, 4vw, 44px) clamp(22px, 4vw, 48px) clamp(40px, 5vw, 56px);
+      max-width: none;
+      /* Narrow panes (e.g. embedded browser / split view) are often <700px wide; keep the
+         hero row intact and scroll horizontally instead of stacking. */
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Flex (not grid): avoids fragile min()/fr track math. Row is forced wide enough that
+       text + photo stay side-by-side unless we explicitly switch to column (small phones). */
+    .about-hero {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      gap: clamp(20px, 3vw, 40px);
+      min-width: 640px;
+    }
+
+    .about-icon-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      padding-top: 6px;
+      flex: 0 0 auto;
+      align-self: flex-start;
+    }
+    .about-icon-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      border: none;
+      background: none;
+      padding: 4px;
+      border-radius: 8px;
+      transition: color 0.16s ease, opacity 0.16s ease, transform 0.16s ease;
+    }
+    .about-icon-link:hover {
+      color: var(--ink);
+      transform: translateY(-1px);
+    }
+    .about-icon-link:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(35, 66, 94, 0.2);
+    }
+    .about-icon-link svg {
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
+
+    .about-copy {
+      flex: 7 1 0;
+      min-width: 0;
+      padding-top: 2px;
+      /* Pull the text’s right edge left a bit more air before the photo */
+      padding-right: clamp(16px, 2.8vw, 32px);
+    }
+    .about-eyebrow {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .about-copy p.about-eyebrow {
+      margin-bottom: 14px;
+    }
+    .about-copy h1 {
+      font-family: var(--sans);
+      font-size: clamp(2rem, 4.2vw, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      color: var(--ink);
+      margin-bottom: 20px;
+    }
+    .about-copy p {
+      color: var(--ink);
+      font-size: clamp(1rem, 1.35vw, 1.08rem);
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+    .about-copy p:last-child {
+      margin-bottom: 0;
+    }
+
+    .about-photo-panel {
+      flex: 3 1 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: stretch;
+      min-width: 0;
+      min-height: 0;
+      padding: 4px 0;
+    }
+    .about-photo {
+      aspect-ratio: 4 / 5;
+      width: 100%;
+      max-width: 300px;
+      max-height: min(360px, 50vh);
+      flex-shrink: 0;
+      border-radius: 28px;
+      border: 1px solid var(--line-strong);
+      background: var(--surface-alt);
+      overflow: hidden;
+    }
+    .about-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+
+    .about-icon-row {
+      display: none;
+      flex-direction: row;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 22px 28px;
+      margin-top: 8px;
+    }
+
+    /* Only real phones: single column + centered (avoid stacking for narrow desktop panes). */
+    @media (max-width: 520px) {
+      .about-main {
+        overflow-x: visible;
+      }
+      .about-hero {
+        flex-direction: column;
+        min-width: 0;
+        align-items: center;
+        gap: 28px;
+      }
+      .about-icon-stack {
+        display: none;
+      }
+      .about-copy {
+        max-width: none;
+        padding-right: 0;
+        text-align: center;
+      }
+      .about-copy p {
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .about-photo-panel {
+        width: 100%;
+        max-width: min(360px, 92vw);
+        flex: none;
+        padding: 0;
+        justify-content: center;
+      }
+      .about-photo {
+        max-height: none;
+        aspect-ratio: 4 / 3;
+        max-width: 100%;
+        margin: 0 auto;
+      }
+      .about-icon-row {
+        display: flex;
+        margin-top: 4px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 16px; }
+      .nav {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+      }
+      .nav-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+      .nav-link,
+      .nav-cta,
+      .nav-about {
+        flex: 1;
+      }
+      .about-main {
+        padding: 22px 18px 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="frame">
+      <nav class="nav">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="brandMarkGradientAbout" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#3a6387"/>
+                <stop offset="100%" stop-color="#89a6c0"/>
+              </linearGradient>
+            </defs>
+            <rect x="3" y="7" width="22" height="14" rx="3" fill="url(#brandMarkGradientAbout)"/>
+            <rect x="3" y="10.5" width="22" height="2.4" fill="#0c1623" opacity="0.32"/>
+            <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
+            <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
+          </svg>
+          <span>Expense Agent</span>
+        </a>
+        <div class="nav-actions">
+          <a class="nav-cta" href="/auth/google">Sign In</a>
+          <a class="nav-link" href="/register">Register with Google</a>
+          <a class="nav-about" href="/">Home</a>
+        </div>
+      </nav>
+
+      <main class="about-main">
+        <section class="about-hero" aria-labelledby="about-name">
+          <div class="about-icon-stack">
+            <a class="about-icon-link" href="https://www.linkedin.com/in/aviralagarwal05" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a class="about-icon-link" href="https://x.com/AviralAgarwal0" target="_blank" rel="noopener noreferrer" aria-label="X (@AviralAgarwal0)">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a class="about-icon-link" href="https://github.com/aviralagarwal1" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+            </a>
+            <a class="about-icon-link" href="mailto:aviral.k.agarwal@gmail.com" aria-label="Email">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+            </a>
+          </div>
+
+          <div class="about-copy">
+            <p class="about-eyebrow">Expense Agent</p>
+            <h1 id="about-name">Aviral Agarwal</h1>
+            <p>
+              Hi! I'm Aviral, a Business Honors and Information Systems student at UT Austin.
+            </p>
+            <p>
+              I created Expense Agent as a personal project to track expenses across different credit card apps in one unified log. The main challenge was building the application to extract data from screenshots, cross-check entries against user history, filter duplicates, and summarize spending.
+            </p>
+            <p>
+              Through this, I became more interested in designing intuitive user flows and thinking from the customer's perspective. AI has made it easier than ever to build, but I'm focused on developing stronger product judgment. I want to better understand which features reduce friction, what to prioritize, and when simplicity matters more than adding functionality.
+            </p>
+            <p>
+              If you have feedback or ideas, feel free to reach out on LinkedIn, Twitter, GitHub, or X. If you're interested in following my work, visit <a href="https://aviralagarwal.com" target="_blank" rel="noopener noreferrer">aviralagarwal.com</a>.
+            </p>
+            <div class="about-icon-row" aria-label="Social links">
+              <a class="about-icon-link" href="https://www.linkedin.com/in/aviralagarwal05" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              </a>
+              <a class="about-icon-link" href="https://x.com/AviralAgarwal0" target="_blank" rel="noopener noreferrer" aria-label="X (@AviralAgarwal0)">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
+              <a class="about-icon-link" href="https://github.com/aviralagarwal1" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+              </a>
+              <a class="about-icon-link" href="mailto:aviral.k.agarwal@gmail.com" aria-label="Email">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="about-photo-panel">
+            <div class="about-photo">
+              <img src="{{ url_for('static', filename='profile.png') }}" alt="Aviral Agarwal" width="640" height="800" loading="lazy" decoding="async" />
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
