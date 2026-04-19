@@ -821,6 +821,7 @@
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
+      transition: border-color 0.2s ease, box-shadow 0.24s ease;
     }
     .upload-card-select:focus {
       border-color: rgba(35, 66, 94, 0.42);
@@ -832,6 +833,32 @@
       -webkit-text-fill-color: var(--muted);
       background: rgba(255,255,255,0.82);
       cursor: not-allowed;
+    }
+    .upload-card-picker.needs-card .upload-card-select {
+      border-color: rgba(35, 66, 94, 0.6);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.1), 0 6px 18px rgba(35, 66, 94, 0.08);
+      animation: picker-pulse 0.9s ease-out 1;
+    }
+    @keyframes picker-pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(35, 66, 94, 0.28), 0 6px 18px rgba(35, 66, 94, 0.08);
+      }
+      60% {
+        box-shadow: 0 0 0 10px rgba(35, 66, 94, 0), 0 6px 18px rgba(35, 66, 94, 0.08);
+      }
+      100% {
+        box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.1), 0 6px 18px rgba(35, 66, 94, 0.08);
+      }
+    }
+    .picker-hint {
+      display: none;
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.005em;
+    }
+    .upload-card-picker.needs-card .picker-hint {
+      display: block;
     }
     .mini-link {
       display: inline-flex;
@@ -1564,7 +1591,7 @@
                 <h2>Upload screenshots</h2>
                 <p id="uploadHeaderHint">Choose the saved card, then drop the batch.</p>
               </div>
-              <div class="upload-card-picker">
+              <div class="upload-card-picker" id="uploadCardPicker">
                 <div class="picker-label">Saved card</div>
                 <div class="upload-card-row">
                   <select class="upload-card-select" id="uploadCardSelect">
@@ -1572,6 +1599,7 @@
                   </select>
                   <a class="mini-link" href="/settings?return_to=%2Fapp">Manage cards</a>
                 </div>
+                <div class="picker-hint" id="pickerHint">Choose a card to analyze.</div>
               </div>
             </div>
 
@@ -1665,6 +1693,7 @@
   const uploadMarkEl = document.getElementById("uploadMark");
   const uploadPanel = document.getElementById("uploadPanel");
   const uploadCardSelect = document.getElementById("uploadCardSelect");
+  const uploadCardPickerEl = document.getElementById("uploadCardPicker");
   const uploadHeaderHintEl = document.getElementById("uploadHeaderHint");
   const cardEmptyStateEl = document.getElementById("cardEmptyState");
   const loadingSpinnerEl = document.querySelector("#loadingView .spinner");
@@ -1688,6 +1717,7 @@
   let possibleTransactions = [];
   let txStatuses = [];
   let possibleStatuses = [];
+  let currentBatchId = "";
 
   (async function handleAuthRedirect() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -1806,6 +1836,13 @@
   function updateAnalyzeAvailability() {
     analyzeBtn.disabled = files.length === 0 || !hasApiKey || !selectedCardId;
     updateUploadHint();
+    updateCardPickerState();
+  }
+
+  function updateCardPickerState() {
+    if (!uploadCardPickerEl) return;
+    const needsCard = files.length > 0 && !selectedCardId && savedCards.length > 0;
+    uploadCardPickerEl.classList.toggle("needs-card", needsCard);
   }
 
   function syncSelectedCard() {
@@ -2046,6 +2083,7 @@
     possibleTransactions = [];
     txStatuses = [];
     possibleStatuses = [];
+    currentBatchId = "";
     previewGrid.innerHTML = "";
     resultsBox.classList.remove("visible");
     document.getElementById("possibleBox").classList.remove("visible");
@@ -2110,6 +2148,7 @@
         showToast("Error: " + data.error);
         return;
       }
+      currentBatchId = data.batch_id || "";
       newTransactions = data.new;
       possibleTransactions = data.possible || [];
       txStatuses = newTransactions.map(() => ({ state: null, id: null }));
@@ -2199,7 +2238,7 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${sessionToken}`,
         },
-        body: JSON.stringify({ transactions: [possibleTransactions[i]] }),
+        body: JSON.stringify({ transactions: [possibleTransactions[i]], batch_id: currentBatchId }),
       });
       const data = await res.json();
       if (data.error) {
@@ -2335,7 +2374,7 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${sessionToken}`,
         },
-        body: JSON.stringify({ transactions: [newTransactions[i]] }),
+        body: JSON.stringify({ transactions: [newTransactions[i]], batch_id: currentBatchId }),
       });
       const data = await res.json();
       if (data.error) {
@@ -2411,7 +2450,7 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${sessionToken}`,
         },
-        body: JSON.stringify({ transactions: payload }),
+        body: JSON.stringify({ transactions: payload, batch_id: currentBatchId }),
       });
       const data = await res.json();
       if (data.error) {
