@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DOTENV = ROOT / ".env"
-# Production app URL (override localhost in .env)
-APP_URL = "https://expenseagent.aviralagarwal.com"
 
 
 def parse_env(path: Path) -> dict[str, str]:
@@ -27,10 +26,23 @@ def parse_env(path: Path) -> dict[str, str]:
 
 def main() -> None:
     env = parse_env(DOTENV)
+    try:
+        supabase_url = env["SUPABASE_URL"]
+        service_key = env["SUPABASE_SERVICE_KEY"]
+    except KeyError as e:
+        raise SystemExit(f"Missing {e.args[0]} in {DOTENV}") from e
+
+    # Prefer CLOUDRUN_APP_URL when .env still points at localhost for local dev.
+    app_url = (os.environ.get("CLOUDRUN_APP_URL") or env.get("APP_URL") or "").strip().rstrip("/")
+    if not app_url:
+        raise SystemExit(
+            f"Set APP_URL in {DOTENV} to your public origin, or set CLOUDRUN_APP_URL for this command only."
+        )
+
     cfg = {
-        "SUPABASE_URL": env["SUPABASE_URL"],
-        "SUPABASE_SERVICE_KEY": env["SUPABASE_SERVICE_KEY"],
-        "APP_URL": APP_URL,
+        "SUPABASE_URL": supabase_url,
+        "SUPABASE_SERVICE_KEY": service_key,
+        "APP_URL": app_url,
     }
     fd, path = tempfile.mkstemp(suffix=".yaml", text=True)
     p = Path(path)
