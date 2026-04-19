@@ -1742,6 +1742,8 @@
   let txStatuses = [];
   let possibleStatuses = [];
   let currentBatchId = "";
+  /** True when we already kicked off bootstrap from the OAuth hash (avoid double /api/settings). */
+  let authBootstrapFromHash = false;
 
   (async function handleAuthRedirect() {
     const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -1755,13 +1757,14 @@
       sessionStorage.setItem("expense_refresh_token", sessionRefreshToken);
       window.history.replaceState(null, "", "/app");
       profileFirstName = getFirstNameFromToken(sessionToken);
+      authBootstrapFromHash = true;
       showAuthenticatedShell();
       checkApiKeyAndEnter();
       return;
     }
   })();
 
-  if (sessionToken) {
+  if (sessionToken && !authBootstrapFromHash) {
     if (window.location.pathname === "/register") {
       window.history.replaceState(null, "", "/app");
     }
