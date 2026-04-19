@@ -1,0 +1,62 @@
+# Build Docker image, push to Artifact Registry, deploy to Cloud Run.
+# Env vars for the service stay in Cloud Run (console or gcloud); this job only
+# updates the container image and keeps existing revision settings.
+
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-cloud-run
+  cancel-in-progress: true
+
+env:
+  PROJECT_ID: public-expense-agent
+  REGION: us-central1
+  SERVICE: expense-agent
+  GAR_REPOSITORY: cloud-run-source-deploy
+  IMAGE_NAME: expense-agent
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/689493751951/locations/global/workloadIdentityPools/github/providers/github-provider
+          service_account: github-actions-deploy@public-expense-agent.iam.gserviceaccount.com
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        run: |
+          set -eux
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      # Only the image changes; existing env vars, limits, and IAM stay on the service.
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image "${{ env.IMAGE }}" \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --quiet
