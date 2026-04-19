@@ -9,7 +9,7 @@
 <body>
   <div class="page">
     <div class="frame">
-      <nav class="nav">
+      <nav class="nav no-print">
         <a class="brand" href="/app">
           <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
@@ -35,7 +35,7 @@
       </nav>
 
       <div class="content">
-        <section class="panel headline">
+        <section class="panel headline no-print">
           <div>
             <h1>History</h1>
             <div class="view-switcher">
@@ -44,23 +44,38 @@
                 <button class="view-tab" id="viewTabTransactions" data-view="transactions" type="button" role="tab" aria-selected="false">Transactions</button>
                 <button class="view-tab" id="viewTabBatches" data-view="batches" type="button" role="tab" aria-selected="false">Batches</button>
               </div>
-              <button class="help-link" id="helpBtn" type="button">What's the difference?</button>
             </div>
           </div>
         </section>
 
-        <section class="panel state-panel" id="loadingState">
+        <section class="panel state-panel no-print" id="loadingState">
           <div class="spinner" aria-hidden="true"></div>
           <h2>Loading your history</h2>
           <p>Pulling every transaction on record.</p>
         </section>
 
-        <section class="panel state-panel" id="emptyState" style="display:none;">
+        <section class="panel state-panel no-print" id="emptyState" style="display:none;">
           <h2>No transactions yet</h2>
           <p><a href="/app">Go back to the app</a> and add a batch of screenshots to start building your ledger.</p>
         </section>
 
         <section class="view-section" id="summaryView" hidden>
+          <div class="summary-export-bar no-print" role="toolbar" aria-label="Export summary">
+            <div class="view-head-actions" role="group">
+              <button type="button" class="export-btn" id="exportSummaryPdfBtn" aria-label="Print or save summary as PDF">
+                <span class="export-btn-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                </span>
+                <span class="export-btn-label">PDF</span>
+              </button>
+              <button type="button" class="export-btn" id="exportSummaryPptxBtn" aria-label="Download summary as PowerPoint">
+                <span class="export-btn-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+                </span>
+                <span class="export-btn-label">PPTX</span>
+              </button>
+            </div>
+          </div>
           <section class="metrics-grid">
             <!-- All four boxes are deliberately filter-independent: they read
                  from allTransactions so the headline numbers stay stable when
@@ -127,7 +142,7 @@
             <section class="panel insight-aside" id="summaryInsightAside">
               <div class="insight-compare-inner" id="comparePanelInner">
                 <div class="section-head">
-                  <h2>Compare</h2>
+                  <h2>Compare Months</h2>
                   <div class="compare-head-tools" id="compareModePills" role="tablist" aria-label="Compare by totals or averages">
                     <button type="button" class="compare-mode-pill" data-compare-mode="totals" role="tab" aria-selected="true" tabindex="0">Totals</button>
                     <button type="button" class="compare-mode-pill" data-compare-mode="averages" role="tab" aria-selected="false" tabindex="-1">Averages</button>
@@ -171,15 +186,25 @@
 
         <section class="view-section" id="transactionsView" hidden>
           <section class="panel ledger-panel">
-            <div class="ledger-top">
-              <div class="ledger-head">
+            <div class="transactions-top">
+              <div>
                 <h2>Transactions</h2>
+                <p>Transactions includes every individual charge you've logged, with one row per charge. Filter, search, and delete one at a time.</p>
+              </div>
+              <div class="view-head-actions no-print" role="group" aria-label="Transactions actions">
                 <div class="ledger-count-group">
-                  <span class="ledger-count" id="ledgerCount">0 shown</span>
                   <button class="clear-link" id="clearFiltersBtn" type="button">Clear Filters</button>
                 </div>
+                <button type="button" class="export-btn" id="exportTxCsvBtn" aria-label="Export filtered transactions as CSV">
+                  <span class="export-btn-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h2"/><path d="M8 17h8"/><path d="M8 9h8"/></svg>
+                  </span>
+                  <span class="export-btn-label">CSV</span>
+                </button>
               </div>
+            </div>
 
+            <div class="ledger-filters">
               <div class="ledger-tools">
                 <div class="control">
                   <label for="searchInput">Search</label>
@@ -250,11 +275,18 @@
             <div class="batches-top">
               <div>
                 <h2>Batches</h2>
-                <p>Every batch logged in your history. Click any row for detail or to delete it.</p>
+                <p>Batches group your charges by each analysis session. If you accidentally filed a batch to the wrong card, you can delete it here in one click.</p>
               </div>
-              <div class="batches-count-group">
-                <span class="batches-count" id="batchesCount">0 batches</span>
-                <button class="clear-link" id="batchClearBtn" type="button">Clear Filters</button>
+              <div class="view-head-actions no-print" role="group" aria-label="Batches actions">
+                <div class="batches-count-group">
+                  <button class="clear-link" id="batchClearBtn" type="button">Clear Filters</button>
+                </div>
+                <button type="button" class="export-btn" id="exportBatchesCsvBtn" aria-label="Export filtered batches as CSV">
+                  <span class="export-btn-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h2"/><path d="M8 17h8"/><path d="M8 9h8"/></svg>
+                  </span>
+                  <span class="export-btn-label">CSV</span>
+                </button>
               </div>
             </div>
 
@@ -303,22 +335,6 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-    <div class="modal-card">
-      <div class="modal-title" id="helpTitle">Transactions vs. Batches</div>
-      <div class="modal-subtitle">Two ways of looking at the same ledger.</div>
-
-      <div class="help-copy">
-        <p><strong>Transactions</strong> includes every individual charge you've logged, with one row per charge. Filter, search, and delete one at a time.</p>
-        <p><strong>Batches</strong> groups your charges by each analysis session. If you accidentally filed a batch to the wrong card, you can delete the whole batch in one click instead of cleaning up row by row.</p>
-      </div>
-
-      <div class="modal-actions" style="justify-content: flex-end;">
-        <button class="modal-btn modal-btn-secondary" id="helpCloseBtn" type="button">Got it</button>
-      </div>
-    </div>
-  </div>
-
   <div class="modal-overlay" id="batchModal" role="dialog" aria-modal="true" aria-labelledby="batchModalTitle">
     <div class="modal-card">
       <div class="modal-title" id="batchModalTitle">Batch</div>
@@ -346,8 +362,9 @@
     </div>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="toast no-print" id="toast" role="status" aria-live="polite"></div>
 
-<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/history.js') }}"></script>
 </body>
 </html>

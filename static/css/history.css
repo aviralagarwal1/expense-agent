@@ -860,33 +860,12 @@
       padding: 0;
       overflow: hidden;
     }
-    .ledger-top {
-      /* The `padding` bottom (3rd value) controls the gap between the
-         last filter row and the ledger table. The grid `gap` controls the
-         spacing between the H2 and row 1, AND between row 1 and row 2.
-         See also `.ledger-tools + .ledger-tools` below for the extra
-         tightening between row 1 and row 2 only. */
-      padding: 24px 24px 28px;
+    .ledger-filters {
+      padding: 18px 28px;
       border-bottom: 1px solid var(--line);
       background: rgba(255,255,255,0.9);
       display: grid;
       gap: 16px;
-    }
-    .ledger-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 14px;
-    }
-    .ledger-head h2 {
-      font-size: 1.1rem;
-      letter-spacing: -0.02em;
-    }
-    .ledger-count {
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 700;
-      white-space: nowrap;
     }
     .ledger-count-group {
       display: flex;
@@ -894,6 +873,52 @@
       gap: 12px;
       flex-wrap: wrap;
     }
+
+    /* Export — shared placement: icon + short label, aligned with count/clear cluster */
+    .view-head-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      min-height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(35, 66, 94, 0.22);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+    }
+    .export-btn:hover {
+      border-color: rgba(35, 66, 94, 0.38);
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(35, 66, 94, 0.1);
+    }
+    .export-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(35, 66, 94, 0.2);
+    }
+    .export-btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .export-btn-label {
+      line-height: 1;
+    }
+
     .ledger-tools {
       display: grid;
       grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(190px, 0.8fr);
@@ -944,9 +969,9 @@
       box-shadow: 0 14px 28px rgba(35, 66, 94, 0.16);
     }
 
-    .ledger-tools + .ledger-tools {
+    .ledger-filters .ledger-tools + .ledger-tools {
       /* Negative margin pulls row 2 (Month/Amount) closer to row 1
-         (Search/Status/Card). The `.ledger-top` grid gap is 16px, so the
+         (Search/Status/Card). The `.ledger-filters` grid gap is 16px, so the
          effective spacing here is (16 + this value). Use 0 for 16px,
          -6 for 10px, -10 for 6px, etc. */
       margin-top: -6px;
@@ -1197,25 +1222,6 @@
       color: #ffffff;
       box-shadow: 0 10px 22px rgba(35, 66, 94, 0.18);
     }
-    .help-link {
-      margin-left: auto;
-      background: transparent;
-      border: none;
-      padding: 4px 2px;
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      text-decoration: underline dashed rgba(24, 33, 43, 0.28);
-      text-underline-offset: 4px;
-      text-decoration-thickness: 1px;
-      transition: color 0.16s ease, text-decoration-color 0.16s ease;
-    }
-    .help-link:hover {
-      color: var(--accent);
-      text-decoration-color: rgba(35, 66, 94, 0.5);
-    }
-
     .view-section {
       display: grid;
       gap: 18px;
@@ -1228,29 +1234,73 @@
       padding: 0;
       overflow: hidden;
     }
-    .batches-top {
-      padding: 26px 28px 18px;
+    /* Summary: export-only strip — spacing comes from .content gap + .view-section gap only,
+       so the row sits evenly between the headline panel and the metric cards (no negative margin
+       or extra bottom padding throwing the rhythm off). */
+    .summary-export-bar {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 14px;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0;
+      margin-top: 0;
+      border-bottom: none;
+    }
+    .summary-export-bar .view-head-actions {
+      gap: 10px;
+    }
+
+    /* Same column template as .ledger-tools: CSV sits in column 3, right edge
+       aligned with Card (Transactions) or Items (Batches) below. Clear stays left of CSV. */
+    .batches-top,
+    .transactions-top {
+      padding: 26px 28px 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(190px, 0.8fr);
+      gap: 12px;
+      align-items: end;
       border-bottom: 1px solid var(--line);
     }
-    .batches-top h2 {
+    .batches-top > div:first-of-type,
+    .transactions-top > div:first-of-type {
+      grid-column: 1 / 3;
+      min-width: 0;
+    }
+    .batches-top .view-head-actions,
+    .transactions-top .view-head-actions {
+      grid-column: 3;
+      justify-self: stretch;
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    /* Placed after base header rules so it wins over the 3-column template. */
+    @media (max-width: 1180px) {
+      .batches-top,
+      .transactions-top {
+        grid-template-columns: 1fr;
+      }
+      .batches-top > div:first-of-type,
+      .transactions-top > div:first-of-type {
+        grid-column: 1;
+      }
+      .batches-top .view-head-actions,
+      .transactions-top .view-head-actions {
+        grid-column: 1;
+        justify-content: flex-end;
+      }
+    }
+
+    .batches-top h2,
+    .transactions-top h2 {
       font-size: 1.1rem;
       letter-spacing: -0.02em;
       margin-bottom: 4px;
     }
-    .batches-top p {
+    .batches-top p,
+    .transactions-top p {
       color: var(--muted);
       font-size: 0.86rem;
       line-height: 1.55;
-    }
-    .batches-count {
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 700;
-      white-space: nowrap;
     }
     .batches-list {
       display: grid;
@@ -1494,18 +1544,6 @@
       border-top-color: #ffffff;
     }
 
-    .help-copy p + p {
-      margin-top: 12px;
-    }
-    .help-copy strong {
-      color: var(--ink);
-    }
-    .help-copy {
-      color: var(--muted);
-      line-height: 1.68;
-      font-size: 0.95rem;
-    }
-
     .toast {
       position: fixed;
       left: 50%;
@@ -1556,9 +1594,19 @@
         grid-row: 1 / span 5;
         align-self: center;
       }
-      .batches-top {
-        flex-direction: column;
-        align-items: flex-start;
+      .batches-top,
+      .transactions-top {
+        grid-template-columns: 1fr;
+      }
+      .batches-top > div:first-of-type,
+      .transactions-top > div:first-of-type {
+        grid-column: 1;
+      }
+      .batches-top .view-head-actions,
+      .transactions-top .view-head-actions {
+        grid-column: 1;
+        width: 100%;
+        justify-content: flex-start;
       }
     }
 
@@ -1591,12 +1639,16 @@
       .metrics-grid {
         grid-template-columns: 1fr;
       }
-      .ledger-top {
+      .ledger-filters {
+        padding: 16px 20px;
+      }
+      .batches-top,
+      .transactions-top {
         padding: 20px 20px 16px;
       }
-      .ledger-head {
-        flex-direction: column;
-        align-items: flex-start;
+      .summary-export-bar {
+        margin-top: 0;
+        padding: 0;
       }
       thead {
         display: none;
@@ -1657,5 +1709,41 @@
       }
       .top-table .top-name-col {
         align-self: start;
+      }
+    }
+
+    /* Only when using Summary → PDF (see history.js); plain Cmd+P elsewhere is unchanged. */
+    @media print {
+      html.print-summary body {
+        background: #fff !important;
+      }
+      html.print-summary .no-print {
+        display: none !important;
+      }
+      html.print-summary #transactionsView,
+      html.print-summary #batchesView {
+        display: none !important;
+      }
+      html.print-summary #summaryView {
+        display: block !important;
+      }
+      html.print-summary #summaryView[hidden] {
+        display: none !important;
+      }
+      html.print-summary .page {
+        max-width: none;
+        padding: 0;
+      }
+      html.print-summary .frame {
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        background: #fff;
+      }
+      html.print-summary .content {
+        padding: 12px 0;
+      }
+      html.print-summary .panel {
+        break-inside: avoid;
       }
     }

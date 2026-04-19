@@ -806,8 +806,6 @@
 
   function renderLedger(txs) {
     const body = document.getElementById("ledgerBody");
-    const totalFilteredSpend = sumAmounts(txs);
-    document.getElementById("ledgerCount").textContent = `${integerFormat.format(txs.length)} shown - ${currencyWhole.format(totalFilteredSpend)}`;
 
     if (!txs.length) {
       body.innerHTML = `<tr><td colspan="5"><div class="ledger-empty">No transactions match the current filters.</div></td></tr>`;
@@ -1052,7 +1050,6 @@
   function renderBatches() {
     const all = computeBatches(allTransactions);
     const list = document.getElementById("batchesList");
-    const count = document.getElementById("batchesCount");
 
     // Month dropdown is populated from the full batch set — not the filtered
     // one — so you can always flip back to a previously hidden month.
@@ -1068,7 +1065,6 @@
     updateBatchClearVisibility();
 
     const batches = all.filter(batchMatchesFilters);
-    count.textContent = pluralize(batches.length, "batch", "batches");
 
     if (!all.length) {
       list.innerHTML = `
@@ -1204,19 +1200,200 @@
     }
   }
 
-  function openHelpModal() {
-    document.getElementById("helpModal").classList.add("visible");
-  }
-  function closeHelpModal() {
-    document.getElementById("helpModal").classList.remove("visible");
-  }
-
   function showToast(message) {
     const el = document.getElementById("toast");
     el.textContent = message;
     el.classList.add("show");
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove("show"), 3200);
+  }
+
+  function csvEscape(value) {
+    const s = value == null ? "" : String(value);
+    if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  }
+
+  function txIsoDate(tx) {
+    const raw = (tx.date || "").trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    if (tx.parsedDate) {
+      const d = tx.parsedDate;
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+    return "";
+  }
+
+  function downloadTextFile(filename, text, mime) {
+    const blob = new Blob([text], { type: mime || "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportStamp() {
+    const d = new Date();
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  function getFilteredBatches() {
+    return computeBatches(allTransactions).filter(batchMatchesFilters);
+  }
+
+  function exportTransactionsCsv() {
+    const rows = getTransactionsSelection();
+    if (!rows.length) {
+      showToast("No transactions to export for the current filters.");
+      return;
+    }
+    const lines = [["date", "vendor", "card", "amount", "status"].map(csvEscape).join(",")];
+    for (const tx of rows) {
+      lines.push([
+        csvEscape(txIsoDate(tx)),
+        csvEscape(tx.vendor),
+        csvEscape(tx.card),
+        csvEscape(tx.amount),
+        csvEscape(tx.status),
+      ].join(","));
+    }
+    downloadTextFile(
+      `expense-agent-transactions-${exportStamp()}.csv`,
+      `\uFEFF${lines.join("\n")}`,
+      "text/csv;charset=utf-8",
+    );
+  }
+
+  function exportBatchesCsv() {
+    const batches = getFilteredBatches();
+    if (!batches.length) {
+      showToast("No batches to export for the current filters.");
+      return;
+    }
+    const header = ["batch_id", "session_date", "session_time", "item_count", "total", "merchant_count", "card_label"];
+    const lines = [header.map(csvEscape).join(",")];
+    for (const b of batches) {
+      lines.push([
+        csvEscape(b.id),
+        csvEscape(b.dateLabel),
+        csvEscape(b.timeLabel || ""),
+        csvEscape(b.count),
+        csvEscape(b.total),
+        csvEscape(b.merchants.size),
+        csvEscape(b.cardLabel),
+      ].join(","));
+    }
+    downloadTextFile(
+      `expense-agent-batches-${exportStamp()}.csv`,
+      `\uFEFF${lines.join("\n")}`,
+      "text/csv;charset=utf-8",
+    );
+  }
+
+  function summaryFilterLine() {
+    const parts = [];
+    if (summaryState.card !== "all") parts.push(`Card filter: ${summaryState.card}`);
+    if (summaryState.merchant !== "all") parts.push(`Merchant filter: ${summaryState.merchant}`);
+    return parts.length ? parts.join(" · ") : "Charts: all cards and merchants (headline metrics are account-wide).";
+  }
+
+  function exportSummaryPdf() {
+    if (!allTransactions.length) return;
+    document.documentElement.classList.add("print-summary");
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      document.documentElement.classList.remove("print-summary");
+    };
+    window.addEventListener("afterprint", cleanup, { once: true });
+    setTimeout(cleanup, 120000);
+    window.print();
+  }
+
+  function exportSummaryPptx() {
+    if (!allTransactions.length) return;
+    if (typeof PptxGenJS === "undefined") {
+      showToast("Could not load presentation library. Check your connection and try again.");
+      return;
+    }
+
+    try {
+    const filtered = getSummarySelection();
+    const pptx = new PptxGenJS();
+    pptx.author = "Expense Agent";
+    pptx.title = "Expense Agent Summary";
+
+    const s1 = pptx.addSlide();
+    s1.addText("Expense Agent — Summary", { x: 0.5, y: 0.6, w: 12, fontSize: 28, bold: true, color: "18212B" });
+    s1.addText(new Date().toLocaleString(), { x: 0.5, y: 1.35, w: 12, fontSize: 11, color: "5D6872" });
+    s1.addText(summaryFilterLine(), { x: 0.5, y: 1.85, w: 12, fontSize: 12, color: "18212B" });
+
+    const allTime = sumAmounts(allTransactions);
+    const currentMonthTotal = sumSpendInCurrentMonth();
+    const rollingTotal = sumSpendInLastDays(rollingDays);
+    const headlineRows = [
+      ["Metric", "Value"],
+      ["Lifetime spend", currencyWhole.format(allTime)],
+      ["Current calendar month", currencyWhole.format(currentMonthTotal)],
+      [`Last ${rollingDays} days`, currencyWhole.format(rollingTotal)],
+      ["Total transactions (count)", integerFormat.format(allTransactions.length)],
+    ];
+    const s2 = pptx.addSlide();
+    s2.addText("Headline metrics (account-wide)", { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
+    s2.addTable(headlineRows, { x: 0.5, y: 1.1, w: 9, colW: [4, 3], fontSize: 11, border: { pt: 0.5, color: "CCCCCC" } });
+
+    const monthly = getMonthlyData(filtered);
+    const trendRows = [["Month", "Total", "Transactions"]].concat(
+      monthly.map(m => [monthLabel(m.key), currencyWhole.format(m.total), integerFormat.format(m.count)]),
+    );
+    const s3 = pptx.addSlide();
+    s3.addText("Spend by month (filtered)", { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
+    if (trendRows.length <= 1) {
+      s3.addText("No month data for the current filters.", { x: 0.5, y: 1.2, w: 12, fontSize: 12, color: "5D6872" });
+    } else {
+      s3.addTable(trendRows, { x: 0.5, y: 1.05, w: 11, colW: [3.5, 2.5, 2], fontSize: 10, border: { pt: 0.5, color: "CCCCCC" } });
+    }
+
+    const cards = getCardMix(filtered);
+    const cardRows = [["Card", "Total", "Share of filtered spend"]].concat(
+      cards.map(c => {
+        const total = sumAmounts(filtered) || 1;
+        const share = Math.round((c.total / total) * 100);
+        return [c.name, currencyWhole.format(c.total), `${share}%`];
+      }),
+    );
+    const s4 = pptx.addSlide();
+    s4.addText("Cards (filtered)", { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
+    if (cardRows.length <= 1) {
+      s4.addText("No card data for the current filters.", { x: 0.5, y: 1.2, w: 12, fontSize: 12, color: "5D6872" });
+    } else {
+      s4.addTable(cardRows, { x: 0.5, y: 1.05, w: 11, colW: [4, 2.5, 2], fontSize: 10, border: { pt: 0.5, color: "CCCCCC" } });
+    }
+
+    const vendors = getTopVendors(filtered);
+    const merchRows = [["Merchant", "Total", "Transactions"]].concat(
+      vendors.map(v => [v.name, currencyWhole.format(v.total), integerFormat.format(v.count)]),
+    );
+    const s5 = pptx.addSlide();
+    s5.addText("Top merchants (filtered)", { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
+    if (merchRows.length <= 1) {
+      s5.addText("No merchant data for the current filters.", { x: 0.5, y: 1.2, w: 12, fontSize: 12, color: "5D6872" });
+    } else {
+      s5.addTable(merchRows, { x: 0.5, y: 1.05, w: 11, colW: [4, 2.5, 2], fontSize: 10, border: { pt: 0.5, color: "CCCCCC" } });
+    }
+
+    pptx.writeFile({ fileName: `expense-agent-summary-${exportStamp()}.pptx` }).catch(() => {
+      showToast("Could not build the presentation file.");
+    });
+    } catch {
+      showToast("Could not build the presentation file.");
+    }
   }
 
   // Transactions-tab controls --------------------------------------------
@@ -1254,6 +1431,11 @@
   });
 
   document.getElementById("clearFiltersBtn").addEventListener("click", clearTransactionsFilters);
+
+  document.getElementById("exportTxCsvBtn").addEventListener("click", exportTransactionsCsv);
+  document.getElementById("exportBatchesCsvBtn").addEventListener("click", exportBatchesCsv);
+  document.getElementById("exportSummaryPdfBtn").addEventListener("click", exportSummaryPdf);
+  document.getElementById("exportSummaryPptxBtn").addEventListener("click", exportSummaryPptx);
 
   // Summary-tab click-to-filter (scoped to #summaryView so Transactions /
   // Batches UI never participates, even if markup gains data-filter-key later).
@@ -1294,12 +1476,6 @@
 
   document.querySelectorAll(".view-tab").forEach(btn => {
     btn.addEventListener("click", () => showView(btn.dataset.view));
-  });
-
-  document.getElementById("helpBtn").addEventListener("click", openHelpModal);
-  document.getElementById("helpCloseBtn").addEventListener("click", closeHelpModal);
-  document.getElementById("helpModal").addEventListener("click", (event) => {
-    if (event.target.id === "helpModal") closeHelpModal();
   });
 
   document.getElementById("batchCancelBtn").addEventListener("click", closeBatchModal);
@@ -1388,7 +1564,6 @@
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     if (document.getElementById("batchModal").classList.contains("visible")) closeBatchModal();
-    else if (document.getElementById("helpModal").classList.contains("visible")) closeHelpModal();
     else if (!document.getElementById("trendMonthPopover").hidden) closeTrendMonthPopover();
     else if (!document.getElementById("rollingPopover").hidden) closeRollingPopover();
   });
