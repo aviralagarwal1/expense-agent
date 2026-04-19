@@ -1411,8 +1411,8 @@
         <div class="auth-shell">
           <section class="auth-card">
             <div class="auth-card-header">
-              <h2>Enter the workspace</h2>
-              <p>Sign in with Google to access your private expense history and saved Anthropic key.</p>
+              <h2>{% if auth_mode|default("signin") == "register" %}Launch your workspace{% else %}Enter your workspace{% endif %}</h2>
+              <p>{% if auth_mode|default("signin") == "register" %}Register with Google to start expensing and save yourself hours of busy work and headaches.{% else %}Sign in with Google to access your private expense history and saved Anthropic key.{% endif %}</p>
             </div>
 
             <div class="auth-social">
@@ -1423,7 +1423,7 @@
                   <path fill="#4A90E2" d="M6 12c0-.8.1-1.5.4-2.2L3.3 7.4C2.5 8.9 2 10.4 2 12s.5 3.1 1.3 4.6l3.1-2.4C6.1 13.5 6 12.8 6 12z"/>
                   <path fill="#FBBC05" d="M12 6.9c1.5 0 2.8.5 3.9 1.5l2.9-2.9C17 3.8 14.7 3 12 3 8.1 3 4.7 5.4 3.3 8.9l3.1 2.4c.9-2.5 3.2-4.4 6-4.4z"/>
                 </svg>
-                Continue with Google
+                {% if auth_mode|default("signin") == "register" %}Register with Google{% else %}Continue with Google{% endif %}
               </a>
             </div>
           </section>
@@ -1684,6 +1684,7 @@
   let isNewAccount = false;
   let shouldFlashLoginSuccess = false;
   const authError = new URLSearchParams(window.location.search).get("auth_error");
+  const authPublicPath = window.location.pathname === "/register" ? "/register" : "/app";
   const loadingView = document.getElementById("loadingView");
   const welcomeView = document.getElementById("welcomeView");
   const setupView = document.getElementById("setupView");
@@ -1738,6 +1739,9 @@
   })();
 
   if (sessionToken) {
+    if (window.location.pathname === "/register") {
+      window.history.replaceState(null, "", "/app");
+    }
     profileFirstName = getFirstNameFromToken(sessionToken);
     showAuthenticatedShell();
     checkApiKeyAndEnter();
@@ -2493,7 +2497,7 @@
       google_callback_exchange_failed: "Google sign-in returned, but Supabase could not finish the session exchange.",
     };
     showToast(authErrorMessages[authError] || "Google sign-in failed.");
-    window.history.replaceState(null, "", "/app");
+    window.history.replaceState(null, "", authPublicPath);
   }
 </script>
 </body>

@@ -629,7 +629,13 @@ def landing():
 
 @app.route("/app")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", auth_mode="signin")
+
+
+@app.route("/register")
+def register():
+    """Same workspace shell as /app, with onboarding-oriented auth copy for new visitors."""
+    return render_template("index.html", auth_mode="register")
 
 
 @app.route("/connect-key")
