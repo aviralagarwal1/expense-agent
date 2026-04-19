@@ -475,16 +475,17 @@ def get_existing_transactions_for_user(user_id: str) -> list:
     return transactions
 
 
-def append_transactions_for_user(user_id: str, transactions: list) -> list:
+def append_transactions_for_user(user_id: str, transactions: list, batch_id: str | None = None) -> list:
     rows = []
     for t in transactions:
         rows.append({
-            "user_id": user_id,
-            "vendor":  t["vendor"],
-            "card":    canonicalize_card_label(t.get("card")),
-            "date":    t.get("date"),
-            "amount":  float(str(t["amount"]).replace("$", "").replace(",", "")),
-            "status":  t.get("status"),
+            "user_id":  user_id,
+            "vendor":   t["vendor"],
+            "card":     canonicalize_card_label(t.get("card")),
+            "date":     t.get("date"),
+            "amount":   float(str(t["amount"]).replace("$", "").replace(",", "")),
+            "status":   t.get("status"),
+            "batch_id": batch_id,
         })
     result = supabase_admin.table("transactions").insert(rows).execute()
     return [row.get("id") for row in (result.data or []) if row.get("id")]
@@ -842,7 +843,13 @@ def upload():
 
     definite_new, definite_dup, possible_dup = classify_transactions(all_transactions, existing_txs)
 
+    # Mint a batch id for this analyze session. The client threads it through every
+    # /confirm call originating from this analysis so the resulting rows can be
+    # grouped and (if the user filed to the wrong card) deleted as a unit.
+    batch_id = str(uuid4())
+
     return jsonify({
+        "batch_id":        batch_id,
         "new":             definite_new,
         "skipped":         definite_dup,
         "possible":        possible_dup,
@@ -862,7 +869,7 @@ def api_transactions():
         return jsonify({"error": "Unauthorized"}), 401
     result = (
         supabase_admin.table("transactions")
-        .select("id,vendor,card,date,amount,status,created_at")
+        .select("id,vendor,card,date,amount,status,created_at,batch_id")
         .eq("user_id", user_id)
         .order("date", desc=True)
         .execute()
@@ -881,12 +888,13 @@ def confirm():
 
     data = request.json or {}
     transactions = data.get("transactions", [])
+    batch_id = (data.get("batch_id") or "").strip() or None
 
     if not transactions:
         return jsonify({"error": "No transactions to add"}), 400
 
     try:
-        inserted_ids = append_transactions_for_user(user_id, transactions)
+        inserted_ids = append_transactions_for_user(user_id, transactions, batch_id=batch_id)
     except Exception as e:
         return jsonify({"error": f"Failed to write to database: {str(e)}"}), 500
 
@@ -895,6 +903,37 @@ def confirm():
         "added": len(transactions),
         "ids": inserted_ids,
     })
+
+
+@app.patch("/api/transactions/<tx_id>")
+def api_transaction_patch(tx_id: str):
+    """Update a row owned by the caller (e.g. pending → settled)."""
+    user_id = get_user_id_from_request()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    status = (data.get("status") or "").strip().lower()
+    if status not in ("pending", "settled"):
+        return jsonify({"error": "status must be pending or settled"}), 400
+
+    try:
+        result = (
+            supabase_admin.table("transactions")
+            .update({"status": status})
+            .eq("id", tx_id)
+            .eq("user_id", user_id)
+            .select("id")
+            .execute()
+        )
+    except Exception as e:
+        return jsonify({"error": f"Failed to update transaction: {str(e)}"}), 500
+
+    rows = result.data or []
+    if not rows:
+        return jsonify({"error": "Transaction not found"}), 404
+
+    return jsonify({"success": True, "status": status})
 
 
 @app.route("/api/transactions/<tx_id>", methods=["DELETE"])
@@ -915,6 +954,41 @@ def api_transaction_delete(tx_id: str):
         return jsonify({"error": f"Failed to delete transaction: {str(e)}"}), 500
 
     return jsonify({"success": True})
+
+
+@app.route("/api/batches/<batch_id>", methods=["DELETE"])
+def api_batch_delete(batch_id: str):
+    """Delete every transaction belonging to one analyze session.
+
+    Scoped to both ``user_id`` and ``batch_id`` so a user can only ever delete
+    rows they themselves uploaded. The client computes batch metadata
+    (counts, totals, merchants) locally from /api/transactions; this endpoint
+    only handles the destructive operation.
+    """
+    user_id = get_user_id_from_request()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    batch_id = (batch_id or "").strip()
+    if not batch_id:
+        return jsonify({"error": "Missing batch id"}), 400
+
+    try:
+        result = (
+            supabase_admin.table("transactions")
+            .delete()
+            .eq("user_id", user_id)
+            .eq("batch_id", batch_id)
+            .execute()
+        )
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete batch: {str(e)}"}), 500
+
+    deleted = len(result.data or [])
+    if deleted == 0:
+        return jsonify({"error": "Batch not found"}), 404
+
+    return jsonify({"success": True, "deleted": deleted})
 
 
 if __name__ == "__main__":
