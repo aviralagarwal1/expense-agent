@@ -1,60 +1,49 @@
 # Expense Agent
 
-Turn screenshots of your credit card app into a reviewed, deduplicated expense
-log — in about 30 seconds per batch.
+Turn screenshots of your credit card app into a reviewed, deduplicated expense log in ~30 seconds per batch.
 
 ## What it is
 
-Expense Agent is a small web app for people who don't want to type transactions
-into a spreadsheet and don't want a firehose import from every account they
-own. You sign in with Google, screenshot the transaction list in any credit
-card app, pick which card the batch is for, and upload. The app extracts every
-charge, cross-checks it against your history, and asks you to sign off on what
-to save.
+Expense Agent is a small web app for people who do not want to type every
+transaction into a spreadsheet and do not want a firehose import from every
+account they own. You sign in with Google, screenshot the transaction list in a
+card app, pick which saved card the batch belongs to, and upload. The app
+reads the charges with **Claude Vision**, compares them to your history, and
+asks you to sign off before anything is saved.
 
-The result is a clean, reviewed log that you actually trust.
+The result is a ledger you chose to capture, on purpose, with duplicates
+called out instead of silently doubled.
+
+Each upload is labeled with the card it came from, yet **every** card you use
+still writes into the **same** History — one ledger, summaries, and exports
+across your whole wallet.
 
 ## Why it exists
 
-Most expense tools either import nothing (you type it in) or everything (noisy
-Plaid feeds you still have to clean up). Expense Agent sits in between:
+Most tools either import nothing (manual entry) or everything (noisy feeds you
+still reconcile). This project sits in between:
 
-- **You** decide when to capture expenses.
-- **You** decide which card each upload is for.
-- **You** confirm every line before it lands in history.
-- The AI only handles the tedious part — reading charges off the screen and
-  flagging duplicates.
+- You decide **when** to capture expenses.
+- You decide **which card** each batch represents.
+- **Card apps don’t talk to each other** — without a consolidation layer, your picture of spend depends on whichever issuer’s UI you opened last.
+- You **confirm** lines before they land in history.
+- The model only handles the tedious part: reading the screen and flagging likely duplicates.
 
 ## What a typical session looks like
 
-1. Sign in with Google.
-2. Save your display name, at least one card, and your Anthropic API key.
-3. Pick a saved card and drop in one or more screenshots.
-4. The app shows three lists:
-   - **New** — charges not in your history. Stage them.
-   - **Skipped** — exact matches already in your history. Hidden by default.
-   - **Needs review** — same vendor, card, and amount within a day of an
-     existing entry. You decide whether it's a real second charge or a
-     duplicate.
-5. Confirm. Approved rows are saved to your history.
-6. The History page shows everything grouped by month, with spend trends and a
-   per-card breakdown.
-
-## Why bring-your-own API key
-
-Every user connects their own Anthropic key in Settings. That means:
-
-- Usage bills directly to your Anthropic account.
-- Your data doesn't pass through a shared key or a shared budget.
-- The app scales to any number of users without a central cost center.
+1. Sign in with Google (from the landing page or the register-oriented entry point).
+2. Save your display name, at least one card, and your **Anthropic API key** (bring-your-own; usage bills to your account).
+3. Open the workspace, pick a card, attach one or more screenshots, and run **Analyze**.
+4. Review three lists: **New**, **Skipped** (exact duplicates), and **Needs review** (fuzzy matches). Confirm what to keep.
+5. Open **History** for a **Summary** dashboard, the full **Transactions** ledger, or a **Batches** view tied to each analyze session — CSV on **Transactions** and **Batches**, PDF/PPTX-style exports on **Summary**.
 
 ## Tech, at a glance
 
-- Python + Flask backend
-- Server-rendered HTML + vanilla JavaScript (no build step)
-- Anthropic Claude Vision for extraction
-- Supabase for Google auth and per-user data
-- Deployed as a container (Google Cloud Run-ready)
+- **Backend:** Python, Flask  
+- **Frontend:** Server-rendered HTML and vanilla JavaScript (no build step)  
+- **AI:** Anthropic Claude Vision  
+- **Auth & data:** Supabase (Google sign-in + Postgres)  
+- **Deploy:** Docker-friendly; intended for **Google Cloud Run** (see `Dockerfile`)
 
 ## Running it locally
 
@@ -63,16 +52,19 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open `http://localhost:5000`. You'll need a Supabase project with Google
-auth enabled and a few environment variables filled in — see `.env.example`.
-Once the server is up, sign in with Google, save an Anthropic API key in
-Settings, save at least one card, and you're ready to upload.
+Then open [http://127.0.0.1:5000](http://127.0.0.1:5000). Create a Supabase project with Google auth enabled, copy **`.env.example`** to **`.env`**, and fill in **`SUPABASE_URL`**, **`SUPABASE_SERVICE_KEY`**, and **`APP_URL`** (localhost is fine for local dev). Add **`{APP_URL}/auth/callback`** to your Supabase OAuth redirect allow list.
 
 ## Status
 
-Actively being refined. The core flow — screenshots → extraction →
-deduplication → reviewed history — is fully working. Next up: a History screen
-refresh and CSV export.
+Personal portfolio piece: core flow (screenshots → extraction → dedupe → history)
+is implemented end to end, including batch grouping and exports on History. The
+repo is meant for recruiters and peers — a public **Try it** URL, README
+screenshots, and small polish (favicon, social meta) are the main items left
+before calling it “launched.”
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
 
 ## Author
 
