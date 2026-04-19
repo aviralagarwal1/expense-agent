@@ -82,8 +82,7 @@
       gap: 12px;
     }
     .nav-link,
-    .nav-cta,
-    .hero-cta {
+    .nav-cta {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -94,15 +93,14 @@
       padding: 12px 18px;
       transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
     }
-    /* Secondary CTA: accent-soft (same token as app chrome) + navy label — pairs cleanly with solid navy primary. */
+    /* Primary: navy — used for Sign In on this page. Secondary: accent-soft — Register with Google. */
     .nav-link {
       border: 1px solid rgba(35, 66, 94, 0.28);
       color: var(--accent);
       background: var(--accent-soft);
       box-shadow: 0 2px 10px rgba(35, 66, 94, 0.06);
     }
-    .nav-cta,
-    .hero-cta {
+    .nav-cta {
       color: #ffffff;
       background: var(--accent);
       border: 1px solid transparent;
@@ -113,8 +111,28 @@
       background: #d9e6f2;
       border-color: rgba(35, 66, 94, 0.4);
     }
-    .nav-cta:hover,
-    .hero-cta:hover {
+    /* White pill — far right; Sign In + Register sit to its left. */
+    .nav-about {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      padding: 12px 18px;
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(24, 33, 43, 0.05);
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+    }
+    .nav-about:hover {
+      transform: translateY(-1px);
+      border-color: rgba(35, 66, 94, 0.28);
+      box-shadow: 0 6px 16px rgba(24, 33, 43, 0.08);
+    }
+    .nav-cta:hover {
       transform: translateY(-1px);
     }
 
@@ -410,7 +428,7 @@
     .cta-actions {
       margin-top: 28px;
     }
-    .cta-actions .hero-cta {
+    .cta-actions .nav-cta {
       padding: 16px 28px;
       font-size: 1rem;
       min-width: 220px;
@@ -548,14 +566,15 @@
         justify-content: stretch;
       }
       .nav-link,
-      .nav-cta {
+      .nav-cta,
+      .nav-about {
         flex: 1;
       }
       .hero-actions {
         width: 100%;
       }
       .hero-actions .nav-link,
-      .hero-actions .hero-cta {
+      .hero-actions .nav-cta {
         flex: 1;
       }
       .hero h1 {
@@ -587,8 +606,9 @@
           <span>Expense Agent</span>
         </a>
         <div class="nav-actions">
-          <a class="nav-link" href="/auth/google">Sign In</a>
-          <a class="nav-cta" href="/register">Register with Google</a>
+          <a class="nav-cta" href="/auth/google">Sign In</a>
+          <a class="nav-link" href="/register">Register with Google</a>
+          <a class="nav-about" href="/about">About</a>
         </div>
       </nav>
 
@@ -599,8 +619,8 @@
             Screenshot your app transactions. We extract the charges, filter duplicates, and surface only what needs your sign-off.
           </p>
           <div class="hero-actions">
-            <a class="nav-link" href="/auth/google">Sign In</a>
-            <a class="hero-cta" href="/register">Register with Google</a>
+            <a class="nav-cta" href="/auth/google">Sign In</a>
+            <a class="nav-link" href="/register">Register with Google</a>
           </div>
         </div>
 
