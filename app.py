@@ -45,7 +45,15 @@ _NETWORK_BRAND_ALIASES: dict[str, str] = {
 
 
 def get_external_app_url(path: str = "/"):
-    base_url = APP_URL or request.url_root.rstrip("/")
+    request_root = request.url_root.rstrip("/")
+    request_host = (request.host or "").split(":", 1)[0].strip().lower()
+
+    # Local development should always round-trip back to localhost, even if a
+    # production APP_URL is present in the environment.
+    if request_host in {"localhost", "127.0.0.1"}:
+        base_url = request_root
+    else:
+        base_url = APP_URL or request_root
     return f"{base_url}{path}"
 
 
