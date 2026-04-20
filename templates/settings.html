@@ -244,6 +244,9 @@
       line-height: 1.05;
       margin-bottom: 16px;
     }
+    .api-key-title-mobile {
+      display: none;
+    }
     .lead {
       color: var(--muted);
       line-height: 1.72;
@@ -372,13 +375,24 @@
       .nav {
         flex-direction: column;
         align-items: stretch;
+        gap: 14px;
       }
-      .nav-actions {
+      .nav .nav-actions {
         width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
       }
-      .nav-link,
-      .nav-danger {
-        flex: 1;
+      .nav .nav-actions > .nav-link,
+      .nav .nav-actions > .nav-pill {
+        flex: none;
+        width: 100%;
+        min-height: 44px;
+      }
+      .nav .nav-actions > .nav-danger {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-height: 44px;
       }
     }
 
@@ -396,6 +410,12 @@
       }
       h1 {
         max-width: none;
+      }
+      .api-key-title-desktop {
+        display: none;
+      }
+      .api-key-title-mobile {
+        display: inline;
       }
       .lead {
         white-space: normal;
@@ -488,7 +508,7 @@
             <a class="inline-link" id="statusReturnLink" href="/app">Return to Workspace</a>
           </div>
 
-          <h1>Connect Your API Key.</h1>
+          <h1><span class="api-key-title-desktop">Connect Your API Key.</span><span class="api-key-title-mobile">Add Your API Key</span></h1>
           <p class="lead">
             Save it once to your account and uploads are ready immediately.
           </p>
