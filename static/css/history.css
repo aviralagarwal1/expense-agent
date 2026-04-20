@@ -696,6 +696,7 @@
       width: 100%;
       border: 1px solid transparent;
       background: transparent;
+      color: var(--ink);
       text-align: left;
       padding: 12px 14px;
       border-radius: 18px;
@@ -1103,6 +1104,15 @@
       white-space: nowrap;
       text-align: right;
     }
+    .mobile-ledger-row {
+      display: none;
+    }
+    .tx-modal-card .modal-actions {
+      justify-content: flex-end;
+    }
+    .tx-modal-stats .modal-stat strong {
+      line-height: 1.25;
+    }
     .status-pill {
       display: inline-flex;
       align-items: center;
@@ -1324,6 +1334,7 @@
       padding: 18px 28px;
       border: none;
       background: transparent;
+      color: var(--ink);
       border-bottom: 1px solid var(--line);
       text-align: left;
       transition: background 0.16s ease;
@@ -1343,6 +1354,9 @@
     .batch-cell-primary span {
       color: var(--muted);
       font-size: 0.82rem;
+    }
+    .batch-mobile-inline {
+      display: none;
     }
     .batch-cell-number {
       font-weight: 700;
@@ -1633,7 +1647,8 @@
       .transactions-top .view-head-actions {
         grid-column: 1;
         width: 100%;
-        justify-content: flex-start;
+        justify-content: flex-end;
+        justify-self: end;
       }
     }
 
@@ -1669,6 +1684,9 @@
       .ledger-filters {
         padding: 16px 20px;
       }
+      .table-wrap {
+        overflow-x: hidden;
+      }
       .batches-top,
       .transactions-top {
         padding: 20px 20px 16px;
@@ -1682,35 +1700,109 @@
       }
       table,
       tbody,
-      tr,
-      td {
+      tr {
         display: block;
+      }
+      table {
         width: 100%;
       }
+      tbody {
+        display: grid;
+      }
       tbody tr {
-        padding: 18px 20px;
+        padding: 0;
         border-bottom: 1px solid var(--line);
+        box-shadow: none;
+      }
+      tbody tr:first-child {
+        border-top: 1px solid var(--line);
+      }
+      tbody tr.ledger-row-pending {
+        box-shadow: none;
       }
       tbody td {
+        display: none;
         padding: 0;
         border-bottom: none;
-        margin-top: 12px;
       }
-      tbody td:first-child {
-        margin-top: 0;
-      }
-      tbody td::before {
-        content: attr(data-label);
+      tbody td[colspan] {
         display: block;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: #7a8390;
-        font-weight: 700;
-        margin-bottom: 6px;
       }
-      .amount-cell {
+      tbody td[data-label="Merchant"] {
+        display: block;
+      }
+      tbody td[data-label="Merchant"]::before {
+        content: none;
+      }
+      tbody td[data-label="Merchant"] .merchant-cell {
+        display: none;
+      }
+      .mobile-ledger-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 16px 74px 30px;
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: var(--ink);
+        padding: 14px 2px;
+        column-gap: 10px;
+        align-items: center;
         text-align: left;
+      }
+      tbody tr.ledger-row-pending .mobile-ledger-row {
+        box-shadow: none;
+        border-radius: 0;
+        background: transparent;
+        border: none;
+        padding-left: 2px;
+        padding-right: 2px;
+      }
+      .mobile-ledger-main {
+        min-width: 0;
+      }
+      .mobile-ledger-vendor {
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mobile-ledger-meta {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        line-height: 1.4;
+      }
+      .mobile-ledger-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--warning);
+        justify-self: center;
+      }
+      .mobile-ledger-status-dot.settled {
+        background: var(--success);
+      }
+      .mobile-ledger-amount {
+        font-size: 0.92rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        text-align: right;
+        min-width: 0;
+      }
+      .mobile-ledger-chevron {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.86);
+        justify-self: end;
       }
       .trend-row {
         grid-template-columns: 1fr;
@@ -1856,8 +1948,50 @@
       .ledger-filters {
         padding: 14px 16px;
       }
-      .batch-row {
+      .batches-top,
+      .transactions-top {
         padding: 14px 16px;
+      }
+      .batch-row {
+        grid-template-columns: minmax(0, 1fr) 44px;
+        align-items: center;
+        column-gap: 10px;
+        row-gap: 0;
+        padding: 14px 16px;
+      }
+      .batch-row > *:nth-child(2),
+      .batch-row > *:nth-child(3),
+      .batch-row > *:nth-child(4),
+      .batch-row > *:nth-child(5) {
+        display: none;
+      }
+      .batch-cell-primary {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        min-width: 0;
+        white-space: nowrap;
+      }
+      .batch-cell-primary strong {
+        margin-bottom: 0;
+        font-size: 0.94rem;
+        flex-shrink: 0;
+      }
+      .batch-cell-primary > span:first-of-type {
+        display: none;
+      }
+      .batch-mobile-inline {
+        display: block;
+        min-width: 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .batch-chevron {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
       }
     }
 

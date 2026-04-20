@@ -17,6 +17,7 @@
 
   let allTransactions = [];
   let activeBatch = null;
+  let activeTxId = "";
   let toastTimer = null;
   const initialParams = new URLSearchParams(window.location.search);
   const VIEWS = ["summary", "transactions", "batches"];
@@ -174,6 +175,22 @@
       day: "numeric",
       year: "numeric",
     });
+  }
+
+  function shortDateNumeric(date) {
+    if (!date) return "Unknown";
+    return date.toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "2-digit",
+    });
+  }
+
+  function mobileVendorLabel(vendor) {
+    const raw = String(vendor || "").trim();
+    if (!raw) return "Unknown merchant";
+    const firstWord = raw.split(/\s+/)[0] || raw;
+    return firstWord.replace(/[.,;:!?]+$/, "");
   }
 
   function normalizeTransactions(raw) {
@@ -550,9 +567,9 @@
       } else {
         note.hidden = false;
         if (atCap) {
-          note.innerHTML = `<strong>Limit reached (${max} months).</strong> Uncheck one to pick a different month. Compare widens as you add months — this keeps both panels readable.`;
+          note.innerHTML = `<strong>Limit reached (${max} months).</strong> Uncheck one to pick a different month.`;
         } else {
-          note.textContent = `Up to ${max} months. Compare gets more horizontal space when several are selected.`;
+          note.textContent = `You can compare up to ${max} months at once.`;
         }
       }
     }
@@ -815,6 +832,9 @@
     body.innerHTML = txs.map(tx => {
       const pending = tx.status === "pending";
       const rowClass = pending ? "ledger-row-pending" : "";
+      const mobileStatus = pending
+        ? `<span class="mobile-ledger-status-dot" aria-label="Pending"></span>`
+        : `<span class="mobile-ledger-status-dot settled" aria-label="Settled"></span>`;
       const statusTd = pending
         ? `<td data-label="Status">
         <div class="status-cell-inner">
@@ -828,9 +848,22 @@
       </td>`
         : `<td data-label="Status"><span class="status-pill">Settled</span></td>`;
       return `
-      <tr class="${rowClass}">
+      <tr class="${rowClass}" data-tx-id="${escapeHtml(tx.id)}">
         <td data-label="Date">${escapeHtml(shortDate(tx.parsedDate))}</td>
         <td data-label="Merchant">
+          <button type="button" class="mobile-ledger-row" data-tx-id="${escapeHtml(tx.id)}" aria-label="View ${escapeHtml(tx.vendor)} details">
+            <div class="mobile-ledger-main">
+              <div class="mobile-ledger-vendor">${escapeHtml(mobileVendorLabel(tx.vendor))}</div>
+              <div class="mobile-ledger-meta">${escapeHtml(shortDateNumeric(tx.parsedDate))}</div>
+            </div>
+            ${mobileStatus}
+            <div class="mobile-ledger-amount">${escapeHtml(currencyWhole.format(tx.amount))}</div>
+            <span class="mobile-ledger-chevron" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+          </button>
           <div class="merchant-cell">
             <div class="merchant-name">${escapeHtml(tx.vendor)}</div>
             <div class="merchant-sub">${escapeHtml(tx.monthKey ? monthLabel(tx.monthKey) : "Undated entry")}</div>
@@ -867,15 +900,59 @@
 
   document.getElementById("ledgerBody").addEventListener("click", event => {
     const btn = event.target.closest(".mark-settled-btn");
-    if (!btn || btn.disabled) return;
-    event.preventDefault();
-    const txId = btn.dataset.txId;
+    if (btn && !btn.disabled) {
+      event.preventDefault();
+      const txId = btn.dataset.txId;
+      if (!txId) return;
+      btn.disabled = true;
+      patchTransactionStatus(txId, "settled").then(ok => {
+        if (!ok) btn.disabled = false;
+      });
+      return;
+    }
+
+    const mobileRow = event.target.closest(".mobile-ledger-row");
+    if (!mobileRow) return;
+    const txId = mobileRow.dataset.txId;
     if (!txId) return;
-    btn.disabled = true;
-    patchTransactionStatus(txId, "settled").then(ok => {
-      if (!ok) btn.disabled = false;
-    });
+    openTxModal(txId);
   });
+
+  function openTxModal(txId) {
+    const tx = allTransactions.find(item => item.id === txId);
+    if (!tx) return;
+    activeTxId = tx.id;
+    document.getElementById("txModalTitle").textContent = tx.vendor;
+    document.getElementById("txModalSubtitle").textContent = `${currencyExact.format(tx.amount)} · ${shortDateNumeric(tx.parsedDate)}`;
+    document.getElementById("txModalDate").textContent = shortDate(tx.parsedDate);
+    document.getElementById("txModalAmount").textContent = currencyExact.format(tx.amount);
+    document.getElementById("txModalCard").textContent = tx.card;
+    document.getElementById("txModalStatus").textContent = tx.status === "pending" ? "Pending" : "Settled";
+    const settleBtn = document.getElementById("txModalSettleBtn");
+    settleBtn.style.display = tx.status === "pending" ? "inline-flex" : "none";
+    settleBtn.disabled = false;
+    settleBtn.textContent = "Mark Settled";
+    document.getElementById("txModal").classList.add("visible");
+  }
+
+  function closeTxModal() {
+    document.getElementById("txModal").classList.remove("visible");
+    activeTxId = "";
+  }
+
+  async function settleTxFromModal() {
+    if (!activeTxId) return;
+    const btn = document.getElementById("txModalSettleBtn");
+    btn.disabled = true;
+    btn.textContent = "Updating...";
+    const ok = await patchTransactionStatus(activeTxId, "settled");
+    if (!ok) {
+      btn.disabled = false;
+      btn.textContent = "Mark Settled";
+      return;
+    }
+    closeTxModal();
+  }
 
   function setHeader(_txs) {
   }
@@ -1089,6 +1166,9 @@
         <div class="batch-cell-primary">
           <strong>${escapeHtml(b.dateLabel)}</strong>
           <span>${escapeHtml(b.timeLabel || "")}</span>
+          <span class="batch-mobile-inline">
+            ${integerFormat.format(b.count)} items · ${currencyWhole.format(b.total)} · ${integerFormat.format(b.merchants.size)} ${b.merchants.size === 1 ? "merchant" : "merchants"}
+          </span>
         </div>
         <div>
           <div class="batch-cell-number">${integerFormat.format(b.count)}</div>
@@ -1124,9 +1204,20 @@
 
   function openBatchModal(batch) {
     activeBatch = batch;
+    let modalDateLabel = batch.dateLabel;
+    if (batch.createdAt) {
+      const parsed = new Date(batch.createdAt);
+      if (!Number.isNaN(parsed.getTime())) {
+        modalDateLabel = parsed.toLocaleDateString("en-US", {
+          month: "numeric",
+          day: "numeric",
+          year: "2-digit",
+        });
+      }
+    }
     const suffix = batch.timeLabel ? ` - ${batch.timeLabel}` : "";
-    document.getElementById("batchModalTitle").textContent = `${batch.dateLabel}${suffix}`;
-    document.getElementById("batchModalSubtitle").textContent = `Analyze session - ${pluralize(batch.count, "transaction")}`;
+    document.getElementById("batchModalTitle").textContent = `${modalDateLabel}${suffix}`;
+    document.getElementById("batchModalSubtitle").textContent = `Analysis session - ${pluralize(batch.count, "transaction")}`;
     document.getElementById("batchStatItems").textContent = integerFormat.format(batch.count);
     document.getElementById("batchStatTotal").textContent = currencyExact.format(batch.total);
     document.getElementById("batchStatMerchants").textContent = integerFormat.format(batch.merchants.size);
@@ -1483,6 +1574,11 @@
   document.getElementById("batchModal").addEventListener("click", (event) => {
     if (event.target.id === "batchModal") closeBatchModal();
   });
+  document.getElementById("txModalCloseBtn").addEventListener("click", closeTxModal);
+  document.getElementById("txModalSettleBtn").addEventListener("click", settleTxFromModal);
+  document.getElementById("txModal").addEventListener("click", (event) => {
+    if (event.target.id === "txModal") closeTxModal();
+  });
 
   document.getElementById("rollingDaysBtn").addEventListener("click", event => {
     event.stopPropagation();
@@ -1564,6 +1660,7 @@
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     if (document.getElementById("batchModal").classList.contains("visible")) closeBatchModal();
+    else if (document.getElementById("txModal").classList.contains("visible")) closeTxModal();
     else if (!document.getElementById("trendMonthPopover").hidden) closeTrendMonthPopover();
     else if (!document.getElementById("rollingPopover").hidden) closeRollingPopover();
   });
