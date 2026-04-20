@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Connect Anthropic - Expense Agent</title>
   <style>
     :root {
@@ -24,6 +24,7 @@
 
     html {
       scrollbar-gutter: stable;
+      -webkit-text-size-adjust: 100%;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -414,6 +415,33 @@
       }
       .btn,
       .inline-link {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding:
+          max(12px, env(safe-area-inset-top, 0px))
+          max(12px, env(safe-area-inset-right, 0px))
+          max(14px, env(safe-area-inset-bottom, 0px))
+          max(12px, env(safe-area-inset-left, 0px));
+        touch-action: manipulation;
+      }
+      .frame {
+        border-radius: 22px;
+      }
+      .nav {
+        padding: 16px 18px;
+      }
+      .nav-actions {
+        gap: 8px;
+      }
+      .nav-link,
+      .nav-danger {
+        min-height: 44px;
+      }
+      .nav-danger {
         width: 100%;
       }
     }
