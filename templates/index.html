@@ -952,6 +952,9 @@
       grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
       gap: 12px;
     }
+    .preview-grid:empty {
+      display: none;
+    }
     .preview-item {
       position: relative;
       background: rgba(255,255,255,0.86);
@@ -1415,20 +1418,38 @@
         width: 100%;
         flex-direction: column;
         align-items: stretch;
-        gap: 14px;
+        gap: 10px;
       }
       .upload-card-select {
         width: 100%;
       }
-      /* Keep a compact control; full-width pill looked odd next to the select */
+      .upload-card-picker {
+        gap: 4px;
+      }
+      .upload-card-picker .picker-label {
+        display: none;
+      }
+      /* Mobile: make this a subtle utility action above the picker. */
       .upload-card-row .mini-link {
+        order: -1;
+        align-self: flex-end;
         width: auto;
-        align-self: flex-start;
-        min-height: 44px;
-        padding: 10px 18px;
+        min-height: 0;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        color: var(--accent);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
       .upload-panel {
         gap: 22px;
+      }
+      .upload-actions {
+        margin-top: 2px;
       }
       .setup-actions .btn {
         width: 100%;
