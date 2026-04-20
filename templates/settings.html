@@ -437,6 +437,9 @@
       .inline-link {
         width: 100%;
       }
+      #statusReturnLink {
+        display: none !important;
+      }
     }
 
     @media (max-width: 480px) {
@@ -551,6 +554,7 @@
 
   const params = new URLSearchParams(window.location.search);
   const returnTo = params.get("return_to") || "/app";
+  const workspaceReturn = "/app";
   const returnLink = document.getElementById("returnLink");
   const statusReturnLink = document.getElementById("statusReturnLink");
   const profileLink = document.getElementById("profileLink");
@@ -564,9 +568,9 @@
 
   let serverHasKey = false;
 
-  returnLink.href = returnTo;
-  statusReturnLink.href = returnTo;
-  workspaceLink.href = returnTo;
+  returnLink.href = workspaceReturn;
+  statusReturnLink.href = workspaceReturn;
+  workspaceLink.href = workspaceReturn;
   profileLink.href = `/settings?return_to=${encodeURIComponent(returnTo)}`;
 
   function doLogout() {
