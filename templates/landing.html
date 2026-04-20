@@ -137,6 +137,42 @@
       transform: translateY(-1px);
     }
 
+    .nav-menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: #ffffff;
+      color: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(24, 33, 43, 0.05);
+      flex-shrink: 0;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+    .nav-menu-btn:hover {
+      border-color: rgba(35, 66, 94, 0.28);
+      box-shadow: 0 6px 16px rgba(24, 33, 43, 0.08);
+    }
+    .nav-menu-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(35, 66, 94, 0.2);
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .hero {
       display: grid;
       grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
@@ -569,17 +605,38 @@
         padding-right: 18px;
       }
       .nav {
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+      }
+      .brand {
+        flex: 1;
+        min-width: 0;
+        order: 1;
+      }
+      .nav-menu-btn {
+        display: inline-flex;
+        order: 2;
       }
       .nav-actions {
+        display: none;
+        order: 3;
+        flex-basis: 100%;
         width: 100%;
-        justify-content: stretch;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .nav.nav--open .nav-actions {
+        display: flex;
       }
       .nav-link,
       .nav-cta,
       .nav-about {
-        flex: 1;
+        flex: none;
+        width: 100%;
+        text-align: center;
       }
       .hero-actions {
         width: 100%;
@@ -613,13 +670,22 @@
       .nav-about {
         min-height: 44px;
       }
+      .hero-actions {
+        flex-direction: column;
+      }
+      .hero-actions .nav-link,
+      .hero-actions .nav-cta {
+        flex: none;
+        width: 100%;
+        text-align: center;
+      }
     }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="frame">
-      <nav class="nav">
+      <nav class="nav" id="siteNav">
         <a class="brand" href="/">
           <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
@@ -635,7 +701,13 @@
           </svg>
           <span>Expense Agent</span>
         </a>
-        <div class="nav-actions">
+        <button type="button" class="nav-menu-btn" id="navMenuBtn" aria-expanded="false" aria-controls="navActionsPanel" aria-label="Open menu">
+          <span class="sr-only">Menu</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="nav-actions" id="navActionsPanel">
           <a class="nav-cta" href="/auth/google">Sign In</a>
           <a class="nav-link" href="/register">Register with Google</a>
           <a class="nav-about" href="/about">About</a>
@@ -751,5 +823,29 @@
 
     <div class="site-foot">Aviral Agarwal &nbsp;·&nbsp; © 2026</div>
   </div>
+  <script>
+    (function () {
+      var nav = document.getElementById("siteNav");
+      var btn = document.getElementById("navMenuBtn");
+      var panel = document.getElementById("navActionsPanel");
+      if (!nav || !btn || !panel) return;
+      function setOpen(open) {
+        nav.classList.toggle("nav--open", open);
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      }
+      btn.addEventListener("click", function () {
+        setOpen(!nav.classList.contains("nav--open"));
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") setOpen(false);
+      });
+      panel.querySelectorAll("a").forEach(function (a) {
+        a.addEventListener("click", function () {
+          setOpen(false);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
