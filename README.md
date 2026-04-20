@@ -35,7 +35,7 @@ still reconcile). This project sits in between:
 2. Save your display name, at least one card, and your **Anthropic API key** (bring-your-own; usage bills to your account).
 3. Open the workspace, pick a card, attach one or more screenshots, and run **Analyze**.
 4. Review three lists: **New**, **Skipped** (exact duplicates), and **Needs review** (fuzzy matches). Confirm what to keep.
-5. Open **History** for a **Summary** dashboard, the full **Transactions** ledger, or a **Batches** view tied to each analyze session — CSV on **Transactions** and **Batches**, PDF/PPTX-style exports on **Summary**.
+5. Open **History** for a **Summary** dashboard, the full **Transactions** ledger, or a **Batches** view tied to each analysis session — CSV on **Transactions** and **Batches**, PDF/PPTX-style exports on **Summary**.
 
 ## Tech, at a glance
 

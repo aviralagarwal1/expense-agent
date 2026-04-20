@@ -929,7 +929,7 @@ def upload():
 
     definite_new, definite_dup, possible_dup = classify_transactions(all_transactions, existing_txs)
 
-    # Mint a batch id for this analyze session. The client threads it through every
+    # Mint a batch id for this analysis session. The client threads it through every
     # /confirm call originating from this analysis so the resulting rows can be
     # grouped and (if the user filed to the wrong card) deleted as a unit.
     batch_id = str(uuid4())
@@ -1044,7 +1044,7 @@ def api_transaction_delete(tx_id: str):
 
 @app.route("/api/batches/<batch_id>", methods=["DELETE"])
 def api_batch_delete(batch_id: str):
-    """Delete every transaction belonging to one analyze session.
+    """Delete every transaction belonging to one analysis session.
 
     Scoped to both ``user_id`` and ``batch_id`` so a user can only ever delete
     rows they themselves uploaded. The client computes batch metadata
