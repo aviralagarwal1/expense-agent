@@ -92,6 +92,7 @@
       font-weight: 700;
       border: 1px solid var(--line-strong);
       background: rgba(255,255,255,0.8);
+      color: var(--ink);
       transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
     }
     .nav-link:hover,
@@ -943,7 +944,7 @@
       font-size: 0.74rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #7a8390;
+      color: var(--ink);
       font-weight: 700;
     }
     .search-input,
@@ -1215,30 +1216,34 @@
       display: inline-flex;
       gap: 6px;
       padding: 5px;
-      background: var(--surface-soft);
-      border: 1px solid rgba(24, 33, 43, 0.06);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line-strong);
       border-radius: 999px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
     }
     .view-tab {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: none;
+      border: 1px solid transparent;
       border-radius: 999px;
       padding: 9px 18px;
       font-size: 0.88rem;
       font-weight: 700;
       letter-spacing: 0.01em;
-      color: var(--muted);
-      background: transparent;
-      transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.55);
+      transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
     }
     .view-tab:hover {
       color: var(--ink);
+      background: rgba(255, 255, 255, 0.95);
+      border-color: var(--line);
     }
     .view-tab.active {
       background: var(--accent);
       color: #ffffff;
+      border-color: transparent;
       box-shadow: 0 10px 22px rgba(35, 66, 94, 0.18);
     }
     .view-section {
@@ -1678,6 +1683,20 @@
         padding: 20px;
         border-radius: 24px;
       }
+      .headline {
+        justify-content: center;
+        text-align: center;
+      }
+      .headline > div {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .headline h1 {
+        text-align: center;
+        margin-bottom: 9px;
+      }
       .metrics-grid {
         grid-template-columns: 1fr;
       }
@@ -1840,8 +1859,9 @@
 
       /* Segmented control: even vertical padding in the track + equal-height tabs (Summary / …). */
       .view-switcher {
-        margin-top: 14px;
+        margin-top: 7px;
         width: 100%;
+        justify-content: center;
       }
       .view-tabs {
         display: flex;
@@ -1925,7 +1945,7 @@
       }
       .headline h1 {
         font-size: clamp(1.55rem, 7vw, 2rem);
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
       .view-tab {
         min-height: 44px;
