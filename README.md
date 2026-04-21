@@ -1,71 +1,128 @@
 # Expense Agent
 
-Turn screenshots of your credit card app into a reviewed, deduplicated expense log in ~30 seconds per batch.
+Expense Agent turns credit card app screenshots into a reviewed expense log.
 
-## What it is
+Live app: [expenseagent.aviralagarwal.com](https://expenseagent.aviralagarwal.com)
 
-Expense Agent is a small web app for people who do not want to type every
-transaction into a spreadsheet and do not want a firehose import from every
-account they own. You sign in with Google, screenshot the transaction list in a
-card app, pick which saved card the batch belongs to, and upload. The app
-reads the charges with **Claude Vision**, compares them to your history, and
-asks you to sign off before anything is saved.
+## Overview
 
-The result is a ledger you chose to capture, on purpose, with duplicates
-called out instead of silently doubled.
+Many personal expense tools sit at one of two extremes. They either require fully manual entry, or they pull in every account and every transaction whether you want them or not.
 
-Each upload is labeled with the card it came from, yet **every** card you use
-still writes into the **same** History — one ledger, summaries, and exports
-across your whole wallet.
+Expense Agent is designed for the middle ground. It lets a user capture transactions intentionally, in batches, from screenshots they choose to upload. The app extracts the transactions, compares them against previously logged history, separates clear duplicates from likely new items, and asks for confirmation before anything is saved.
 
-## Why it exists
+The result is a single ledger across multiple cards without needing direct bank integrations.
 
-Most tools either import nothing (manual entry) or everything (noisy feeds you
-still reconcile). This project sits in between:
+## Use Case
 
-- You decide **when** to capture expenses.
-- You decide **which card** each batch represents.
-- **Card apps don’t talk to each other** — without a consolidation layer, your picture of spend depends on whichever issuer’s UI you opened last.
-- You **confirm** lines before they land in history.
-- The model only handles the tedious part: reading the screen and flagging likely duplicates.
+This app is useful for someone who:
 
-## What a typical session looks like
+- wants one place to review spending across multiple credit cards
+- does not want to type every charge manually
+- does not want a full automatic import pipeline
+- prefers to verify expenses before they are added to history
 
-1. Sign in with Google (from the landing page or the register-oriented entry point).
-2. Save your display name, at least one card, and your **Anthropic API key** (bring-your-own; usage bills to your account).
-3. Open the workspace, pick a card, attach one or more screenshots, and run **Analyze**.
-4. Review three lists: **New**, **Skipped** (exact duplicates), and **Needs review** (fuzzy matches). Confirm what to keep.
-5. Open **History** for a **Summary** dashboard, the full **Transactions** ledger, or a **Batches** view tied to each analysis session — CSV on **Transactions** and **Batches**, PDF/PPTX-style exports on **Summary**.
+The workflow is deliberately selective. A user uploads screenshots only when they want to capture a batch of spending.
 
-## Tech, at a glance
+## How It Works
 
-- **Backend:** Python, Flask  
-- **Frontend:** Server-rendered HTML and vanilla JavaScript (no build step)  
-- **AI:** Anthropic Claude Vision  
-- **Auth & data:** Supabase (Google sign-in + Postgres)  
-- **Deploy:** Docker-friendly; intended for **Google Cloud Run** (see `Dockerfile`)
+1. Sign in with Google.
+2. Save an Anthropic API key and at least one card label.
+3. Upload one or more screenshots from a credit card app.
+4. The app extracts transactions from the screenshots with Claude Vision.
+5. The extracted transactions are compared against the user's existing history.
+6. The app returns three groups:
+   - new transactions
+   - skipped transactions that appear to be exact duplicates
+   - possible duplicates that need a manual decision
+7. The user confirms what should be added.
+8. Confirmed rows are written to a single per-user transaction history.
 
-## Running it locally
+Each upload is associated with one selected saved card, but all confirmed transactions flow into the same ledger.
+
+## Core Functionality
+
+- Google OAuth authentication through Supabase
+- Bring-your-own Anthropic API key
+- Saved card labels with optional identifying digits
+- Screenshot upload and transaction extraction
+- Duplicate detection against prior history
+- Review step before insertion
+- Unified transaction history across cards
+- Summary, transaction, and batch views
+- CSV export for transactions and batches
+- PDF and PPTX-style summary export from the history page
+
+## Technical Architecture
+
+Expense Agent is a small server-rendered web application with a simple deployment shape.
+
+- Backend: Python + Flask
+- Frontend: HTML, CSS, and vanilla JavaScript
+- AI extraction: Anthropic Claude Vision
+- Auth and database: Supabase
+- Deployment: Docker, designed for Google Cloud Run
+
+The backend lives primarily in a single `app.py` file and handles:
+
+- OAuth start and callback flow
+- user settings and saved card management
+- screenshot ingestion
+- Anthropic API calls
+- duplicate classification
+- transaction persistence and editing APIs
+
+The frontend is intentionally lightweight. Most pages are server-rendered templates, and the history experience is driven by a single client-side script with no build step.
+
+## Data Model
+
+The app relies on two main persistence concepts:
+
+- `user_settings`: stores the user's Anthropic API key, profile information, and saved cards
+- `transactions`: stores confirmed expense rows, including vendor, card label, amount, date, status, and optional batch id
+
+Batch history is derived from groups of transactions that share a `batch_id`. There is no separate batches table.
+
+## Local Development
+
+### Requirements
+
+- Python 3.11
+- A Supabase project with Google auth enabled
+- An Anthropic account for screenshot extraction
+
+### Setup
 
 ```bash
 pip install -r requirements.txt
 python app.py
 ```
 
-Then open [http://127.0.0.1:5000](http://127.0.0.1:5000). Create a Supabase project with Google auth enabled, copy **`.env.example`** to **`.env`**, and fill in **`SUPABASE_URL`**, **`SUPABASE_SERVICE_KEY`**, and **`APP_URL`** (localhost is fine for local dev). Add **`{APP_URL}/auth/callback`** to your Supabase OAuth redirect allow list.
+Then create a local `.env` from `.env.example` and set:
 
-## Status
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_KEY`
+- `APP_URL`
 
-Personal portfolio piece: core flow (screenshots → extraction → dedupe → history)
-is implemented end to end, including batch grouping and exports on History. The
-repo is meant for recruiters and peers — a public **Try it** URL, README
-screenshots, and small polish (favicon, social meta) are the main items left
-before calling it “launched.”
+For local development, `APP_URL=http://127.0.0.1:5000` is sufficient.
+
+In Supabase Auth, allow the following callback URL:
+
+```text
+http://127.0.0.1:5000/auth/callback
+```
+
+## Deployment Notes
+
+The repository includes a `Dockerfile` and a helper script, `scripts/generate_cloudrun_env.py`, for generating a Cloud Run env-vars YAML from a local `.env` file.
+
+In production, the app expects:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_KEY`
+- `APP_URL`
+
+`APP_URL` should match the public origin used for Google OAuth callbacks.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
-
-## Author
-
-Aviral Agarwal
+MIT. See [LICENSE](LICENSE).
