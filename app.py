@@ -1004,12 +1004,13 @@ def api_transaction_patch(tx_id: str):
         return jsonify({"error": "status must be pending or settled"}), 400
 
     try:
+        # postgrest-py (supabase v2): .update() returns a filter builder with no .select();
+        # use default returning=representation so execute() still returns updated rows.
         result = (
             supabase_admin.table("transactions")
             .update({"status": status})
             .eq("id", tx_id)
             .eq("user_id", user_id)
-            .select("id")
             .execute()
         )
     except Exception as e:
