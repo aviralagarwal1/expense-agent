@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 from dotenv import load_dotenv
 load_dotenv()
 from supabase import create_client, Client
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory
 from datetime import datetime
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -708,6 +708,16 @@ def classify_transactions(new_txs: list, existing_txs: list):
 @app.route("/")
 def landing():
     return render_template("landing.html")
+
+
+@app.route("/favicon.png")
+def favicon_png():
+    return send_from_directory("branding", "favicon.png")
+
+
+@app.route("/favicon.ico")
+def favicon_ico():
+    return send_from_directory("branding", "favicon.png")
 
 
 @app.route("/about")
