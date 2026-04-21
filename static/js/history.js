@@ -193,6 +193,27 @@
     return firstWord.replace(/[.,;:!?]+$/, "");
   }
 
+  /** Split stored card label (e.g. "Mastercard ending in 44") into brand + reference line for the detail modal. */
+  function parseCardForModal(cardRaw) {
+    const raw = (cardRaw || "").trim();
+    if (!raw || raw === "Unassigned") {
+      return { brand: "—", reference: "N/A" };
+    }
+    const hintRe = /\s+(ending|starting)\s+in\s+(\d{1,4})$/i;
+    const m = raw.match(hintRe);
+    if (m) {
+      const brand = raw.slice(0, m.index).trim();
+      const pos = m[1].toLowerCase() === "starting" ? "Starting with" : "Ending in";
+      return { brand: brand || raw, reference: `${pos} ${m[2]}` };
+    }
+    const legacy = raw.match(/^(.*?)\s*\((\d{1,4})\)\s*$/);
+    if (legacy) {
+      const b = legacy[1].trim();
+      return { brand: b || raw, reference: `Ending in ${legacy[2]}` };
+    }
+    return { brand: raw, reference: "N/A" };
+  }
+
   function normalizeTransactions(raw) {
     return raw
       .map((tx, index) => {
@@ -833,8 +854,8 @@
       const pending = tx.status === "pending";
       const rowClass = pending ? "ledger-row-pending" : "";
       const mobileStatus = pending
-        ? `<span class="mobile-ledger-status-dot" aria-label="Pending"></span>`
-        : `<span class="mobile-ledger-status-dot settled" aria-label="Settled"></span>`;
+        ? `<span class="mobile-ledger-status-pill pending">Pending</span>`
+        : `<span class="mobile-ledger-status-pill settled">Settled</span>`;
       const statusTd = pending
         ? `<td data-label="Status">
         <div class="status-cell-inner">
@@ -918,24 +939,37 @@
     openTxModal(txId);
   });
 
+  function setMobileLedgerActiveRow(txId) {
+    document.querySelectorAll("#ledgerBody .mobile-ledger-row").forEach(el => {
+      el.classList.toggle("is-active", Boolean(txId) && el.dataset.txId === txId);
+    });
+  }
+
   function openTxModal(txId) {
     const tx = allTransactions.find(item => item.id === txId);
     if (!tx) return;
     activeTxId = tx.id;
+    setMobileLedgerActiveRow(txId);
+    const pending = tx.status === "pending";
     document.getElementById("txModalTitle").textContent = tx.vendor;
-    document.getElementById("txModalSubtitle").textContent = `${currencyExact.format(tx.amount)} · ${shortDateNumeric(tx.parsedDate)}`;
-    document.getElementById("txModalDate").textContent = shortDate(tx.parsedDate);
+    document.getElementById("txModalSubtitle").textContent = shortDate(tx.parsedDate);
     document.getElementById("txModalAmount").textContent = currencyExact.format(tx.amount);
-    document.getElementById("txModalCard").textContent = tx.card;
-    document.getElementById("txModalStatus").textContent = tx.status === "pending" ? "Pending" : "Settled";
+    const { brand, reference } = parseCardForModal(tx.card);
+    document.getElementById("txModalCardBrand").textContent = brand;
+    document.getElementById("txModalCardHint").textContent = reference;
+    const statusEl = document.getElementById("txModalStatus");
+    statusEl.textContent = pending ? "Pending" : "Settled";
+    statusEl.classList.remove("settled", "pending");
+    statusEl.classList.add(pending ? "pending" : "settled");
     const settleBtn = document.getElementById("txModalSettleBtn");
-    settleBtn.style.display = tx.status === "pending" ? "inline-flex" : "none";
+    settleBtn.style.display = pending ? "inline-flex" : "none";
     settleBtn.disabled = false;
     settleBtn.textContent = "Mark Settled";
     document.getElementById("txModal").classList.add("visible");
   }
 
   function closeTxModal() {
+    setMobileLedgerActiveRow("");
     document.getElementById("txModal").classList.remove("visible");
     activeTxId = "";
   }

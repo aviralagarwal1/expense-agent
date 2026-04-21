@@ -1111,8 +1111,18 @@
     .tx-modal-card .modal-actions {
       justify-content: flex-end;
     }
-    .tx-modal-stats .modal-stat strong {
-      line-height: 1.25;
+    /* Match value typography to status pill; keeps grid calm on long card names. */
+    .tx-modal-stats .modal-stat > strong:not(.modal-status-pill) {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      line-height: 1.4;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+    .tx-modal-stats .modal-stat > strong#txModalCardBrand {
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
     .status-pill {
       display: inline-flex;
@@ -1563,6 +1573,48 @@
       color: #ffffff;
       box-shadow: 0 12px 28px rgba(161, 72, 66, 0.22);
     }
+    /* Transaction detail modal: primary success for Mark Settled on pending entries */
+    .modal-btn-tx-settle {
+      background: var(--success);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 12px 28px rgba(36, 102, 74, 0.28);
+    }
+    .modal-btn-tx-settle:hover:not(:disabled) {
+      background: #1d563f;
+      box-shadow: 0 14px 30px rgba(36, 102, 74, 0.32);
+    }
+    .modal-btn-tx-settle .spinner {
+      border-color: rgba(255, 255, 255, 0.35);
+      border-top-color: #ffffff;
+    }
+    .modal-status-pill {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      max-width: 100%;
+      margin-top: 2px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .modal-status-pill.settled {
+      background: rgba(36, 102, 74, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(36, 102, 74, 0.22);
+    }
+    .modal-status-pill.pending {
+      background: var(--warning-soft);
+      color: var(--warning);
+      border: 1px solid rgba(154, 106, 32, 0.22);
+    }
+    .modal-stat strong.modal-status-pill {
+      font-size: 0.82rem;
+      letter-spacing: 0.02em;
+      font-weight: 700;
+    }
     .modal-btn .spinner {
       width: 14px;
       height: 14px;
@@ -1758,15 +1810,16 @@
       }
       .mobile-ledger-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 16px 74px 30px;
+        grid-template-columns: minmax(0, 1fr) auto auto 30px;
         width: 100%;
         border: none;
         background: transparent;
         color: var(--ink);
-        padding: 14px 2px;
-        column-gap: 10px;
+        padding: 12px 4px;
+        column-gap: 8px;
         align-items: center;
         text-align: left;
+        transition: background 0.16s ease, box-shadow 0.16s ease;
       }
       tbody tr.ledger-row-pending .mobile-ledger-row {
         box-shadow: none;
@@ -1793,15 +1846,43 @@
         font-size: 0.78rem;
         line-height: 1.4;
       }
-      .mobile-ledger-status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--warning);
+      .mobile-ledger-status-pill {
         justify-self: center;
+        align-self: center;
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 5px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+        line-height: 1;
       }
-      .mobile-ledger-status-dot.settled {
-        background: var(--success);
+      .mobile-ledger-status-pill.settled {
+        background: rgba(36, 102, 74, 0.14);
+        color: var(--success);
+        border: 1px solid rgba(36, 102, 74, 0.26);
+      }
+      .mobile-ledger-status-pill.pending {
+        background: var(--warning-soft);
+        color: var(--warning);
+        border: 1px solid rgba(154, 106, 32, 0.28);
+      }
+      tbody tr:not(.ledger-row-pending) .mobile-ledger-row.is-active {
+        border-radius: 14px;
+        padding-left: 8px;
+        padding-right: 8px;
+        background:
+          linear-gradient(180deg, rgba(36, 102, 74, 0.12) 0%, rgba(36, 102, 74, 0.05) 100%);
+        box-shadow: inset 0 0 0 1px rgba(36, 102, 74, 0.28);
+      }
+      tbody tr.ledger-row-pending .mobile-ledger-row.is-active {
+        border-radius: 14px;
+        padding-left: 8px;
+        padding-right: 8px;
+        background:
+          linear-gradient(180deg, rgba(154, 106, 32, 0.14) 0%, rgba(154, 106, 32, 0.06) 100%);
+        box-shadow: inset 0 0 0 1px rgba(154, 106, 32, 0.32);
       }
       .mobile-ledger-amount {
         font-size: 0.92rem;
