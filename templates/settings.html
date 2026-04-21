@@ -557,7 +557,7 @@
           <div id="keyStatus" class="key-status unset">
             <div class="key-status-main">
               <div>
-                <div class="key-status-title" id="keyStatusTitle">No API key saved</div>
+                <div class="key-status-title" id="keyStatusTitle">No API Key Saved</div>
                 <div class="key-status-copy" id="keyStatusCopy">Add your Anthropic key to unlock screenshot uploads.</div>
               </div>
             </div>
@@ -640,6 +640,13 @@
     saveBtn.textContent = serverHasKey ? "Clear Key" : "Save Key";
   }
 
+  function clearStatus() {
+    const el = document.getElementById("statusMsg");
+    el.textContent = "";
+    el.className = "status-msg";
+    el.style.display = "none";
+  }
+
   function syncWorkspaceNav() {
     if (serverHasKey) {
       workspaceLink.classList.remove("is-disabled");
@@ -674,7 +681,7 @@
     }
 
     keyStatus.className = "key-status unset";
-    keyStatusTitle.textContent = "No API key saved";
+    keyStatusTitle.textContent = "No API Key Saved";
     keyStatusCopy.textContent = "Screenshot uploads are locked until you save an Anthropic key below.";
     apiKeyInput.placeholder = "sk-ant-...";
     returnLink.style.display = "none";
@@ -710,7 +717,7 @@
       apiKeyInput.value = "";
       apiKeyInput.type = "password";
       toggleKeyBtn.textContent = "Show";
-      showStatus("API key removed from this app. Workspace stays locked until you save a new key.", false);
+      clearStatus();
       updateKeyUi(false);
     } catch (e) {
       showStatus("Network error - please try again.", false);
