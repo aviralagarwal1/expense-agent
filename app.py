@@ -524,7 +524,7 @@ def user_facing_extraction_error(exc: Exception) -> tuple[str, str]:
         )
     if isinstance(exc, anthropic.BadRequestError):
         return (
-            "Anthropic could not process these screenshots. Try fewer or smaller images, then try again.",
+            "We couldn't accept one of your files. Please make sure each is a PNG, JPG, GIF, or WEBP image.",
             url,
         )
     if isinstance(exc, (anthropic.APIConnectionError, anthropic.APITimeoutError)):
@@ -608,6 +608,21 @@ Rules:
         if raw.startswith("json"):
             raw = raw[4:]
     return json.loads(raw.strip())
+
+
+def filter_out_non_expenses(transactions: list) -> list:
+    # Backstop to the Claude prompt's "ignore credits/refunds" rule. Drop rows whose
+    # parsed amount is ≤ 0; leave unparseable amounts alone so classify_transactions
+    # can still surface them for the user to vet.
+    kept = []
+    for tx in transactions:
+        try:
+            if float(str(tx.get("amount")).replace("$", "").replace(",", "")) <= 0:
+                continue
+        except (TypeError, ValueError):
+            pass
+        kept.append(tx)
+    return kept
 
 
 def attach_selected_card_to_transactions(transactions: list, card_label: str) -> list:
@@ -916,6 +931,7 @@ def upload():
 
     try:
         extracted_transactions = extract_transactions_from_images(image_data_list, api_key)
+        extracted_transactions = filter_out_non_expenses(extracted_transactions)
         all_transactions = attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
     except Exception as e:
         app.logger.exception("Claude extraction failed for user_id=%s", user_id)
@@ -999,16 +1015,53 @@ def api_transaction_patch(tx_id: str):
         return jsonify({"error": "Unauthorized"}), 401
 
     data = request.json or {}
-    status = (data.get("status") or "").strip().lower()
-    if status not in ("pending", "settled"):
-        return jsonify({"error": "status must be pending or settled"}), 400
+    updates: dict[str, object] = {}
+
+    if "status" in data:
+        status = str(data.get("status") or "").strip().lower()
+        if status not in ("pending", "settled"):
+            return jsonify({"error": "status must be pending or settled"}), 400
+        updates["status"] = status
+
+    if "vendor" in data:
+        vendor = re.sub(r"\s+", " ", str(data.get("vendor") or "").strip())
+        if not vendor:
+            return jsonify({"error": "merchant is required"}), 400
+        if len(vendor) > 120:
+            return jsonify({"error": "merchant must be 120 characters or fewer"}), 400
+        updates["vendor"] = vendor
+
+    if "date" in data:
+        raw_date = str(data.get("date") or "").strip()
+        if not raw_date:
+            return jsonify({"error": "date is required"}), 400
+        try:
+            parsed = datetime.strptime(raw_date, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"error": "date must be in YYYY-MM-DD format"}), 400
+        updates["date"] = parsed.strftime("%Y-%m-%d")
+
+    if "amount" in data:
+        raw_amount = data.get("amount")
+        if raw_amount is None or str(raw_amount).strip() == "":
+            return jsonify({"error": "amount is required"}), 400
+        try:
+            amount = round(float(str(raw_amount).replace("$", "").replace(",", "").strip()), 2)
+        except (TypeError, ValueError):
+            return jsonify({"error": "amount must be a number"}), 400
+        if amount <= 0:
+            return jsonify({"error": "amount must be greater than 0"}), 400
+        updates["amount"] = amount
+
+    if not updates:
+        return jsonify({"error": "No editable fields were provided"}), 400
 
     try:
         # postgrest-py (supabase v2): .update() returns a filter builder with no .select();
         # use default returning=representation so execute() still returns updated rows.
         result = (
             supabase_admin.table("transactions")
-            .update({"status": status})
+            .update(updates)
             .eq("id", tx_id)
             .eq("user_id", user_id)
             .execute()
@@ -1020,7 +1073,9 @@ def api_transaction_patch(tx_id: str):
     if not rows:
         return jsonify({"error": "Transaction not found"}), 404
 
-    return jsonify({"success": True, "status": status})
+    row = rows[0]
+    row["card"] = canonicalize_card_label(row.get("card")) or "Unassigned"
+    return jsonify({"success": True, "transaction": row})
 
 
 @app.route("/api/transactions/<tx_id>", methods=["DELETE"])

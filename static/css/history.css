@@ -1104,6 +1104,21 @@
       width: 100%;
       border-collapse: collapse;
     }
+    .ledger-table {
+      table-layout: fixed;
+    }
+    .ledger-col-date {
+      width: 17%;
+    }
+    .ledger-col-card {
+      width: 17%;
+    }
+    .ledger-col-status {
+      width: 16%;
+    }
+    .ledger-col-amount {
+      width: 170px;
+    }
     thead th {
       text-align: left;
       padding: 15px 24px;
@@ -1115,18 +1130,33 @@
       border-bottom: 1px solid var(--line);
       background: rgba(248,246,242,0.7);
     }
+    .amount-head {
+      text-align: left;
+    }
     tbody td {
       padding: 18px 24px;
       border-bottom: 1px solid var(--line);
-      vertical-align: top;
+      vertical-align: middle;
       font-size: 0.94rem;
     }
     tbody tr:last-child td {
       border-bottom: none;
     }
+    .ledger-editable,
+    .merchant-cell-shell,
+    .amount-cell-inner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .merchant-cell-shell {
+      justify-content: space-between;
+      align-items: flex-start;
+    }
     .merchant-cell {
       display: grid;
       gap: 4px;
+      min-width: 0;
     }
     .merchant-name {
       font-weight: 700;
@@ -1141,7 +1171,143 @@
       font-weight: 700;
       letter-spacing: -0.01em;
       white-space: nowrap;
-      text-align: right;
+      text-align: left;
+    }
+    .amount-cell-inner {
+      justify-content: flex-start;
+    }
+    .amount-value,
+    .ledger-editable-text {
+      min-width: 0;
+    }
+    .card-cell {
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    .cell-icon-btn,
+    .status-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(35, 66, 94, 0.18);
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease, opacity 120ms ease;
+    }
+    .cell-icon-btn:hover:not(:disabled),
+    .status-toggle-btn:hover:not(:disabled) {
+      background: rgba(35, 66, 94, 0.06);
+      border-color: rgba(35, 66, 94, 0.36);
+    }
+    .cell-icon-btn:active:not(:disabled),
+    .status-toggle-btn:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+    .cell-icon-btn:disabled,
+    .status-toggle-btn:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+    .cell-icon-btn svg,
+    .status-toggle-btn svg {
+      display: block;
+    }
+    .cell-icon-btn--confirm {
+      color: var(--success);
+      border-color: rgba(36, 102, 74, 0.26);
+    }
+    .cell-icon-btn--confirm:hover:not(:disabled) {
+      background: rgba(36, 102, 74, 0.08);
+      border-color: rgba(36, 102, 74, 0.38);
+    }
+    .cell-icon-btn--cancel {
+      color: var(--danger);
+      border-color: rgba(161, 72, 66, 0.24);
+    }
+    .cell-icon-btn--cancel:hover:not(:disabled) {
+      background: rgba(161, 72, 66, 0.08);
+      border-color: rgba(161, 72, 66, 0.36);
+    }
+    .status-toggle-btn--settled {
+      color: var(--success);
+      border-color: rgba(36, 102, 74, 0.24);
+    }
+    .status-toggle-btn--settled:hover:not(:disabled) {
+      background: rgba(36, 102, 74, 0.08);
+      border-color: rgba(36, 102, 74, 0.36);
+    }
+    .status-toggle-btn--pending {
+      color: var(--warning);
+      border-color: rgba(154, 106, 32, 0.26);
+    }
+    .status-toggle-btn--pending:hover:not(:disabled) {
+      background: rgba(154, 106, 32, 0.08);
+      border-color: rgba(154, 106, 32, 0.38);
+    }
+    .inline-edit-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .inline-edit-box--merchant {
+      width: 100%;
+    }
+    .inline-edit-input {
+      width: 100%;
+      min-width: 0;
+      height: 40px;
+      border-radius: 14px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.98);
+      padding: 0 14px;
+      font: inherit;
+      color: var(--ink);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+    .inline-edit-input:focus {
+      outline: none;
+      border-color: rgba(35, 66, 94, 0.34);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .inline-edit-input--amount {
+      appearance: textfield;
+      border: none;
+      box-shadow: none;
+      background: transparent;
+      height: auto;
+      padding: 0;
+    }
+    .inline-edit-input--amount::-webkit-outer-spin-button,
+    .inline-edit-input--amount::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .inline-edit-amount-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 116px;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.98);
+    }
+    .inline-edit-amount-wrap:focus-within {
+      border-color: rgba(35, 66, 94, 0.34);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .inline-edit-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
     .mobile-ledger-row {
       display: none;
@@ -1198,35 +1364,6 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px 10px;
-    }
-    .mark-settled-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 30px;
-      height: 30px;
-      padding: 0;
-      border-radius: 999px;
-      border: 1px solid rgba(35, 66, 94, 0.18);
-      background: rgba(255, 255, 255, 0.95);
-      color: var(--accent);
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease, opacity 120ms ease;
-    }
-    .mark-settled-btn:hover:not(:disabled) {
-      border-color: var(--accent);
-      background: rgba(35, 66, 94, 0.06);
-    }
-    .mark-settled-btn:active:not(:disabled) {
-      transform: scale(0.96);
-    }
-    .mark-settled-btn:disabled {
-      opacity: 0.55;
-      cursor: default;
-    }
-    .mark-settled-btn svg {
-      display: block;
     }
 
     .ledger-empty {
@@ -1581,6 +1718,9 @@
       margin-top: 24px;
       flex-wrap: wrap;
     }
+    .tx-modal-actions {
+      justify-content: flex-end;
+    }
     .modal-btn {
       display: inline-flex;
       align-items: center;
@@ -1611,20 +1751,44 @@
       color: #ffffff;
       box-shadow: 0 12px 28px rgba(161, 72, 66, 0.22);
     }
-    /* Transaction detail modal: primary success for Mark Settled on pending entries */
-    .modal-btn-tx-settle {
+    .modal-btn-tx-save {
       background: var(--success);
       color: #ffffff;
       border-color: transparent;
       box-shadow: 0 12px 28px rgba(36, 102, 74, 0.28);
     }
-    .modal-btn-tx-settle:hover:not(:disabled) {
+    .modal-btn-tx-save:hover:not(:disabled) {
       background: #1d563f;
       box-shadow: 0 14px 30px rgba(36, 102, 74, 0.32);
     }
-    .modal-btn-tx-settle .spinner {
+    .modal-btn-tx-save .spinner {
       border-color: rgba(255, 255, 255, 0.35);
       border-top-color: #ffffff;
+    }
+    .modal-btn-tx-status {
+      border-color: transparent;
+    }
+    .modal-btn-tx-status.is-settled {
+      background: var(--success);
+      color: #ffffff;
+      box-shadow: 0 12px 28px rgba(36, 102, 74, 0.22);
+    }
+    .modal-btn-tx-status.is-settled:hover:not(:disabled) {
+      background: #1d563f;
+    }
+    .modal-btn-tx-status.is-pending {
+      background: var(--warning-soft);
+      color: var(--warning);
+      border-color: rgba(154, 106, 32, 0.26);
+      box-shadow: none;
+    }
+    .modal-btn-tx-status.is-pending:hover:not(:disabled) {
+      background: rgba(241, 225, 197, 0.92);
+      border-color: rgba(154, 106, 32, 0.38);
+    }
+    .modal-btn-tx-status .spinner {
+      border-color: rgba(255, 255, 255, 0.35);
+      border-top-color: currentColor;
     }
     .modal-status-pill {
       display: inline-flex;
@@ -1652,6 +1816,52 @@
       font-size: 0.82rem;
       letter-spacing: 0.02em;
       font-weight: 700;
+    }
+    .tx-edit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .tx-edit-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+    .tx-edit-field--full {
+      grid-column: 1 / -1;
+    }
+    .tx-edit-field > span {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #7a8390;
+      font-weight: 700;
+    }
+    .tx-edit-input {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 16px;
+      border: 1px solid var(--line-strong);
+      background: #ffffff;
+      padding: 0 15px;
+      font: inherit;
+      color: var(--ink);
+    }
+    .tx-edit-input:focus {
+      outline: none;
+      border-color: rgba(35, 66, 94, 0.34);
+      box-shadow: 0 0 0 4px rgba(35, 66, 94, 0.08);
+    }
+    .tx-edit-amount-wrap {
+      min-height: 44px;
+      padding-right: 14px;
+    }
+    .tx-edit-amount-wrap .tx-edit-input {
+      min-height: auto;
+      padding: 0;
+      border: none;
+      box-shadow: none;
+      background: transparent;
     }
     .modal-btn .spinner {
       width: 14px;
@@ -1867,12 +2077,14 @@
       tbody td[data-label="Merchant"]::before {
         content: none;
       }
-      tbody td[data-label="Merchant"] .merchant-cell {
+      tbody td[data-label="Merchant"] .merchant-cell,
+      tbody td[data-label="Merchant"] .merchant-cell-shell,
+      tbody td[data-label="Merchant"] .inline-edit-box--merchant {
         display: none;
       }
       .mobile-ledger-row {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto 30px;
+        grid-template-columns: minmax(0, 1fr) minmax(108px, 1fr) auto 30px;
         width: 100%;
         border: none;
         background: transparent;
@@ -1919,6 +2131,9 @@
         border-radius: 999px;
         white-space: nowrap;
         line-height: 1;
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
       }
       .mobile-ledger-status-pill.settled {
         background: rgba(36, 102, 74, 0.14);
@@ -1953,6 +2168,7 @@
         white-space: nowrap;
         text-align: right;
         min-width: 0;
+        justify-self: end;
       }
       .mobile-ledger-chevron {
         display: inline-flex;
@@ -2096,7 +2312,8 @@
       .export-btn {
         min-height: 44px;
       }
-      .mark-settled-btn {
+      .cell-icon-btn,
+      .status-toggle-btn {
         width: 44px;
         height: 44px;
       }
@@ -2104,6 +2321,18 @@
         margin: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
           max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      }
+      .tx-edit-grid {
+        grid-template-columns: 1fr;
+      }
+      .tx-edit-field--full {
+        grid-column: auto;
+      }
+      .tx-modal-actions {
+        flex-direction: column;
+      }
+      .tx-modal-actions .modal-btn {
+        width: 100%;
       }
       .batches-tools {
         padding: 14px 16px;

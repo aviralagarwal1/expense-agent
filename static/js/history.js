@@ -18,7 +18,29 @@
   let allTransactions = [];
   let activeBatch = null;
   let activeTxId = "";
+  let activeInlineEdit = { txId: "", field: "" };
   let toastTimer = null;
+  const ICONS = {
+    pencil: `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 20h9"/>
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+      </svg>`,
+    check: `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>`,
+    clock: `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v5l3 2"/>
+      </svg>`,
+    x: `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 6L6 18"/>
+        <path d="M6 6l12 12"/>
+      </svg>`,
+  };
   const initialParams = new URLSearchParams(window.location.search);
   const VIEWS = ["summary", "transactions", "batches"];
   const requestedView = initialParams.get("view");
@@ -214,28 +236,33 @@
     return { brand: raw, reference: "N/A" };
   }
 
+  function normalizeTransaction(tx, index = 0) {
+    const parsedDate = parseTxDate(tx);
+    const amount = safeAmount(tx.amount);
+    const vendor = (tx.vendor || "Unknown merchant").trim();
+    const card = (tx.card || "Unassigned").trim();
+    const status = tx.status === "pending" ? "pending" : "settled";
+    return {
+      ...tx,
+      id: tx.id || `${vendor}-${card}-${index}`,
+      amount,
+      vendor,
+      card,
+      status,
+      parsedDate,
+      monthKey: parsedDate ? monthKey(parsedDate) : null,
+      searchBlob: `${vendor} ${card} ${status} ${parsedDate ? shortDate(parsedDate) : ""}`.toLowerCase(),
+      sortStamp: parsedDate ? parsedDate.getTime() : 0,
+    };
+  }
+
+  function sortTransactions(items) {
+    items.sort((a, b) => b.sortStamp - a.sortStamp || b.amount - a.amount);
+    return items;
+  }
+
   function normalizeTransactions(raw) {
-    return raw
-      .map((tx, index) => {
-        const parsedDate = parseTxDate(tx);
-        const amount = safeAmount(tx.amount);
-        const vendor = (tx.vendor || "Unknown merchant").trim();
-        const card = (tx.card || "Unassigned").trim();
-        const status = tx.status === "pending" ? "pending" : "settled";
-        return {
-          ...tx,
-          id: tx.id || `${vendor}-${card}-${index}`,
-          amount,
-          vendor,
-          card,
-          status,
-          parsedDate,
-          monthKey: parsedDate ? monthKey(parsedDate) : null,
-          searchBlob: `${vendor} ${card} ${status} ${parsedDate ? shortDate(parsedDate) : ""}`.toLowerCase(),
-          sortStamp: parsedDate ? parsedDate.getTime() : 0,
-        };
-      })
-      .sort((a, b) => b.sortStamp - a.sortStamp || b.amount - a.amount);
+    return sortTransactions(raw.map((tx, index) => normalizeTransaction(tx, index)));
   }
 
   function sumAmounts(items) {
@@ -842,6 +869,158 @@
       .replace(/'/g, "&#39;");
   }
 
+  function getTransactionById(txId) {
+    return allTransactions.find(tx => tx.id === txId) || null;
+  }
+
+  function mergeUpdatedTransaction(updatedTx) {
+    const normalized = normalizeTransaction(updatedTx);
+    const idx = allTransactions.findIndex(tx => tx.id === normalized.id);
+    if (idx === -1) allTransactions.push(normalized);
+    else allTransactions[idx] = normalized;
+    sortTransactions(allTransactions);
+    return normalized;
+  }
+
+  async function patchTransaction(txId, payload, fallbackMessage) {
+    const res = await fetch(`/api/transactions/${encodeURIComponent(txId)}`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast(data.error || fallbackMessage || "Could not update transaction");
+      return null;
+    }
+    const updated = mergeUpdatedTransaction(data.transaction || { id: txId, ...payload });
+    renderSummary();
+    renderTransactionsLedger();
+    renderBatches();
+    if (activeTxId === updated.id && document.getElementById("txModal").classList.contains("visible")) {
+      populateTxModal(updated);
+    }
+    return updated;
+  }
+
+  function setInlineEdit(txId, field) {
+    activeInlineEdit = { txId, field };
+    renderTransactionsLedger();
+    requestAnimationFrame(() => {
+      const input = Array.from(document.querySelectorAll(".inline-edit-box"))
+        .find(box => box.dataset.txId === txId && box.dataset.field === field)
+        ?.querySelector(".inline-edit-input");
+      if (!input) return;
+      input.focus();
+      if (typeof input.select === "function") input.select();
+    });
+  }
+
+  function clearInlineEdit(rerender = true) {
+    activeInlineEdit = { txId: "", field: "" };
+    if (rerender) renderTransactionsLedger();
+  }
+
+  function renderIconButton({ action, txId, label, icon, title, field = "", nextStatus = "", className = "" }) {
+    return `
+      <button
+        type="button"
+        class="${className}"
+        data-action="${action}"
+        data-tx-id="${escapeHtml(txId)}"
+        ${field ? `data-field="${escapeHtml(field)}"` : ""}
+        ${nextStatus ? `data-next-status="${escapeHtml(nextStatus)}"` : ""}
+        title="${escapeHtml(title || label)}"
+        aria-label="${escapeHtml(label)}"
+      >
+        ${icon}
+      </button>`;
+  }
+
+  function renderDateCell(tx) {
+    const editing = activeInlineEdit.txId === tx.id && activeInlineEdit.field === "date";
+    if (editing) {
+      return `
+        <div class="inline-edit-box inline-edit-box--date" data-tx-id="${escapeHtml(tx.id)}" data-field="date">
+          <input class="inline-edit-input" type="date" value="${escapeHtml(txIsoDate(tx))}" />
+          <div class="inline-edit-actions">
+            ${renderIconButton({ action: "save-inline-edit", txId: tx.id, field: "date", label: "Save date", title: "Save date", icon: ICONS.check, className: "cell-icon-btn cell-icon-btn--confirm" })}
+            ${renderIconButton({ action: "cancel-inline-edit", txId: tx.id, field: "date", label: "Cancel date edit", title: "Cancel", icon: ICONS.x, className: "cell-icon-btn cell-icon-btn--cancel" })}
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="ledger-editable">
+        <span class="ledger-editable-text">${escapeHtml(shortDate(tx.parsedDate))}</span>
+        ${renderIconButton({ action: "start-inline-edit", txId: tx.id, field: "date", label: `Edit date for ${tx.vendor}`, title: "Edit date", icon: ICONS.pencil, className: "cell-icon-btn cell-edit-btn" })}
+      </div>`;
+  }
+
+  function renderMerchantCell(tx) {
+    const editing = activeInlineEdit.txId === tx.id && activeInlineEdit.field === "vendor";
+    if (editing) {
+      return `
+        <div class="inline-edit-box inline-edit-box--merchant" data-tx-id="${escapeHtml(tx.id)}" data-field="vendor">
+          <input class="inline-edit-input" type="text" value="${escapeHtml(tx.vendor)}" maxlength="120" />
+          <div class="inline-edit-actions">
+            ${renderIconButton({ action: "save-inline-edit", txId: tx.id, field: "vendor", label: `Save merchant for ${tx.vendor}`, title: "Save merchant", icon: ICONS.check, className: "cell-icon-btn cell-icon-btn--confirm" })}
+            ${renderIconButton({ action: "cancel-inline-edit", txId: tx.id, field: "vendor", label: "Cancel merchant edit", title: "Cancel", icon: ICONS.x, className: "cell-icon-btn cell-icon-btn--cancel" })}
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="merchant-cell-shell">
+        <div class="merchant-cell">
+          <div class="merchant-name">${escapeHtml(tx.vendor)}</div>
+          <div class="merchant-sub">${escapeHtml(tx.monthKey ? monthLabel(tx.monthKey) : "Undated entry")}</div>
+        </div>
+        ${renderIconButton({ action: "start-inline-edit", txId: tx.id, field: "vendor", label: `Edit merchant for ${tx.vendor}`, title: "Edit merchant", icon: ICONS.pencil, className: "cell-icon-btn cell-edit-btn" })}
+      </div>`;
+  }
+
+  function renderStatusCell(tx) {
+    const pending = tx.status === "pending";
+    const nextStatus = pending ? "settled" : "pending";
+    const buttonLabel = pending ? `Mark ${tx.vendor} as settled` : `Mark ${tx.vendor} as pending`;
+    const buttonTitle = pending ? "Mark as settled" : "Mark as pending";
+    const buttonIcon = pending ? ICONS.check : ICONS.clock;
+    const buttonClass = pending
+      ? "status-toggle-btn status-toggle-btn--settled"
+      : "status-toggle-btn status-toggle-btn--pending";
+    return `
+      <td data-label="Status" class="status-cell">
+        <div class="status-cell-inner">
+          <span class="status-pill${pending ? " pending" : ""}">${pending ? "Pending" : "Settled"}</span>
+          ${renderIconButton({ action: "toggle-status", txId: tx.id, nextStatus, label: buttonLabel, title: buttonTitle, icon: buttonIcon, className: buttonClass })}
+        </div>
+      </td>`;
+  }
+
+  function renderAmountCell(tx) {
+    const editing = activeInlineEdit.txId === tx.id && activeInlineEdit.field === "amount";
+    if (editing) {
+      return `
+        <div class="inline-edit-box inline-edit-box--amount" data-tx-id="${escapeHtml(tx.id)}" data-field="amount">
+          <div class="inline-edit-amount-wrap">
+            <span class="amount-prefix">$</span>
+            <input class="inline-edit-input inline-edit-input--amount" type="number" min="0.01" step="0.01" value="${escapeHtml(tx.amount.toFixed(2))}" inputmode="decimal" />
+          </div>
+          <div class="inline-edit-actions">
+            ${renderIconButton({ action: "save-inline-edit", txId: tx.id, field: "amount", label: `Save amount for ${tx.vendor}`, title: "Save amount", icon: ICONS.check, className: "cell-icon-btn cell-icon-btn--confirm" })}
+            ${renderIconButton({ action: "cancel-inline-edit", txId: tx.id, field: "amount", label: "Cancel amount edit", title: "Cancel", icon: ICONS.x, className: "cell-icon-btn cell-icon-btn--cancel" })}
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="amount-cell-inner">
+        <span class="amount-value">${escapeHtml(currencyExact.format(tx.amount))}</span>
+        ${renderIconButton({ action: "start-inline-edit", txId: tx.id, field: "amount", label: `Edit amount for ${tx.vendor}`, title: "Edit amount", icon: ICONS.pencil, className: "cell-icon-btn cell-edit-btn" })}
+      </div>`;
+  }
+
   function renderLedger(txs) {
     const body = document.getElementById("ledgerBody");
 
@@ -856,23 +1035,11 @@
       const mobileStatus = pending
         ? `<span class="mobile-ledger-status-pill pending">Pending</span>`
         : `<span class="mobile-ledger-status-pill settled">Settled</span>`;
-      const statusTd = pending
-        ? `<td data-label="Status">
-        <div class="status-cell-inner">
-          <span class="status-pill pending">Pending</span>
-          <button type="button" class="mark-settled-btn" data-tx-id="${escapeHtml(tx.id)}" title="Mark as settled" aria-label="Mark as settled">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 6L9 17l-5-5"/>
-            </svg>
-          </button>
-        </div>
-      </td>`
-        : `<td data-label="Status"><span class="status-pill">Settled</span></td>`;
       return `
       <tr class="${rowClass}" data-tx-id="${escapeHtml(tx.id)}">
-        <td data-label="Date">${escapeHtml(shortDate(tx.parsedDate))}</td>
+        <td data-label="Date" class="date-cell">${renderDateCell(tx)}</td>
         <td data-label="Merchant">
-          <button type="button" class="mobile-ledger-row" data-tx-id="${escapeHtml(tx.id)}" aria-label="View ${escapeHtml(tx.vendor)} details">
+          <button type="button" class="mobile-ledger-row" data-tx-id="${escapeHtml(tx.id)}" aria-label="View or edit ${escapeHtml(tx.vendor)}">
             <div class="mobile-ledger-main">
               <div class="mobile-ledger-vendor">${escapeHtml(mobileVendorLabel(tx.vendor))}</div>
               <div class="mobile-ledger-meta">${escapeHtml(shortDateNumeric(tx.parsedDate))}</div>
@@ -885,51 +1052,109 @@
               </svg>
             </span>
           </button>
-          <div class="merchant-cell">
-            <div class="merchant-name">${escapeHtml(tx.vendor)}</div>
-            <div class="merchant-sub">${escapeHtml(tx.monthKey ? monthLabel(tx.monthKey) : "Undated entry")}</div>
-          </div>
+          ${renderMerchantCell(tx)}
         </td>
-        <td data-label="Card">${escapeHtml(tx.card)}</td>
-        ${statusTd}
-        <td data-label="Amount" class="amount-cell">${escapeHtml(currencyExact.format(tx.amount))}</td>
+        <td data-label="Card" class="card-cell">${escapeHtml(tx.card)}</td>
+        ${renderStatusCell(tx)}
+        <td data-label="Amount" class="amount-cell">${renderAmountCell(tx)}</td>
       </tr>`;
     }).join("");
   }
 
-  async function patchTransactionStatus(txId, status) {
-    const res = await fetch(`/api/transactions/${encodeURIComponent(txId)}`, {
-      method: "PATCH",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ status }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      showToast(data.error || "Could not update status");
-      return false;
+  function readInlineEditPayload(txId, field) {
+    const tx = getTransactionById(txId);
+    const box = Array.from(document.querySelectorAll(".inline-edit-box"))
+      .find(el => el.dataset.txId === txId && el.dataset.field === field);
+    const input = box?.querySelector(".inline-edit-input");
+    if (!tx || !input) return null;
+
+    if (field === "date") {
+      const value = input.value.trim();
+      if (!value) {
+        showToast("Choose a valid date.");
+        input.focus();
+        return null;
+      }
+      if (value === txIsoDate(tx)) return {};
+      return { date: value };
     }
-    const tx = allTransactions.find(t => t.id === txId);
-    if (tx) tx.status = status;
-    renderSummary();
-    renderTransactionsLedger();
-    renderBatches();
-    return true;
+
+    if (field === "vendor") {
+      const value = input.value.trim().replace(/\s+/g, " ");
+      if (!value) {
+        showToast("Merchant is required.");
+        input.focus();
+        return null;
+      }
+      if (value === tx.vendor) return {};
+      return { vendor: value };
+    }
+
+    if (field === "amount") {
+      const parsed = parseFloat(input.value);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        showToast("Amount must be greater than 0.");
+        input.focus();
+        return null;
+      }
+      const amount = Number(parsed.toFixed(2));
+      if (Math.abs(amount - tx.amount) < 0.005) return {};
+      return { amount };
+    }
+
+    return null;
+  }
+
+  async function saveInlineEdit(txId, field, triggerEl) {
+    const box = triggerEl.closest(".inline-edit-box");
+    if (!box) return;
+    const payload = readInlineEditPayload(txId, field);
+    if (payload == null) return;
+    if (!Object.keys(payload).length) {
+      clearInlineEdit();
+      return;
+    }
+
+    box.querySelectorAll("button").forEach(btn => { btn.disabled = true; });
+    const updated = await patchTransaction(txId, payload, "Could not save your changes");
+    if (!updated) {
+      box.querySelectorAll("button").forEach(btn => { btn.disabled = false; });
+      return;
+    }
+    clearInlineEdit();
+  }
+
+  async function toggleTransactionStatus(txId, nextStatus, button) {
+    if (!txId || !nextStatus) return;
+    if (button) button.disabled = true;
+    const updated = await patchTransaction(txId, { status: nextStatus }, "Could not update status");
+    if (!updated && button) button.disabled = false;
   }
 
   document.getElementById("ledgerBody").addEventListener("click", event => {
-    const btn = event.target.closest(".mark-settled-btn");
-    if (btn && !btn.disabled) {
+    const actionBtn = event.target.closest("[data-action]");
+    if (actionBtn && !actionBtn.disabled) {
       event.preventDefault();
-      const txId = btn.dataset.txId;
-      if (!txId) return;
-      btn.disabled = true;
-      patchTransactionStatus(txId, "settled").then(ok => {
-        if (!ok) btn.disabled = false;
-      });
-      return;
+      const txId = actionBtn.dataset.txId;
+      const field = actionBtn.dataset.field || "";
+      const action = actionBtn.dataset.action;
+      if (!txId || !action) return;
+      if (action === "start-inline-edit") {
+        setInlineEdit(txId, field);
+        return;
+      }
+      if (action === "cancel-inline-edit") {
+        clearInlineEdit();
+        return;
+      }
+      if (action === "save-inline-edit") {
+        saveInlineEdit(txId, field, actionBtn);
+        return;
+      }
+      if (action === "toggle-status") {
+        toggleTransactionStatus(txId, actionBtn.dataset.nextStatus || "", actionBtn);
+        return;
+      }
     }
 
     const mobileRow = event.target.closest(".mobile-ledger-row");
@@ -939,17 +1164,28 @@
     openTxModal(txId);
   });
 
+  document.getElementById("ledgerBody").addEventListener("keydown", event => {
+    const box = event.target.closest(".inline-edit-box");
+    if (!box) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      clearInlineEdit();
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const saveBtn = box.querySelector('[data-action="save-inline-edit"]');
+      if (saveBtn) saveInlineEdit(box.dataset.txId || "", box.dataset.field || "", saveBtn);
+    }
+  });
+
   function setMobileLedgerActiveRow(txId) {
     document.querySelectorAll("#ledgerBody .mobile-ledger-row").forEach(el => {
       el.classList.toggle("is-active", Boolean(txId) && el.dataset.txId === txId);
     });
   }
 
-  function openTxModal(txId) {
-    const tx = allTransactions.find(item => item.id === txId);
-    if (!tx) return;
-    activeTxId = tx.id;
-    setMobileLedgerActiveRow(txId);
+  function populateTxModal(tx) {
     const pending = tx.status === "pending";
     document.getElementById("txModalTitle").textContent = tx.vendor;
     document.getElementById("txModalSubtitle").textContent = shortDate(tx.parsedDate);
@@ -961,10 +1197,29 @@
     statusEl.textContent = pending ? "Pending" : "Settled";
     statusEl.classList.remove("settled", "pending");
     statusEl.classList.add(pending ? "pending" : "settled");
-    const settleBtn = document.getElementById("txModalSettleBtn");
-    settleBtn.style.display = pending ? "inline-flex" : "none";
-    settleBtn.disabled = false;
-    settleBtn.textContent = "Mark Settled";
+    document.getElementById("txModalMerchantInput").value = tx.vendor;
+    document.getElementById("txModalDateInput").value = txIsoDate(tx);
+    document.getElementById("txModalAmountInput").value = tx.amount.toFixed(2);
+
+    const statusBtn = document.getElementById("txModalStatusBtn");
+    const nextStatus = pending ? "settled" : "pending";
+    statusBtn.dataset.nextStatus = nextStatus;
+    statusBtn.disabled = false;
+    statusBtn.classList.remove("is-settled", "is-pending");
+    statusBtn.classList.add(pending ? "is-settled" : "is-pending");
+    statusBtn.innerHTML = `${pending ? ICONS.check : ICONS.clock}<span>${pending ? "Mark Settled" : "Mark Pending"}</span>`;
+
+    const saveBtn = document.getElementById("txModalSaveBtn");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Changes";
+  }
+
+  function openTxModal(txId) {
+    const tx = getTransactionById(txId);
+    if (!tx) return;
+    activeTxId = tx.id;
+    setMobileLedgerActiveRow(txId);
+    populateTxModal(tx);
     document.getElementById("txModal").classList.add("visible");
   }
 
@@ -974,18 +1229,68 @@
     activeTxId = "";
   }
 
-  async function settleTxFromModal() {
+  async function toggleTxStatusFromModal() {
     if (!activeTxId) return;
-    const btn = document.getElementById("txModalSettleBtn");
+    const btn = document.getElementById("txModalStatusBtn");
+    const nextStatus = btn.dataset.nextStatus || "";
+    if (!nextStatus) return;
     btn.disabled = true;
-    btn.textContent = "Updating...";
-    const ok = await patchTransactionStatus(activeTxId, "settled");
-    if (!ok) {
+    btn.innerHTML = `<span class="spinner"></span><span>Updating</span>`;
+    const updated = await patchTransaction(activeTxId, { status: nextStatus }, "Could not update status");
+    if (!updated) {
       btn.disabled = false;
-      btn.textContent = "Mark Settled";
+      const current = getTransactionById(activeTxId);
+      if (current) populateTxModal(current);
+    }
+  }
+
+  async function saveTxFromModal() {
+    if (!activeTxId) return;
+    const tx = getTransactionById(activeTxId);
+    if (!tx) return;
+
+    const merchant = document.getElementById("txModalMerchantInput").value.trim().replace(/\s+/g, " ");
+    const date = document.getElementById("txModalDateInput").value.trim();
+    const amountRaw = document.getElementById("txModalAmountInput").value.trim();
+    const payload = {};
+
+    if (!merchant) {
+      showToast("Merchant is required.");
+      document.getElementById("txModalMerchantInput").focus();
       return;
     }
-    closeTxModal();
+    if (!date) {
+      showToast("Choose a valid date.");
+      document.getElementById("txModalDateInput").focus();
+      return;
+    }
+    const parsedAmount = parseFloat(amountRaw);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      showToast("Amount must be greater than 0.");
+      document.getElementById("txModalAmountInput").focus();
+      return;
+    }
+
+    if (merchant !== tx.vendor) payload.vendor = merchant;
+    if (date !== txIsoDate(tx)) payload.date = date;
+    const nextAmount = Number(parsedAmount.toFixed(2));
+    if (Math.abs(nextAmount - tx.amount) >= 0.005) payload.amount = nextAmount;
+
+    if (!Object.keys(payload).length) {
+      showToast("No changes to save.");
+      return;
+    }
+
+    const btn = document.getElementById("txModalSaveBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span><span>Saving</span>`;
+    const updated = await patchTransaction(activeTxId, payload, "Could not save changes");
+    if (!updated) {
+      btn.disabled = false;
+      btn.textContent = "Save Changes";
+      return;
+    }
+    showToast("Transaction updated.");
   }
 
   function setHeader(_txs) {
@@ -1609,7 +1914,8 @@
     if (event.target.id === "batchModal") closeBatchModal();
   });
   document.getElementById("txModalCloseBtn").addEventListener("click", closeTxModal);
-  document.getElementById("txModalSettleBtn").addEventListener("click", settleTxFromModal);
+  document.getElementById("txModalStatusBtn").addEventListener("click", toggleTxStatusFromModal);
+  document.getElementById("txModalSaveBtn").addEventListener("click", saveTxFromModal);
   document.getElementById("txModal").addEventListener("click", (event) => {
     if (event.target.id === "txModal") closeTxModal();
   });

@@ -263,14 +263,21 @@
             </div>
 
             <div class="table-wrap">
-              <table>
+              <table class="ledger-table">
+                <colgroup>
+                  <col class="ledger-col-date" />
+                  <col class="ledger-col-merchant" />
+                  <col class="ledger-col-card" />
+                  <col class="ledger-col-status" />
+                  <col class="ledger-col-amount" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Date</th>
                     <th>Merchant</th>
                     <th>Card</th>
                     <th>Status</th>
-                    <th style="text-align:right;">Amount</th>
+                    <th class="amount-head">Amount</th>
                   </tr>
                 </thead>
                 <tbody id="ledgerBody"></tbody>
@@ -386,9 +393,33 @@
         </div>
       </div>
 
-      <div class="modal-actions">
+      <div class="modal-section">
+        <h3>Edit Transaction</h3>
+        <div class="tx-edit-grid">
+          <label class="tx-edit-field tx-edit-field--full" for="txModalMerchantInput">
+            <span>Merchant</span>
+            <input class="tx-edit-input" id="txModalMerchantInput" type="text" maxlength="120" autocomplete="off" />
+          </label>
+
+          <label class="tx-edit-field" for="txModalDateInput">
+            <span>Date</span>
+            <input class="tx-edit-input" id="txModalDateInput" type="date" />
+          </label>
+
+          <label class="tx-edit-field" for="txModalAmountInput">
+            <span>Amount</span>
+            <div class="amount-input-wrap tx-edit-amount-wrap">
+              <span class="amount-prefix">$</span>
+              <input class="amount-input tx-edit-input" id="txModalAmountInput" type="number" min="0.01" step="0.01" inputmode="decimal" />
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions tx-modal-actions">
         <button class="modal-btn modal-btn-secondary" id="txModalCloseBtn" type="button">Close</button>
-        <button class="modal-btn modal-btn-tx-settle" id="txModalSettleBtn" type="button">Mark Settled</button>
+        <button class="modal-btn modal-btn-tx-status" id="txModalStatusBtn" type="button">Mark Pending</button>
+        <button class="modal-btn modal-btn-tx-save" id="txModalSaveBtn" type="button">Save Changes</button>
       </div>
     </div>
   </div>
