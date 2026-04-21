@@ -4,6 +4,8 @@ Expense Agent turns credit card app screenshots into a reviewed expense log.
 
 Live app: [expenseagent.aviralagarwal.com](https://expenseagent.aviralagarwal.com)
 
+![Expense Agent screenshot](static/expense-agent-screenshot.png)
+
 ## Overview
 
 Many personal expense tools sit at one of two extremes. They either require fully manual entry, or they pull in every account and every transaction whether you want them or not.
