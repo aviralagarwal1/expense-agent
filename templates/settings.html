@@ -774,7 +774,7 @@
       apiKeyInput.value = "";
       apiKeyInput.type = "password";
       toggleKeyBtn.textContent = "Show";
-      showStatus("Key saved. Screenshot uploads are now unlocked.", true);
+      clearStatus();
       updateKeyUi(true);
     } catch (e) {
       showStatus("Network error - please try again.", false);
