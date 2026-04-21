@@ -397,13 +397,15 @@
     }
     .empty-state.success {
       color: var(--success);
-      width: auto;
+      width: fit-content;
       max-width: 100%;
+      margin-inline: auto;
       padding: 13px 18px;
       border-radius: 999px;
       background: linear-gradient(180deg, rgba(228, 243, 234, 0.92), rgba(255, 255, 255, 0.92));
       border: 1px solid rgba(36, 102, 74, 0.2);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+      justify-content: center;
     }
     .empty-state.success::before {
       content: none;
@@ -413,13 +415,15 @@
     }
     .empty-state.danger {
       color: var(--danger);
-      width: auto;
+      width: fit-content;
       max-width: 100%;
+      margin-inline: auto;
       padding: 13px 18px;
       border-radius: 999px;
       background: linear-gradient(180deg, rgba(243, 228, 226, 0.92), rgba(255, 255, 255, 0.92));
       border: 1px solid rgba(161, 72, 66, 0.2);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+      justify-content: center;
     }
     .empty-state.danger::before {
       content: none;
@@ -749,7 +753,7 @@
     banner.innerHTML = detail
       ? `<span class="empty-state-label">${escapeHtml(label)}</span><span>${escapeHtml(detail)}</span>`
       : `<span class="empty-state-label">${escapeHtml(label)}</span>`;
-    banner.style.display = (mode === "success" || mode === "danger" || mode === "empty") ? "inline-block" : "flex";
+    banner.style.display = "flex";
   }
 
   function hideCardsBanner() {
