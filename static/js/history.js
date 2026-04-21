@@ -56,6 +56,8 @@
 
   /** Max months selectable in Spend Trend / Compare; keeps the two-column row legible. */
   const MAX_TREND_MONTHS_SELECTED = 5;
+  const TOP_CARDS_LIMIT = 5;
+  const TOP_MERCHANTS_LIMIT = 10;
   /** Bar 1→5 use distinct gradients (capped at 5 months). */
   const COMPARE_BAR_GRADIENTS = [
     "linear-gradient(180deg, #5d8ab3 0%, #2e4f6e 100%)",
@@ -302,7 +304,7 @@
       vendor.count += 1;
     }
 
-    return Array.from(map.values()).sort((a, b) => b.total - a.total).slice(0, 6);
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
   }
 
   function getCardMix(txs) {
@@ -319,6 +321,12 @@
     }
 
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }
+
+  function topSummaryLabel(count, singular, limit) {
+    if (!count) return `No ${singular} data`;
+    if (count >= limit) return `Top ${limit} ${count === 1 ? singular : `${singular}s`} by spend`;
+    return `${pluralize(count, singular)} by spend`;
   }
 
   // Summary tab only — month/card/merchant drill-down. Never reads
@@ -787,11 +795,10 @@
   }
 
   function renderCards(contextTxs, activeCard) {
-    const cards = getCardMix(contextTxs);
+    const allCards = getCardMix(contextTxs);
+    const cards = allCards.slice(0, TOP_CARDS_LIMIT);
     const total = sumAmounts(contextTxs) || 1;
-    document.getElementById("cardsSpan").textContent = cards.length
-      ? `${pluralize(cards.length, "card")} by spend`
-      : "No card data";
+    document.getElementById("cardsSpan").textContent = topSummaryLabel(allCards.length, "card", TOP_CARDS_LIMIT);
 
     if (!cards.length) {
       document.getElementById("cardList").innerHTML = `<div class="mini-empty">No card data for the current view.</div>`;
@@ -816,9 +823,10 @@
   }
 
   function renderMerchants(contextTxs, activeMerchant) {
-    const vendors = getTopVendors(contextTxs);
+    const allVendors = getTopVendors(contextTxs);
+    const vendors = allVendors.slice(0, TOP_MERCHANTS_LIMIT);
     const total = sumAmounts(contextTxs) || 1;
-    document.getElementById("merchantSpan").textContent = vendors.length ? `${pluralize(vendors.length, "merchant")} by spend` : "No merchant data";
+    document.getElementById("merchantSpan").textContent = topSummaryLabel(allVendors.length, "merchant", TOP_MERCHANTS_LIMIT);
 
     if (!vendors.length) {
       document.getElementById("merchantList").innerHTML = `<div class="mini-empty">No merchant data for the current view.</div>`;
@@ -1790,7 +1798,7 @@
       s3.addTable(trendRows, { x: 0.5, y: 1.05, w: 11, colW: [3.5, 2.5, 2], fontSize: 10, border: { pt: 0.5, color: "CCCCCC" } });
     }
 
-    const cards = getCardMix(filtered);
+    const cards = getCardMix(filtered).slice(0, TOP_CARDS_LIMIT);
     const cardRows = [["Card", "Total", "Share of filtered spend"]].concat(
       cards.map(c => {
         const total = sumAmounts(filtered) || 1;
@@ -1799,19 +1807,19 @@
       }),
     );
     const s4 = pptx.addSlide();
-    s4.addText("Cards (filtered)", { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
+    s4.addText(`Top ${TOP_CARDS_LIMIT} cards (filtered)`, { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
     if (cardRows.length <= 1) {
       s4.addText("No card data for the current filters.", { x: 0.5, y: 1.2, w: 12, fontSize: 12, color: "5D6872" });
     } else {
       s4.addTable(cardRows, { x: 0.5, y: 1.05, w: 11, colW: [4, 2.5, 2], fontSize: 10, border: { pt: 0.5, color: "CCCCCC" } });
     }
 
-    const vendors = getTopVendors(filtered);
+    const vendors = getTopVendors(filtered).slice(0, TOP_MERCHANTS_LIMIT);
     const merchRows = [["Merchant", "Total", "Transactions"]].concat(
       vendors.map(v => [v.name, currencyWhole.format(v.total), integerFormat.format(v.count)]),
     );
     const s5 = pptx.addSlide();
-    s5.addText("Top merchants (filtered)", { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
+    s5.addText(`Top ${TOP_MERCHANTS_LIMIT} merchants (filtered)`, { x: 0.5, y: 0.45, w: 12, fontSize: 16, bold: true, color: "18212B" });
     if (merchRows.length <= 1) {
       s5.addText("No merchant data for the current filters.", { x: 0.5, y: 1.2, w: 12, fontSize: 12, color: "5D6872" });
     } else {
