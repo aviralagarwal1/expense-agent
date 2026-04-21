@@ -1138,6 +1138,9 @@
       font-size: 0.82rem;
       line-height: 1.5;
     }
+    .pending-inline {
+      display: inline;
+    }
     .tx-amount {
       min-width: 84px;
       text-align: right;
@@ -1512,6 +1515,9 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      .pending-inline {
+        display: none;
       }
       .tx:has(.tx-actions) .tx-meta {
         grid-column: 1;
@@ -2652,7 +2658,7 @@
     div.innerHTML = `
       <div class="tx-main">
         <div class="tx-vendor">${t.vendor}</div>
-        <div class="tx-meta">${isPending ? '<span class="pending-dot"></span>Pending · ' : ""}${t.card} · ${t.date}</div>
+        <div class="tx-meta">${isPending ? '<span class="pending-inline"><span class="pending-dot"></span>Pending · </span>' : ""}${t.card} · ${t.date}</div>
       </div>
       <div class="tx-amount">$${parseFloat(t.amount).toFixed(2)}</div>
       ${actionsSlot}`;
@@ -2825,6 +2831,7 @@
       a.textContent = "Open Anthropic Console";
       toast.appendChild(line);
       toast.appendChild(a);
+      toast.appendChild(document.createTextNode("."));
     } else {
       toast.textContent = msg;
     }
