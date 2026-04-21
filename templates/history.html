@@ -9,7 +9,7 @@
 <body>
   <div class="page">
     <div class="frame">
-      <nav class="nav no-print">
+      <nav class="nav no-print" id="siteNav">
         <a class="brand" href="/app">
           <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
@@ -25,11 +25,20 @@
           </svg>
           <span>Expense Agent</span>
         </a>
+        <button type="button" class="nav-menu-btn" id="navMenuBtn" aria-expanded="false" aria-controls="navMenuPanel" aria-label="Open menu">
+          <span class="sr-only">Menu</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
         <div class="nav-actions">
           <a class="nav-link" href="/app">Workspace</a>
           <span class="nav-pill" aria-current="page">History</span>
           <a class="nav-link" href="/settings?return_to=%2Fhistory">Profile</a>
           <a class="nav-link" href="/connect-key?return_to=%2Fhistory">API Key</a>
+          <button class="nav-danger nav-danger--desktop" type="button" onclick="doLogout()">Sign Out</button>
+        </div>
+        <div class="nav-menu-panel" id="navMenuPanel">
           <button class="nav-danger" type="button" onclick="doLogout()">Sign Out</button>
         </div>
       </nav>
@@ -388,5 +397,27 @@
 
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.min.js"></script>
   <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+  <script>
+    (function () {
+      var nav = document.getElementById("siteNav");
+      var btn = document.getElementById("navMenuBtn");
+      var panel = document.getElementById("navMenuPanel");
+      if (!nav || !btn || !panel) return;
+      function setOpen(open) {
+        nav.classList.toggle("nav--open", open);
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      }
+      btn.addEventListener("click", function () {
+        setOpen(!nav.classList.contains("nav--open"));
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") setOpen(false);
+      });
+      panel.querySelectorAll("button").forEach(function (b) {
+        b.addEventListener("click", function () { setOpen(false); });
+      });
+    })();
+  </script>
 </body>
 </html>

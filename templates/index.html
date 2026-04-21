@@ -454,6 +454,44 @@
       border-color: rgba(161, 72, 66, 0.2);
       color: var(--danger);
     }
+    .top-bar-menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: #ffffff;
+      color: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(24, 33, 43, 0.05);
+      flex-shrink: 0;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+    .top-bar-menu-btn:hover {
+      border-color: rgba(35, 66, 94, 0.28);
+      box-shadow: 0 6px 16px rgba(24, 33, 43, 0.08);
+    }
+    .top-bar-menu-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(35, 66, 94, 0.2);
+    }
+    .top-bar-menu-panel {
+      display: none;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .workspace-section {
       display: none;
       gap: 18px;
@@ -1349,19 +1387,27 @@
       .auth-points {
         grid-template-columns: 1fr;
       }
-      .top-bar,
       .upload-header,
       .status-header {
         flex-direction: column;
       }
       .top-bar {
-        align-items: stretch;
+        flex-wrap: wrap;
+        align-items: center;
         gap: 14px;
       }
       .top-bar-left {
-        width: 100%;
+        flex: 1;
+        min-width: 0;
+        order: 1;
+      }
+      .top-bar-menu-btn {
+        display: inline-flex;
+        order: 2;
       }
       .top-bar-actions {
+        order: 3;
+        flex-basis: 100%;
         width: 100%;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1372,8 +1418,23 @@
         width: 100%;
         min-height: 44px;
       }
-      .top-link-danger {
-        grid-column: 1 / -1;
+      .top-bar-actions > .top-link-danger--desktop {
+        display: none;
+      }
+      .top-bar-menu-panel {
+        order: 4;
+        flex-basis: 100%;
+        width: 100%;
+        display: none;
+      }
+      .top-bar.top-bar--open .top-bar-menu-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .top-bar-menu-panel > .top-link-danger {
+        width: 100%;
+        min-height: 44px;
       }
       .upload-header-copy p {
         white-space: normal;
@@ -1429,19 +1490,21 @@
       }
       .tx-amount {
         grid-column: 2;
-        grid-row: 1;
+        grid-row: 1 / span 2;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
         text-align: right;
         min-width: 0;
         font-size: 0.94rem;
         line-height: 1.2;
         white-space: nowrap;
-        align-self: center;
       }
       .tx:has(.tx-actions) .tx-amount {
         grid-column: 2;
       }
       .tx-meta {
-        grid-column: 1 / -1;
+        grid-column: 1;
         grid-row: 2;
         font-size: 0.74rem;
         line-height: 1.35;
@@ -1451,7 +1514,7 @@
         white-space: nowrap;
       }
       .tx:has(.tx-actions) .tx-meta {
-        grid-column: 1 / 3;
+        grid-column: 1;
       }
       .tx-actions {
         grid-column: 3;
@@ -1667,7 +1730,7 @@
     </div>
 
     <div id="mainApp" class="frame" style="display:none;">
-      <div class="top-bar">
+      <div class="top-bar" id="appTopBar">
         <div class="top-bar-left">
           <span class="brand" aria-label="Expense Agent">
             <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -1685,11 +1748,20 @@
             <span>Expense Agent</span>
           </span>
         </div>
+        <button type="button" class="top-bar-menu-btn" id="appMenuBtn" aria-expanded="false" aria-controls="appMenuPanel" aria-label="Open menu">
+          <span class="sr-only">Menu</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
         <div class="top-bar-actions">
           <span class="top-link is-current" aria-current="page">Workspace</span>
           <a class="top-link" href="/history">History</a>
           <a class="top-link" href="/settings?return_to=%2Fapp">Profile</a>
           <a class="top-link" href="/connect-key?return_to=%2Fapp">API Key</a>
+          <button class="top-link top-link-danger top-link-danger--desktop" type="button" onclick="doLogout()">Sign Out</button>
+        </div>
+        <div class="top-bar-menu-panel" id="appMenuPanel">
           <button class="top-link top-link-danger" type="button" onclick="doLogout()">Sign Out</button>
         </div>
       </div>
@@ -2240,6 +2312,27 @@
     clearStoredSession();
     window.location.href = "/app";
   }
+
+  (function () {
+    var bar = document.getElementById("appTopBar");
+    var btn = document.getElementById("appMenuBtn");
+    var panel = document.getElementById("appMenuPanel");
+    if (!bar || !btn || !panel) return;
+    function setOpen(open) {
+      bar.classList.toggle("top-bar--open", open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    }
+    btn.addEventListener("click", function () {
+      setOpen(!bar.classList.contains("top-bar--open"));
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") setOpen(false);
+    });
+    panel.querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () { setOpen(false); });
+    });
+  })();
 
   function updateConfirmBtn() {
     const remaining = newTransactions.filter((_, i) => !txStatuses[i] || txStatuses[i].state === null);
