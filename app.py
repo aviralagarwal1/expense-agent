@@ -319,7 +319,7 @@ def create_user_card_for_user(user_id: str, brand: str, digit_hint: str | None, 
     existing_cards = [serialize_user_card(card) for card in (settings.get("cards") or [])]
     if not normalized_digit_hint and any(card["brand"].lower() == cleaned_brand.lower() for card in existing_cards):
         raise ValueError(
-            f"You already have a {cleaned_brand} registered. Remove the existing one or add 1-2 reference digits so we can tell them apart."
+            f"You already have a {cleaned_brand} registered. Remove the existing one or add unique reference digits."
         )
     if any(card["label"] == label for card in existing_cards):
         raise ValueError("That card is already saved.")
