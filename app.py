@@ -725,6 +725,11 @@ def about_page():
     return render_template("about.html")
 
 
+@app.route("/sitemap.xml")
+def sitemap():
+    return send_from_directory("static", "sitemap.xml", mimetype="application/xml")
+
+
 @app.route("/app")
 def index():
     return render_template("index.html", auth_mode="signin")
