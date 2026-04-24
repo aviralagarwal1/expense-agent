@@ -428,28 +428,8 @@
   <div class="toast no-print" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/auth_session.js') }}"></script>
   <script src="{{ url_for('static', filename='js/history.js') }}"></script>
-  <script>
-    (function () {
-      var nav = document.getElementById("siteNav");
-      var btn = document.getElementById("navMenuBtn");
-      var panel = document.getElementById("navMenuPanel");
-      if (!nav || !btn || !panel) return;
-      function setOpen(open) {
-        nav.classList.toggle("nav--open", open);
-        btn.setAttribute("aria-expanded", open ? "true" : "false");
-        btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-      }
-      btn.addEventListener("click", function () {
-        setOpen(!nav.classList.contains("nav--open"));
-      });
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") setOpen(false);
-      });
-      panel.querySelectorAll("button").forEach(function (b) {
-        b.addEventListener("click", function () { setOpen(false); });
-      });
-    })();
-  </script>
+  <script src="{{ url_for('static', filename='js/site_nav.js') }}"></script>
 </body>
 </html>

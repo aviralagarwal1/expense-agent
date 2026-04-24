@@ -100,12 +100,6 @@
     return `${integerFormat.format(count)} ${count === 1 ? singular : plural}`;
   }
 
-  function doLogout() {
-    sessionStorage.removeItem("expense_token");
-    sessionStorage.removeItem("expense_refresh_token");
-    window.location.href = "/app";
-  }
-
   function safeAmount(value) {
     const parsed = parseFloat(value);
     return Number.isFinite(parsed) ? parsed : 0;
