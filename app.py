@@ -1,9 +1,7 @@
 import os
-import json
 import base64
 import re
 from uuid import uuid4
-import anthropic
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 load_dotenv()
@@ -11,6 +9,37 @@ from supabase import create_client, Client
 from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory
 from datetime import datetime
 from werkzeug.middleware.proxy_fix import ProxyFix
+from expense_agent.cards import canonicalize_card_label
+from expense_agent.profile import get_profile_seed_from_user
+from expense_agent.extraction import (
+    extract_transactions_from_images as domain_extract_transactions_from_images,
+    user_facing_extraction_error as domain_user_facing_extraction_error,
+)
+from expense_agent.transaction_store import (
+    append_transactions_for_user as store_append_transactions_for_user,
+    delete_batch_for_user as store_delete_batch_for_user,
+    delete_transaction_for_user as store_delete_transaction_for_user,
+    get_existing_transactions_for_user as store_get_existing_transactions_for_user,
+    list_transactions_for_user as store_list_transactions_for_user,
+    update_transaction_for_user as store_update_transaction_for_user,
+)
+from expense_agent.transactions import (
+    attach_selected_card_to_transactions as domain_attach_selected_card_to_transactions,
+    classify_transactions as domain_classify_transactions,
+    filter_out_non_expenses as domain_filter_out_non_expenses,
+)
+from expense_agent.user_data import (
+    create_user_card_for_user as store_create_user_card_for_user,
+    delete_user_card_for_user as store_delete_user_card_for_user,
+    ensure_profile_for_user as store_ensure_profile_for_user,
+    get_user_api_key as store_get_user_api_key,
+    get_user_card_for_user as store_get_user_card_for_user,
+    get_user_settings_state_for_user as store_get_user_settings_state_for_user,
+    is_new_user_account as store_is_new_user_account,
+    list_user_cards_for_user as store_list_user_cards_for_user,
+    save_user_settings_state_for_user as store_save_user_settings_state_for_user,
+    upsert_profile_for_user as store_upsert_profile_for_user,
+)
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -22,28 +51,6 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 APP_URL              = (os.environ.get("APP_URL") or "").rstrip("/")
 
 supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-
-CARD_HINT_POSITIONS = {"ending", "starting"}
-
-# Payment-network synonyms only (spacing, punctuation, shorthand). We do not map
-# issuer or product names (e.g. Capital One, Savor) to a network — those banks
-# issue both Visa and Mastercard cards, so collapsing them would be wrong.
-_NETWORK_BRAND_ALIASES: dict[str, str] = {
-    "american express": "American Express",
-    "americanexpress": "American Express",
-    "amex": "American Express",
-    "visa": "Visa",
-    "visa card": "Visa",
-    "visacard": "Visa",
-    "mastercard": "Mastercard",
-    "master card": "Mastercard",
-    "mc": "Mastercard",
-    "discover": "Discover",
-    "discover card": "Discover",
-    "discovercard": "Discover",
-}
-
-
 def get_external_app_url(path: str = "/"):
     request_root = request.url_root.rstrip("/")
     request_host = (request.host or "").split(":", 1)[0].strip().lower()
@@ -79,632 +86,12 @@ def get_user_id_from_request():
     return user.id if user else None
 
 
-def build_empty_user_settings():
-    return {
-        "anthropic_api_key": None,
-        "profile": {"first_name": None, "last_name": None},
-        "cards": [],
-    }
-
-
-def normalize_stored_profile(profile: dict | None):
-    profile = profile or {}
-    return {
-        "first_name": (profile.get("first_name") or "").strip() or None,
-        "last_name": (profile.get("last_name") or "").strip() or None,
-    }
-
-
-def parse_user_settings_blob(raw_value: str | None):
-    settings = build_empty_user_settings()
-    raw_text = (raw_value or "").strip()
-    if not raw_text:
-        return settings
-
-    payload = None
-    if raw_text.startswith("{"):
-        try:
-            payload = json.loads(raw_text)
-        except json.JSONDecodeError:
-            payload = None
-
-    if isinstance(payload, dict):
-        settings["anthropic_api_key"] = (payload.get("anthropic_api_key") or "").strip() or None
-        settings["profile"] = normalize_stored_profile(payload.get("profile"))
-        settings["cards"] = [
-            serialize_user_card(card)
-            for card in (payload.get("cards") or [])
-            if isinstance(card, dict)
-        ]
-        return settings
-
-    settings["anthropic_api_key"] = raw_text
-    return settings
-
-
-def serialize_user_settings_blob(settings: dict):
-    payload = {
-        "anthropic_api_key": (settings.get("anthropic_api_key") or "").strip() or None,
-        "profile": normalize_stored_profile(settings.get("profile")),
-        "cards": [
-            {
-                "id": str(card.get("id") or uuid4()),
-                "brand": normalize_card_brand(card.get("brand")) or (card.get("brand") or "Card").strip(),
-                "digit_hint": normalize_reference_digits(card.get("digit_hint")),
-                "hint_position": (card.get("hint_position") or "ending").strip().lower(),
-            }
-            for card in (settings.get("cards") or [])
-            if isinstance(card, dict)
-        ],
-    }
-    return json.dumps(payload, separators=(",", ":"))
-
-
-def get_user_settings_state_for_user(user_id: str):
-    result = (
-        supabase_admin.table("user_settings")
-        .select("anthropic_api_key")
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
-    if result.data:
-        return parse_user_settings_blob(result.data[0].get("anthropic_api_key"))
-    return build_empty_user_settings()
-
-
-def save_user_settings_state_for_user(user_id: str, settings: dict):
-    serialized = serialize_user_settings_blob(settings)
-    supabase_admin.table("user_settings").upsert({
-        "user_id": user_id,
-        "anthropic_api_key": serialized,
-    }).execute()
-    return parse_user_settings_blob(serialized)
-
-
 # ── User settings (BYOA) ─────────────────────────────────────────────────────
-def get_user_api_key(user_id: str):
-    return get_user_settings_state_for_user(user_id).get("anthropic_api_key")
-
-
-def normalize_reference_digits(value: str | None, *, max_length: int = 2, align: str = "left") -> str | None:
-    digits = re.sub(r"\D", "", value or "")
-    if not digits:
-        return None
-    if len(digits) <= max_length:
-        return digits
-    if align == "right":
-        return digits[-max_length:]
-    return digits[:max_length]
-
-
-def _network_brand_lookup_keys(value: str | None) -> list[str]:
-    text = (value or "").strip()
-    if not text:
-        return []
-    spaced = " ".join(text.split()).lower()
-    compact = re.sub(r"[^a-z0-9]", "", spaced)
-    keys = [spaced]
-    if compact and compact not in keys:
-        keys.append(compact)
-    return keys
-
-
-def normalize_card_brand(value: str | None) -> str | None:
-    for key in _network_brand_lookup_keys(value):
-        canonical = _NETWORK_BRAND_ALIASES.get(key)
-        if canonical:
-            return canonical
-    return None
-
-
-def _title_case_token(token: str) -> str:
-    if not token:
-        return token
-    return token[0].upper() + token[1:].lower()
-
-
-def present_custom_card_brand(name: str) -> str:
-    """Title-case issuer / custom labels. Networks use normalize_card_brand instead."""
-    text = " ".join(name.strip().split())
-    if not text:
-        return text
-    parts = []
-    for word in text.split():
-        if "-" in word:
-            parts.append("-".join(_title_case_token(p) for p in word.split("-") if p))
-        else:
-            parts.append(_title_case_token(word))
-    return " ".join(parts)
-
-
-def clean_card_brand(value: str | None) -> str | None:
-    canonical = normalize_card_brand(value)
-    if canonical:
-        return canonical
-
-    cleaned = " ".join((value or "").strip().split())
-    if not cleaned:
-        return None
-
-    if len(cleaned) > 40:
-        cleaned = cleaned[:40].rstrip()
-    return present_custom_card_brand(cleaned)
-
-
-def format_saved_card_label(brand: str, digit_hint: str | None = None, hint_position: str = "ending") -> str:
-    if digit_hint:
-        return f"{brand} {hint_position} in {digit_hint}"
-    return brand
-
-
-def canonicalize_card_label(value: str | None) -> str | None:
-    raw = " ".join((value or "").strip().split())
-    if not raw:
-        return None
-
-    standard_match = re.match(
-        r"^(American Express|Visa|Mastercard|Discover)(?:\s+(ending|starting)\s+in\s+(\d{1,4}))?$",
-        raw,
-        re.IGNORECASE,
-    )
-    if standard_match:
-        brand = normalize_card_brand(standard_match.group(1))
-        position = (standard_match.group(2) or "ending").lower()
-        digits = normalize_reference_digits(
-            standard_match.group(3),
-            align="right" if position == "ending" else "left",
-        )
-        return format_saved_card_label(brand, digits, position)
-
-    legacy_match = re.match(r"^(.*?)(?:\s*\((\d{1,4})\))?$", raw)
-    if legacy_match:
-        brand = normalize_card_brand(legacy_match.group(1))
-        if brand:
-            digits = normalize_reference_digits(legacy_match.group(2), align="right")
-            return format_saved_card_label(brand, digits, "ending")
-
-    return raw
-
-
-def serialize_user_card(row: dict) -> dict:
-    raw_brand = (row.get("brand") or "Card").strip()
-    net = normalize_card_brand(raw_brand)
-    brand = net if net else present_custom_card_brand(raw_brand) or "Card"
-    hint_position = (row.get("hint_position") or "ending").strip().lower()
-    if hint_position not in CARD_HINT_POSITIONS:
-        hint_position = "ending"
-    digit_hint = normalize_reference_digits(row.get("digit_hint"))
-    return {
-        "id": str(row.get("id") or uuid4()),
-        "brand": brand,
-        "digit_hint": digit_hint,
-        "hint_position": hint_position,
-        "label": format_saved_card_label(brand, digit_hint, hint_position),
-    }
-
-
-def list_user_cards_for_user(user_id: str) -> list:
-    settings = get_user_settings_state_for_user(user_id)
-    return [serialize_user_card(row) for row in (settings.get("cards") or [])]
-
-
-def get_user_card_for_user(user_id: str, card_id: str):
-    for card in list_user_cards_for_user(user_id):
-        if card["id"] == card_id:
-            return card
-    return None
-
-
-def create_user_card_for_user(user_id: str, brand: str, digit_hint: str | None, hint_position: str) -> dict:
-    cleaned_brand = clean_card_brand(brand)
-    if not cleaned_brand:
-        raise ValueError("Select or enter a card brand.")
-
-    raw_digits = re.sub(r"\D", "", digit_hint or "")
-    if digit_hint and not raw_digits:
-        raise ValueError("Reference digits must be numeric.")
-    if len(raw_digits) > 2:
-        raise ValueError("Use one or two reference digits only.")
-
-    normalized_position = (hint_position or "").strip().lower()
-    if raw_digits and normalized_position not in CARD_HINT_POSITIONS:
-        raise ValueError("Choose whether the digits are at the start or end.")
-    if normalized_position not in CARD_HINT_POSITIONS:
-        normalized_position = "ending"
-
-    normalized_digit_hint = normalize_reference_digits(raw_digits)
-    label = format_saved_card_label(cleaned_brand, normalized_digit_hint, normalized_position)
-    settings = get_user_settings_state_for_user(user_id)
-    existing_cards = [serialize_user_card(card) for card in (settings.get("cards") or [])]
-    if not normalized_digit_hint and any(card["brand"].lower() == cleaned_brand.lower() for card in existing_cards):
-        raise ValueError(
-            f"You already have a {cleaned_brand} registered. Remove the existing one or add unique reference digits."
-        )
-    if any(card["label"] == label for card in existing_cards):
-        raise ValueError("That card is already saved.")
-
-    card = serialize_user_card({
-        "id": str(uuid4()),
-        "brand": cleaned_brand,
-        "digit_hint": normalized_digit_hint,
-        "hint_position": normalized_position,
-    })
-    settings["cards"] = existing_cards + [card]
-    save_user_settings_state_for_user(user_id, settings)
-    return card
-
-
-def delete_user_card_for_user(user_id: str, card_id: str) -> bool:
-    settings = get_user_settings_state_for_user(user_id)
-    existing_cards = [serialize_user_card(card) for card in (settings.get("cards") or [])]
-    remaining_cards = [card for card in existing_cards if card["id"] != card_id]
-    if len(remaining_cards) == len(existing_cards):
-        return False
-    settings["cards"] = remaining_cards
-    save_user_settings_state_for_user(user_id, settings)
-    return True
-
-
-def split_name_parts(full_name: str):
-    parts = [part for part in (full_name or "").strip().split() if part]
-    if not parts:
-        return "", ""
-    if len(parts) == 1:
-        return parts[0], ""
-    return parts[0], " ".join(parts[1:])
-
-
-def get_profile_seed_from_user(user):
-    metadata = getattr(user, "user_metadata", {}) or {}
-
-    first_name = (
-        metadata.get("first_name")
-        or metadata.get("firstName")
-        or metadata.get("given_name")
-        or ""
-    ).strip()
-    last_name = (
-        metadata.get("last_name")
-        or metadata.get("lastName")
-        or metadata.get("family_name")
-        or ""
-    ).strip()
-
-    if not first_name:
-        seed_full_name = (
-            metadata.get("full_name")
-            or metadata.get("display_name")
-            or metadata.get("name")
-            or ""
-        ).strip()
-        seed_first, seed_last = split_name_parts(seed_full_name)
-        first_name = first_name or seed_first
-        last_name = last_name or seed_last
-
-    return {
-        "first_name": first_name or None,
-        "last_name": last_name or None,
-    }
-
-
-def get_profile_for_user(user_id: str):
-    profile = get_user_settings_state_for_user(user_id).get("profile") or {}
-    normalized = normalize_stored_profile(profile)
-    if normalized.get("first_name") or normalized.get("last_name"):
-        return normalized
-    return None
-
-
-def upsert_profile_for_user(user_id: str, first_name: str | None, last_name: str | None):
-    profile = {
-        "first_name": first_name or None,
-        "last_name": last_name or None,
-    }
-    settings = get_user_settings_state_for_user(user_id)
-    settings["profile"] = normalize_stored_profile(profile)
-    save_user_settings_state_for_user(user_id, settings)
-    return settings["profile"]
-
-
-def user_has_transactions(user_id: str) -> bool:
-    result = (
-        supabase_admin.table("transactions")
-        .select("id")
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
-    return bool(result.data)
-
-
-def ensure_profile_for_user(user):
-    user_id = user.id
-    seed = get_profile_seed_from_user(user)
-    profile = get_profile_for_user(user_id)
-
-    if not profile:
-        return seed
-
-    return {
-        "first_name": profile.get("first_name") or seed.get("first_name"),
-        "last_name": profile.get("last_name") or seed.get("last_name"),
-    }
-
-
-def is_new_user_account(user_id: str, has_key: bool, profile: dict | None):
-    if has_key:
-        return False
-    if profile and (profile.get("first_name") or profile.get("last_name")):
-        return False
-    return not user_has_transactions(user_id)
-
-
-# ── Vendor normalization ──────────────────────────────────────────────────────
-def normalize_vendor(name: str) -> str:
-    name = name.lower().strip()
-    if " & " in name:
-        name = name.split(" & ")[0].strip()
-    for suffix in [" inc", " llc", " ltd", " co", " corp", " store", " qps"]:
-        if name.endswith(suffix):
-            name = name[: -len(suffix)].strip()
-    if name.endswith("s") and len(name) > 4:
-        name = name[:-1]
-    return name.strip()
-
 
 # ── Supabase storage ─────────────────────────────────────────────────────────
-def get_existing_transactions_for_user(user_id: str) -> list:
-    result = (
-        supabase_admin.table("transactions")
-        .select("vendor,amount,date,card")
-        .eq("user_id", user_id)
-        .execute()
-    )
-    transactions = []
-    for row in result.data:
-        vendor = normalize_vendor(row["vendor"])
-        try:
-            amount = float(row["amount"])
-        except (TypeError, ValueError):
-            continue
-        dt = None
-        if row.get("date"):
-            try:
-                dt = datetime.strptime(row["date"], "%Y-%m-%d")
-            except ValueError:
-                pass
-        transactions.append({
-            "vendor": vendor,
-            "card": canonicalize_card_label(row.get("card")) or "",
-            "amount": amount,
-            "date": dt,
-        })
-    return transactions
-
-
-def append_transactions_for_user(user_id: str, transactions: list, batch_id: str | None = None) -> list:
-    rows = []
-    for t in transactions:
-        rows.append({
-            "user_id":  user_id,
-            "vendor":   t["vendor"],
-            "card":     canonicalize_card_label(t.get("card")),
-            "date":     t.get("date"),
-            "amount":   float(str(t["amount"]).replace("$", "").replace(",", "")),
-            "status":   t.get("status"),
-            "batch_id": batch_id,
-        })
-    result = supabase_admin.table("transactions").insert(rows).execute()
-    return [row.get("id") for row in (result.data or []) if row.get("id")]
 
 
 # ── Claude Vision ────────────────────────────────────────────────────────────
-# Same entry point linked from settings.html and index onboarding copy.
-ANTHROPIC_CONSOLE_KEYS_URL = "https://console.anthropic.com/settings/keys"
-
-
-def user_facing_extraction_error(exc: Exception) -> tuple[str, str]:
-    """Map Claude/API failures to a safe message. Never expose raw exception text to clients."""
-    url = ANTHROPIC_CONSOLE_KEYS_URL
-    if isinstance(exc, json.JSONDecodeError):
-        return (
-            "We could not read the analysis result. Try again with clear card-app screenshots.",
-            url,
-        )
-    if isinstance(exc, anthropic.AuthenticationError):
-        return (
-            "Anthropic rejected your API key. Add a valid key from the Anthropic Console under Settings in this app.",
-            url,
-        )
-    if isinstance(exc, anthropic.RateLimitError):
-        return (
-            "Anthropic is rate limiting requests. Wait a minute and try again, or check usage in the Anthropic Console.",
-            url,
-        )
-    if isinstance(exc, anthropic.BadRequestError):
-        return (
-            "We couldn't accept one of your files. Please make sure each is a PNG, JPG, GIF, or WEBP image.",
-            url,
-        )
-    if isinstance(exc, (anthropic.APIConnectionError, anthropic.APITimeoutError)):
-        return (
-            "Could not reach Anthropic. Check your connection and try again.",
-            url,
-        )
-    if isinstance(exc, anthropic.APIStatusError):
-        code = getattr(exc, "status_code", None)
-        if code == 402:
-            return (
-                "Anthropic could not bill this request. Add credits or a payment method in the Anthropic Console.",
-                url,
-            )
-        if code in (401, 403):
-            return (
-                "Anthropic rejected this request. Confirm your API key in Settings and in the Anthropic Console.",
-                url,
-            )
-        if code == 413:
-            return (
-                "The upload was too large for Anthropic. Try fewer screenshots or smaller files.",
-                url,
-            )
-        if code is not None and code >= 500:
-            return (
-                "Anthropic had a temporary problem. Try again in a moment.",
-                url,
-            )
-    return (
-        "Screenshot analysis could not finish. Check your API key, usage, and billing in the Anthropic Console, then try again.",
-        url,
-    )
-
-
-def extract_transactions_from_images(image_data_list: list, api_key: str) -> list:
-    client = anthropic.Anthropic(api_key=api_key, timeout=90.0)
-
-    content = []
-    for b64, mime_type in image_data_list:
-        content.append({
-            "type": "image",
-            "source": {"type": "base64", "media_type": mime_type, "data": b64},
-        })
-
-    content.append({
-        "type": "text",
-        "text": """Extract ALL transactions from these credit card app screenshots.
-Include both pending and settled transactions.
-
-Return ONLY a JSON array, no other text, like this:
-[
-  {
-    "vendor": "Cava",
-    "date": "2026-02-09",
-    "amount": "15.80",
-    "status": "settled"
-  }
-]
-
-Rules:
-- vendor: clean merchant name
-- date: YYYY-MM-DD format. If only month/day shown, assume 2026.
-- amount: numeric string only, no $ sign (e.g. "15.80")
-- status: "pending" or "settled"
-- IGNORE any transactions with a negative amount (credits, autopayments, refunds) — expenses only
-- IGNORE any transaction labeled as "autopay", "payment", "credit", or "refund"
-- DO NOT infer or return the card name. The selected card is attached separately.
-- Include ALL expense transactions you can see across all screenshots""",
-    })
-
-    response = client.messages.create(
-        model="claude-opus-4-6",
-        max_tokens=4096,
-        messages=[{"role": "user", "content": content}],
-    )
-
-    raw = response.content[0].text.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    return json.loads(raw.strip())
-
-
-def filter_out_non_expenses(transactions: list) -> list:
-    # Backstop to the Claude prompt's "ignore credits/refunds" rule. Drop rows whose
-    # parsed amount is ≤ 0; leave unparseable amounts alone so classify_transactions
-    # can still surface them for the user to vet.
-    kept = []
-    for tx in transactions:
-        try:
-            if float(str(tx.get("amount")).replace("$", "").replace(",", "")) <= 0:
-                continue
-        except (TypeError, ValueError):
-            pass
-        kept.append(tx)
-    return kept
-
-
-def attach_selected_card_to_transactions(transactions: list, card_label: str) -> list:
-    normalized_card = canonicalize_card_label(card_label) or card_label
-    stamped = []
-    for tx in transactions:
-        stamped.append({
-            "vendor": (tx.get("vendor") or "").strip(),
-            "card": normalized_card,
-            "date": (tx.get("date") or "").strip(),
-            "amount": tx.get("amount"),
-            "status": (tx.get("status") or "").strip().lower(),
-        })
-    return stamped
-
-
-# ── Deduplication ────────────────────────────────────────────────────────────
-def classify_transactions(new_txs: list, existing_txs: list):
-    definite_new = []
-    definite_dup = []
-    possible_dup = []
-    seen_keys = set()
-
-    for t in new_txs:
-        vendor = normalize_vendor(t["vendor"])
-        card = canonicalize_card_label(t.get("card")) or ""
-        try:
-            amount = float(str(t["amount"]).replace("$", "").replace(",", ""))
-        except ValueError:
-            definite_new.append(t)
-            continue
-
-        try:
-            t_date = datetime.strptime(t["date"], "%Y-%m-%d")
-        except Exception:
-            t_date = None
-
-        upload_key = f"{vendor}|{card}|{amount}|{t.get('date','')}"
-        if upload_key in seen_keys:
-            definite_dup.append(t)
-            continue
-        seen_keys.add(upload_key)
-
-        exact_match = False
-        fuzzy_match = False
-        fuzzy_existing = None
-
-        for ex in existing_txs:
-            if ex["vendor"] != vendor:
-                continue
-            if ex.get("card", "") != card:
-                continue
-            if abs(ex["amount"] - amount) > 0.01:
-                continue
-
-            if t_date and ex["date"]:
-                delta = abs((t_date - ex["date"]).days)
-                if delta == 0:
-                    exact_match = True
-                    break
-                elif delta <= 1:
-                    fuzzy_match = True
-                    fuzzy_existing = ex
-            else:
-                exact_match = True
-                break
-
-        if exact_match:
-            definite_dup.append(t)
-        elif fuzzy_match:
-            t["possible_match"] = {
-                "date": fuzzy_existing["date"].strftime("%Y-%m-%d") if fuzzy_existing["date"] else "?",
-                "amount": fuzzy_existing["amount"],
-            }
-            possible_dup.append(t)
-        else:
-            definite_new.append(t)
-
-    return definite_new, definite_dup, possible_dup
-
-
-# ── Routes ───────────────────────────────────────────────────────────────────
 @app.route("/")
 def landing():
     return render_template("landing.html")
@@ -805,17 +192,17 @@ def api_settings_get():
     user = get_user_from_request()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    key = get_user_api_key(user.id)
+    key = store_get_user_api_key(supabase_admin, user.id)
     try:
-        profile = ensure_profile_for_user(user)
+        profile = store_ensure_profile_for_user(supabase_admin, user)
     except Exception:
         profile = get_profile_seed_from_user(user)
     try:
-        is_new_user = is_new_user_account(user.id, bool(key), profile)
+        is_new_user = store_is_new_user_account(supabase_admin, user.id, bool(key), profile)
     except Exception:
         is_new_user = False
     try:
-        cards = list_user_cards_for_user(user.id)
+        cards = store_list_user_cards_for_user(supabase_admin, user.id)
     except Exception:
         cards = []
     return jsonify({"has_key": bool(key), "profile": profile, "is_new_user": is_new_user, "cards": cards})
@@ -828,16 +215,16 @@ def api_settings_save():
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
     if data.get("clear_api_key") is True:
-        settings = get_user_settings_state_for_user(user_id)
+        settings = store_get_user_settings_state_for_user(supabase_admin, user_id)
         settings["anthropic_api_key"] = None
-        save_user_settings_state_for_user(user_id, settings)
+        store_save_user_settings_state_for_user(supabase_admin, user_id, settings)
         return jsonify({"success": True, "has_key": False})
     api_key = data.get("anthropic_api_key", "").strip()
     if not api_key:
         return jsonify({"error": "API key is required"}), 400
-    settings = get_user_settings_state_for_user(user_id)
+    settings = store_get_user_settings_state_for_user(supabase_admin, user_id)
     settings["anthropic_api_key"] = api_key
-    save_user_settings_state_for_user(user_id, settings)
+    store_save_user_settings_state_for_user(supabase_admin, user_id, settings)
     return jsonify({"success": True, "has_key": True})
 
 
@@ -855,7 +242,7 @@ def api_profile_save():
         return jsonify({"error": "First name is required"}), 400
 
     try:
-        profile = upsert_profile_for_user(user_id, first_name, last_name)
+        profile = store_upsert_profile_for_user(supabase_admin, user_id, first_name, last_name)
     except Exception as e:
         return jsonify({"error": f"Failed to save profile: {str(e)}"}), 500
     return jsonify({"success": True, "profile": profile})
@@ -869,7 +256,8 @@ def api_card_create():
 
     data = request.json or {}
     try:
-        card = create_user_card_for_user(
+        card = store_create_user_card_for_user(
+            supabase_admin,
             user_id,
             data.get("brand"),
             data.get("digit_hint"),
@@ -890,7 +278,7 @@ def api_card_delete(card_id: str):
         return jsonify({"error": "Unauthorized"}), 401
 
     try:
-        deleted = delete_user_card_for_user(user_id, card_id)
+        deleted = store_delete_user_card_for_user(supabase_admin, user_id, card_id)
     except Exception as e:
         return jsonify({"error": f"Failed to delete card: {str(e)}"}), 500
 
@@ -907,7 +295,7 @@ def api_welcome_seen():
 
     try:
         seed = get_profile_seed_from_user(user)
-        profile = upsert_profile_for_user(user.id, seed.get("first_name"), seed.get("last_name"))
+        profile = store_upsert_profile_for_user(supabase_admin, user.id, seed.get("first_name"), seed.get("last_name"))
         return jsonify({"success": True, "profile": profile})
     except Exception:
         return jsonify({"success": True})
@@ -919,7 +307,7 @@ def upload():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    api_key = get_user_api_key(user_id)
+    api_key = store_get_user_api_key(supabase_admin, user_id)
     if not api_key:
         return jsonify({"error": "no_api_key"}), 400
 
@@ -927,7 +315,7 @@ def upload():
     if not selected_card_id:
         return jsonify({"error": "no_card_selected"}), 400
 
-    selected_card = get_user_card_for_user(user_id, selected_card_id)
+    selected_card = store_get_user_card_for_user(supabase_admin, user_id, selected_card_id)
     if not selected_card:
         return jsonify({"error": "invalid_card"}), 400
 
@@ -945,20 +333,20 @@ def upload():
         image_data_list.append((b64, mime_type))
 
     try:
-        extracted_transactions = extract_transactions_from_images(image_data_list, api_key)
-        extracted_transactions = filter_out_non_expenses(extracted_transactions)
-        all_transactions = attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
+        extracted_transactions = domain_extract_transactions_from_images(image_data_list, api_key)
+        extracted_transactions = domain_filter_out_non_expenses(extracted_transactions)
+        all_transactions = domain_attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
     except Exception as e:
         app.logger.exception("Claude extraction failed for user_id=%s", user_id)
-        msg, help_url = user_facing_extraction_error(e)
+        msg, help_url = domain_user_facing_extraction_error(e)
         return jsonify({"error": msg, "help_url": help_url}), 500
 
     try:
-        existing_txs = get_existing_transactions_for_user(user_id)
+        existing_txs = store_get_existing_transactions_for_user(supabase_admin, user_id)
     except Exception as e:
         return jsonify({"error": f"Database query failed: {str(e)}"}), 500
 
-    definite_new, definite_dup, possible_dup = classify_transactions(all_transactions, existing_txs)
+    definite_new, definite_dup, possible_dup = domain_classify_transactions(all_transactions, existing_txs)
 
     # Mint a batch id for this analysis session. The client threads it through every
     # /confirm call originating from this analysis so the resulting rows can be
@@ -984,14 +372,7 @@ def api_transactions():
     user_id = get_user_id_from_request()
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
-    result = (
-        supabase_admin.table("transactions")
-        .select("id,vendor,card,date,amount,status,created_at,batch_id")
-        .eq("user_id", user_id)
-        .order("date", desc=True)
-        .execute()
-    )
-    rows = result.data or []
+    rows = store_list_transactions_for_user(supabase_admin, user_id)
     for row in rows:
         row["card"] = canonicalize_card_label(row.get("card")) or "Unassigned"
     return jsonify({"transactions": rows})
@@ -1011,7 +392,7 @@ def confirm():
         return jsonify({"error": "No transactions to add"}), 400
 
     try:
-        inserted_ids = append_transactions_for_user(user_id, transactions, batch_id=batch_id)
+        inserted_ids = store_append_transactions_for_user(supabase_admin, user_id, transactions, batch_id=batch_id)
     except Exception as e:
         return jsonify({"error": f"Failed to write to database: {str(e)}"}), 500
 
@@ -1072,15 +453,7 @@ def api_transaction_patch(tx_id: str):
         return jsonify({"error": "No editable fields were provided"}), 400
 
     try:
-        # postgrest-py (supabase v2): .update() returns a filter builder with no .select();
-        # use default returning=representation so execute() still returns updated rows.
-        result = (
-            supabase_admin.table("transactions")
-            .update(updates)
-            .eq("id", tx_id)
-            .eq("user_id", user_id)
-            .execute()
-        )
+        result = store_update_transaction_for_user(supabase_admin, user_id, tx_id, updates)
     except Exception as e:
         return jsonify({"error": f"Failed to update transaction: {str(e)}"}), 500
 
@@ -1100,13 +473,7 @@ def api_transaction_delete(tx_id: str):
         return jsonify({"error": "Unauthorized"}), 401
 
     try:
-        (
-            supabase_admin.table("transactions")
-            .delete()
-            .eq("id", tx_id)
-            .eq("user_id", user_id)
-            .execute()
-        )
+        store_delete_transaction_for_user(supabase_admin, user_id, tx_id)
     except Exception as e:
         return jsonify({"error": f"Failed to delete transaction: {str(e)}"}), 500
 
@@ -1131,13 +498,7 @@ def api_batch_delete(batch_id: str):
         return jsonify({"error": "Missing batch id"}), 400
 
     try:
-        result = (
-            supabase_admin.table("transactions")
-            .delete()
-            .eq("user_id", user_id)
-            .eq("batch_id", batch_id)
-            .execute()
-        )
+        result = store_delete_batch_for_user(supabase_admin, user_id, batch_id)
     except Exception as e:
         return jsonify({"error": f"Failed to delete batch: {str(e)}"}), 500
 
