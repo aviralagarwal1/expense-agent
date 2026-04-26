@@ -41,6 +41,15 @@ def attach_selected_card_to_transactions(transactions: list, card_label: str) ->
     return stamped
 
 
+def apply_date_fallback(transactions: list, today_str: str) -> list:
+    result = []
+    for tx in transactions:
+        if not tx.get("date"):
+            tx = {**tx, "date": today_str}
+        result.append(tx)
+    return result
+
+
 def classify_transactions(new_txs: list, existing_txs: list):
     definite_new = []
     definite_dup = []

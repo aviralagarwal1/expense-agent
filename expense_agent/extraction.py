@@ -62,7 +62,7 @@ def user_facing_extraction_error(exc: Exception) -> tuple[str, str]:
     )
 
 
-def extract_transactions_from_images(image_data_list: list, api_key: str) -> list:
+def extract_transactions_from_images(image_data_list: list, api_key: str, today_str: str = "") -> list:
     client = anthropic.Anthropic(api_key=api_key, timeout=90.0)
 
     content = []
@@ -89,7 +89,8 @@ Return ONLY a JSON array, no other text, like this:
 
 Rules:
 - vendor: clean merchant name
-- date: YYYY-MM-DD format. If only month/day shown, assume 2026.
+- date: YYYY-MM-DD format. If only month/day shown, assume the year {today_str[:4] if today_str else "2026"}.
+- If the date is shown as a relative expression ("3 minutes ago", "2 hours ago", "just now", etc.) or the transaction is pending with no visible date, return "" for date — do not guess.
 - amount: numeric string only, no $ sign (e.g. "15.80")
 - status: "pending" or "settled"
 - IGNORE any transactions with a negative amount (credits, autopayments, refunds) — expenses only

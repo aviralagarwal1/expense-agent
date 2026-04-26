@@ -24,6 +24,7 @@ from expense_agent.transaction_store import (
     update_transaction_for_user as store_update_transaction_for_user,
 )
 from expense_agent.transactions import (
+    apply_date_fallback as domain_apply_date_fallback,
     attach_selected_card_to_transactions as domain_attach_selected_card_to_transactions,
     classify_transactions as domain_classify_transactions,
     filter_out_non_expenses as domain_filter_out_non_expenses,
@@ -332,10 +333,12 @@ def upload():
         b64 = base64.standard_b64encode(data).decode("utf-8")
         image_data_list.append((b64, mime_type))
 
+    today_str = datetime.today().strftime("%Y-%m-%d")
     try:
-        extracted_transactions = domain_extract_transactions_from_images(image_data_list, api_key)
+        extracted_transactions = domain_extract_transactions_from_images(image_data_list, api_key, today_str)
         extracted_transactions = domain_filter_out_non_expenses(extracted_transactions)
         all_transactions = domain_attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
+        all_transactions = domain_apply_date_fallback(all_transactions, today_str)
     except Exception as e:
         app.logger.exception("Claude extraction failed for user_id=%s", user_id)
         msg, help_url = domain_user_facing_extraction_error(e)
