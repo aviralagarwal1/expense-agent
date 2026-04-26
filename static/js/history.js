@@ -1279,7 +1279,7 @@
     if (Math.abs(nextAmount - tx.amount) >= 0.005) payload.amount = nextAmount;
 
     if (!Object.keys(payload).length) {
-      showToast("No changes to save.");
+      closeTxModal();
       return;
     }
 
@@ -1293,6 +1293,7 @@
       return;
     }
     showToast("Transaction updated.");
+    closeTxModal();
   }
 
   function setHeader(_txs) {
@@ -1325,6 +1326,7 @@
     const merchantContext = getSummarySelection({ merchant: "all" });
 
     renderMetrics();
+    renderSummaryScope();
     renderTrend(filtered);
     renderCompareChart(filtered);
     renderCards(cardContext, summaryState.card);
@@ -1734,6 +1736,32 @@
     return parts.length ? parts.join(" · ") : "Charts: all cards and merchants (headline metrics are account-wide).";
   }
 
+  function summaryScopeText() {
+    const parts = [];
+    if (summaryState.card !== "all") parts.push(`card: ${summaryState.card}`);
+    if (summaryState.merchant !== "all") parts.push(`merchant: ${summaryState.merchant}`);
+    return parts.length
+      ? `Charts scoped to ${parts.join(" | ")}. Headline metrics remain account-wide.`
+      : "Charts scoped to all cards and merchants. Headline metrics remain account-wide.";
+  }
+
+  function renderSummaryScope() {
+    const scopeEl = document.getElementById("summaryScopeSummary");
+    if (scopeEl) scopeEl.textContent = summaryScopeText();
+
+    const clearBtn = document.getElementById("clearSummaryFiltersBtn");
+    if (!clearBtn) return;
+
+    const hasFilters = summaryState.card !== "all" || summaryState.merchant !== "all";
+    clearBtn.style.display = hasFilters ? "inline-flex" : "none";
+  }
+
+  function clearSummaryFilters() {
+    summaryState.card = "all";
+    summaryState.merchant = "all";
+    renderSummary();
+  }
+
   function exportSummaryPdf() {
     if (!allTransactions.length) return;
     document.documentElement.classList.add("print-summary");
@@ -1868,6 +1896,7 @@
   document.getElementById("exportBatchesCsvBtn").addEventListener("click", exportBatchesCsv);
   document.getElementById("exportSummaryPdfBtn").addEventListener("click", exportSummaryPdf);
   document.getElementById("exportSummaryPptxBtn").addEventListener("click", exportSummaryPptx);
+  document.getElementById("clearSummaryFiltersBtn").addEventListener("click", clearSummaryFilters);
 
   // Summary-tab click-to-filter (scoped to #summaryView so Transactions /
   // Batches UI never participates, even if markup gains data-filter-key later).

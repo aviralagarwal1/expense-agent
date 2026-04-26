@@ -1195,6 +1195,19 @@
       justify-content: flex-start;
       margin-left: -41.5px;
     }
+    .date-cell .ledger-editable {
+      display: inline-grid;
+      grid-template-columns: 110px 32px;
+      align-items: center;
+      column-gap: 10px;
+      justify-content: flex-start;
+    }
+    .date-cell .ledger-editable-text {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
     .amount-value {
       display: block;
       width: 100%;
@@ -2051,8 +2064,18 @@
       .metrics-grid {
         grid-template-columns: 1fr;
       }
+      .ledger-filters .ledger-tools:first-of-type,
+      .ledger-filters .ledger-tools:last-of-type {
+        grid-template-columns: 1fr;
+      }
+      .ledger-filters .ledger-tools + .ledger-tools {
+        margin-top: 0;
+      }
       .ledger-filters {
         padding: 16px 20px;
+      }
+      #transactionsView .amount-row {
+        grid-template-columns: minmax(0, 110px) minmax(0, 1fr);
       }
       .table-wrap {
         overflow-x: hidden;
