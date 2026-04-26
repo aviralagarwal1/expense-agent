@@ -143,6 +143,22 @@
     return `${mon} ${yy}`;
   }
 
+  function daysInMonth(year, monthIndexZeroBased) {
+    return new Date(year, monthIndexZeroBased + 1, 0).getDate();
+  }
+
+  function getCompareDaysDivisor(key, now = new Date()) {
+    if (!key || key === "Unknown") return 30;
+    const [year, month] = key.split("-").map(Number);
+    if (!year || !month) return 30;
+
+    const monthIndex = month - 1;
+    const totalDays = daysInMonth(year, monthIndex);
+    const isCurrentMonth = year === now.getFullYear() && monthIndex === now.getMonth();
+    if (isCurrentMonth) return Math.max(1, now.getDate());
+    return totalDays;
+  }
+
   function niceCeilingAxis(n) {
     if (!Number.isFinite(n) || n <= 0) return 1;
     const exp = Math.floor(Math.log10(n));
@@ -181,7 +197,12 @@
 
   function formatCompareBarValue(value, mode) {
     if (mode === "averages") {
-      return `${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value)}/day`;
+      return `${new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: value < 10 ? 2 : 1,
+        minimumFractionDigits: 0,
+      }).format(value)}/day`;
     }
     return currencyWhole.format(value);
   }
@@ -727,8 +748,9 @@
     const rows = ordered.map(key => {
       const bucket = byKey.get(key);
       const total = bucket ? bucket.total : 0;
-      const yVal = compareYMode === "averages" ? total / 30 : total;
-      return { key, total, yVal };
+      const daysDivisor = getCompareDaysDivisor(key);
+      const yVal = compareYMode === "averages" ? total / daysDivisor : total;
+      return { key, total, yVal, daysDivisor };
     });
 
     const dataMax = Math.max(...rows.map(r => r.yVal), 0);
@@ -744,6 +766,7 @@
     const barsHtml = rows.map((r, i) => {
       const h = maxScale > 0 ? Math.min(100, (r.yVal / maxScale) * 100) : 0;
       const fill = COMPARE_BAR_GRADIENTS[i % COMPARE_BAR_GRADIENTS.length];
+      const averageTip = `Month total ${currencyExact.format(r.total)} · ${formatCompareTick(r.yVal, "averages")}/day (÷${r.daysDivisor})`;
       const tip = compareYMode === "averages"
         ? `Month total ${currencyExact.format(r.total)} · ${formatCompareTick(r.yVal, "averages")}/day (÷30)`
         : `Month total ${currencyExact.format(r.total)}`;
@@ -752,7 +775,7 @@
           <div class="compare-bar-track">
             <div class="compare-bar-stack" style="--compare-h-pct:${h}%;">
               <div class="compare-bar-fill" style="background:${fill};box-shadow:0 2px 10px rgba(35,55,70,0.2);" role="presentation"></div>
-              <div class="compare-bar-value" title="${escapeHtml(tip)}">${escapeHtml(formatCompareBarValue(r.yVal, compareYMode))}</div>
+              <div class="compare-bar-value" title="${escapeHtml(compareYMode === "averages" ? averageTip : tip)}">${escapeHtml(formatCompareBarValue(r.yVal, compareYMode))}</div>
             </div>
           </div>
         </div>`;
@@ -773,6 +796,10 @@
     foot += compareYMode === "averages"
       ? "Each selected month’s total is divided by 30 days so daily pace is comparable."
       : "Total spend compared between each month selected.";
+
+    if (compareYMode === "averages") {
+      foot = `${truncated ? `Showing ${MAX_TREND_MONTHS_SELECTED} most recent of ${totalPicked} selected months. ` : ""}Completed months use their full calendar length. The current month uses elapsed days so pace stays comparable as the month unfolds.`;
+    }
 
     mount.innerHTML = `
       <div class="compare-chart-shell" role="img" aria-label="Compare: ${escapeHtml(yAxisTitle)} for selected months">
@@ -1753,7 +1780,9 @@
     if (!clearBtn) return;
 
     const hasFilters = summaryState.card !== "all" || summaryState.merchant !== "all";
-    clearBtn.style.display = hasFilters ? "inline-flex" : "none";
+    clearBtn.classList.toggle("is-visible", hasFilters);
+    const scopeBar = clearBtn.closest(".scope-bar");
+    if (scopeBar) scopeBar.classList.toggle("has-filters", hasFilters);
   }
 
   function clearSummaryFilters() {

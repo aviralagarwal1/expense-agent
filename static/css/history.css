@@ -227,6 +227,19 @@
     .clear-link:hover {
       transform: translateY(-1px);
     }
+    .clear-link--stable {
+      display: inline-flex;
+      min-width: 138px;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+    }
+    .clear-link--stable.is-visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
 
     .state-panel {
       text-align: center;
@@ -2063,6 +2076,23 @@
       }
       .metrics-grid {
         grid-template-columns: 1fr;
+      }
+      .scope-bar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 10px;
+      }
+      .scope-summary {
+        min-width: 0;
+      }
+      .scope-bar .clear-link--stable {
+        display: none;
+        min-width: 0;
+        justify-self: end;
+      }
+      .scope-bar.has-filters .clear-link--stable.is-visible {
+        display: inline-flex;
       }
       .ledger-filters .ledger-tools:first-of-type,
       .ledger-filters .ledger-tools:last-of-type {
