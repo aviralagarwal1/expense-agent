@@ -462,6 +462,13 @@
         body: formData,
       });
       const data = await res.json();
+      if (res.status === 401 || data.error === "Unauthorized") {
+        clearStoredSession();
+        authScreen.style.display = "block";
+        mainApp.style.display = "none";
+        showToast("Session expired. Please sign in again.");
+        return;
+      }
       if (data.error === "no_api_key") {
         showToast("Add your Anthropic API key in Settings before analyzing screenshots.");
         setTimeout(redirectToSettingsForKey, 500);
