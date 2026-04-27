@@ -1,12 +1,16 @@
 import json
 from uuid import uuid4
 
+from .ai_providers import AI_PROVIDER_META, normalize_ai_provider
 from .cards import normalize_card_brand, normalize_reference_digits, serialize_user_card
 
 
 def build_empty_user_settings():
     return {
         "anthropic_api_key": None,
+        "openai_api_key": None,
+        "gemini_api_key": None,
+        "active_ai_provider": "anthropic",
         "profile": {"first_name": None, "last_name": None},
         "cards": [],
     }
@@ -26,30 +30,30 @@ def parse_user_settings_blob(raw_value: str | None):
     if not raw_text:
         return settings
 
-    payload = None
-    if raw_text.startswith("{"):
-        try:
-            payload = json.loads(raw_text)
-        except json.JSONDecodeError:
-            payload = None
-
-    if isinstance(payload, dict):
-        settings["anthropic_api_key"] = (payload.get("anthropic_api_key") or "").strip() or None
-        settings["profile"] = normalize_stored_profile(payload.get("profile"))
-        settings["cards"] = [
-            serialize_user_card(card)
-            for card in (payload.get("cards") or [])
-            if isinstance(card, dict)
-        ]
+    try:
+        payload = json.loads(raw_text)
+    except json.JSONDecodeError:
         return settings
 
-    settings["anthropic_api_key"] = raw_text
+    if not isinstance(payload, dict):
+        return settings
+
+    for meta in AI_PROVIDER_META.values():
+        key_field = meta["key_field"]
+        settings[key_field] = (payload.get(key_field) or "").strip() or None
+    settings["active_ai_provider"] = normalize_ai_provider(payload.get("active_ai_provider"))
+    settings["profile"] = normalize_stored_profile(payload.get("profile"))
+    settings["cards"] = [
+        serialize_user_card(card)
+        for card in (payload.get("cards") or [])
+        if isinstance(card, dict)
+    ]
     return settings
 
 
 def serialize_user_settings_blob(settings: dict):
     payload = {
-        "anthropic_api_key": (settings.get("anthropic_api_key") or "").strip() or None,
+        "active_ai_provider": normalize_ai_provider(settings.get("active_ai_provider")),
         "profile": normalize_stored_profile(settings.get("profile")),
         "cards": [
             {
@@ -62,4 +66,7 @@ def serialize_user_settings_blob(settings: dict):
             if isinstance(card, dict)
         ],
     }
+    for meta in AI_PROVIDER_META.values():
+        key_field = meta["key_field"]
+        payload[key_field] = (settings.get(key_field) or "").strip() or None
     return json.dumps(payload, separators=(",", ":"))

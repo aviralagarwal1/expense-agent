@@ -9,6 +9,13 @@ from supabase import create_client, Client
 from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory
 from datetime import datetime
 from werkzeug.middleware.proxy_fix import ProxyFix
+from expense_agent.ai_providers import (
+    active_or_first_configured_provider,
+    get_provider_key_field,
+    get_provider_meta,
+    list_provider_states,
+    normalize_ai_provider,
+)
 from expense_agent.cards import canonicalize_card_label
 from expense_agent.profile import get_profile_seed_from_user
 from expense_agent.extraction import (
@@ -92,7 +99,7 @@ def get_user_id_from_request():
 # ── Supabase storage ─────────────────────────────────────────────────────────
 
 
-# ── Claude Vision ────────────────────────────────────────────────────────────
+# ── AI extraction ────────────────────────────────────────────────────────────
 @app.route("/")
 def landing():
     return render_template("landing.html")
@@ -193,7 +200,10 @@ def api_settings_get():
     user = get_user_from_request()
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
-    key = store_get_user_api_key(supabase_admin, user.id)
+    settings = store_get_user_settings_state_for_user(supabase_admin, user.id)
+    active_provider = active_or_first_configured_provider(settings)
+    key = settings.get(get_provider_key_field(active_provider))
+    providers = list_provider_states(settings)
     try:
         profile = store_ensure_profile_for_user(supabase_admin, user)
     except Exception:
@@ -206,7 +216,14 @@ def api_settings_get():
         cards = store_list_user_cards_for_user(supabase_admin, user.id)
     except Exception:
         cards = []
-    return jsonify({"has_key": bool(key), "profile": profile, "is_new_user": is_new_user, "cards": cards})
+    return jsonify({
+        "has_key": any(provider["has_key"] for provider in providers),
+        "active_provider": active_provider,
+        "providers": providers,
+        "profile": profile,
+        "is_new_user": is_new_user,
+        "cards": cards,
+    })
 
 
 @app.route("/api/settings", methods=["POST"])
@@ -215,18 +232,39 @@ def api_settings_save():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json or {}
+    provider = normalize_ai_provider(data.get("provider"))
+    key_field = get_provider_key_field(provider)
     if data.get("clear_api_key") is True:
         settings = store_get_user_settings_state_for_user(supabase_admin, user_id)
-        settings["anthropic_api_key"] = None
+        settings[key_field] = None
+        if settings.get("active_ai_provider") == provider:
+            settings["active_ai_provider"] = active_or_first_configured_provider(settings)
         store_save_user_settings_state_for_user(supabase_admin, user_id, settings)
-        return jsonify({"success": True, "has_key": False})
-    api_key = data.get("anthropic_api_key", "").strip()
+        providers = list_provider_states(settings)
+        return jsonify({
+            "success": True,
+            "has_key": any(item["has_key"] for item in providers),
+            "active_provider": active_or_first_configured_provider(settings),
+            "providers": providers,
+        })
+    api_key = (
+        data.get(key_field)
+        or data.get("api_key")
+        or ""
+    ).strip()
     if not api_key:
         return jsonify({"error": "API key is required"}), 400
     settings = store_get_user_settings_state_for_user(supabase_admin, user_id)
-    settings["anthropic_api_key"] = api_key
+    settings[key_field] = api_key
+    settings["active_ai_provider"] = provider
     store_save_user_settings_state_for_user(supabase_admin, user_id, settings)
-    return jsonify({"success": True, "has_key": True})
+    providers = list_provider_states(settings)
+    return jsonify({
+        "success": True,
+        "has_key": True,
+        "active_provider": provider,
+        "providers": providers,
+    })
 
 
 @app.route("/api/profile", methods=["POST"])
@@ -308,7 +346,11 @@ def upload():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    api_key = store_get_user_api_key(supabase_admin, user_id)
+    raw_selected_provider = (request.form.get("selected_provider") or "").strip()
+    if not raw_selected_provider:
+        return jsonify({"error": "no_provider_selected"}), 400
+    selected_provider = normalize_ai_provider(raw_selected_provider)
+    api_key = store_get_user_api_key(supabase_admin, user_id, selected_provider)
     if not api_key:
         return jsonify({"error": "no_api_key"}), 400
 
@@ -335,13 +377,18 @@ def upload():
 
     today_str = datetime.today().strftime("%Y-%m-%d")
     try:
-        extracted_transactions = domain_extract_transactions_from_images(image_data_list, api_key, today_str)
+        extracted_transactions = domain_extract_transactions_from_images(
+            image_data_list,
+            api_key,
+            today_str,
+            selected_provider,
+        )
         extracted_transactions = domain_filter_out_non_expenses(extracted_transactions)
         all_transactions = domain_attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
         all_transactions = domain_apply_date_fallback(all_transactions, today_str)
     except Exception as e:
-        app.logger.exception("Claude extraction failed for user_id=%s", user_id)
-        msg, help_url = domain_user_facing_extraction_error(e)
+        app.logger.exception("%s extraction failed for user_id=%s", get_provider_meta(selected_provider)["label"], user_id)
+        msg, help_url = domain_user_facing_extraction_error(e, selected_provider)
         return jsonify({"error": msg, "help_url": help_url}), 500
 
     try:
@@ -514,4 +561,3 @@ def api_batch_delete(batch_id: str):
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-

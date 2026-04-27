@@ -1,6 +1,7 @@
 import re
 from uuid import uuid4
 
+from .ai_providers import get_provider_key_field
 from .cards import (
     CARD_HINT_POSITIONS,
     clean_card_brand,
@@ -39,8 +40,9 @@ def save_user_settings_state_for_user(client, user_id: str, settings: dict):
     return parse_user_settings_blob(serialized)
 
 
-def get_user_api_key(client, user_id: str):
-    return get_user_settings_state_for_user(client, user_id).get("anthropic_api_key")
+def get_user_api_key(client, user_id: str, provider: str):
+    settings = get_user_settings_state_for_user(client, user_id)
+    return settings.get(get_provider_key_field(provider))
 
 
 def list_user_cards_for_user(client, user_id: str) -> list:
