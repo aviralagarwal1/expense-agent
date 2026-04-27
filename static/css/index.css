@@ -1115,6 +1115,9 @@
       display: grid;
       gap: 12px;
     }
+    .metrics-grid + .transaction-list {
+      margin-top: 4px;
+    }
     /* Wrapper so mobile compact grid can use display:contents without matching other divs. */
     .tx-main {
       min-width: 0;
@@ -1375,6 +1378,18 @@
       opacity: 1;
       transform: translateX(-50%) translateY(-2px);
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
     .toast.toast--rich {
       white-space: normal;
       max-width: min(440px, calc(100vw - 40px));

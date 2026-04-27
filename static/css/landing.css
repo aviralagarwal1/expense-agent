@@ -173,6 +173,32 @@
       padding: 28px 28px 14px;
       align-items: stretch;
     }
+    .hero-copy,
+    .hero-panel,
+    .workflow-card,
+    .stats-strip {
+      animation: soft-rise 0.42s ease-out both;
+    }
+    .hero-panel {
+      animation-delay: 0.05s;
+    }
+    .workflow-card:nth-child(1) { animation-delay: 0.04s; }
+    .workflow-card:nth-child(2) { animation-delay: 0.08s; }
+    .workflow-card:nth-child(3) { animation-delay: 0.12s; }
+    .workflow-card:nth-child(4) { animation-delay: 0.16s; }
+    .stats-strip {
+      animation-delay: 0.08s;
+    }
+    @keyframes soft-rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
     .hero-copy {
       padding: 14px 8px 8px;
       display: flex;
@@ -717,5 +743,16 @@
         flex: none;
         width: 100%;
         text-align: center;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
       }
     }
