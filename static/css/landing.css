@@ -274,6 +274,8 @@
       display: block;
       font-size: 1.08rem;
       margin-bottom: 2px;
+      font-family: var(--sans);
+      font-variant-numeric: tabular-nums lining-nums;
     }
     .summary-metric span {
       color: var(--muted);
@@ -357,6 +359,10 @@
       border-top: 1px solid var(--line);
       padding-top: 24px;
     }
+    .stats-section {
+      padding-top: 0;
+      padding-bottom: 60px;
+    }
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -403,6 +409,8 @@
       border-radius: 12px;
       background: var(--accent-soft);
       color: var(--accent);
+      font-family: var(--sans);
+      font-variant-numeric: tabular-nums lining-nums;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -522,6 +530,8 @@
       line-height: 1;
       margin-bottom: 8px;
       color: var(--accent);
+      font-family: var(--sans);
+      font-variant-numeric: tabular-nums lining-nums;
     }
     .stats-strip-item span {
       color: var(--muted);
@@ -589,6 +599,9 @@
       .frame {
         border-radius: 24px;
       }
+      .hero {
+        gap: 15px;
+      }
       .nav,
       .hero,
       .section,
@@ -641,8 +654,40 @@
       .hero h1 {
         max-width: none;
       }
+      .section {
+        gap: 12px;
+        padding-top: 22px;
+        padding-bottom: 22px;
+      }
+      .section:first-of-type {
+        padding-top: 20px;
+      }
+      .stats-section {
+        padding-top: 0;
+        padding-bottom: 28px;
+      }
+      .section-title {
+        font-size: 1.85rem;
+      }
+      .workflow {
+        gap: 10px;
+      }
+      .workflow-card {
+        border-radius: 22px;
+        padding: 17px;
+      }
+      .workflow-step {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 12px;
+      }
       .summary-grid {
         grid-template-columns: 1fr;
+      }
+      .stats-strip {
+        gap: 16px;
+        padding: 22px 18px;
+        border-radius: 22px;
       }
     }
 
@@ -665,6 +710,7 @@
       }
       .hero-actions {
         flex-direction: column;
+        gap: 10px;
       }
       .hero-actions .nav-link,
       .hero-actions .nav-cta {

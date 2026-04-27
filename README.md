@@ -15,9 +15,9 @@ The app lets a user intentionally upload batches of screenshots from credit card
 ## What It Does
 
 - Google sign-in through Supabase
-- User-supplied Anthropic API key
-- Saved card labels with optional identifying digits
-- Screenshot upload and Claude Vision extraction
+- User-supplied Anthropic, OpenAI, or Gemini API key
+- Saved credit card labels with optional identifying digits
+- Screenshot upload and provider-selectable vision extraction
 - Exact and fuzzy duplicate detection
 - Confirmation step before insertion
 - Unified transaction history across cards
@@ -28,14 +28,14 @@ The app lets a user intentionally upload batches of screenshots from credit card
 ## Typical Flow
 
 1. Sign in with Google.
-2. Save an Anthropic API key.
-3. Save at least one card label.
+2. Save an Anthropic, OpenAI, or Gemini API key.
+3. Save at least one credit card label.
 4. Upload one or more screenshots from a credit card app.
 5. Review new transactions, skipped duplicates, and possible duplicates.
 6. Confirm the rows that should be written to history.
 7. Review everything later in the history views.
 
-Each upload is tied to one selected saved card, but all confirmed rows are written into the same per-user ledger.
+Each upload is tied to one selected credit card, but all confirmed rows are written into the same per-user ledger.
 
 ## Architecture
 
@@ -43,7 +43,7 @@ Expense Agent is a small server-rendered web app with a deliberately simple stac
 
 - Backend: Python + Flask
 - Frontend: HTML, CSS, and vanilla JavaScript
-- AI extraction: Anthropic Claude Vision
+- AI extraction: provider-selectable vision LLMs
 - Auth and data storage: Supabase
 - Deployment: Docker, designed for Google Cloud Run
 
@@ -53,7 +53,7 @@ The app entry point is `app.py`, with backend domain logic split into the `expen
 
 The runtime uses two main persistence concepts:
 
-- `user_settings`: stores the user's Anthropic API key, profile data, and saved cards in a serialized settings blob
+- `user_settings`: stores the user's API keys, active provider, profile data, and saved credit cards in a serialized settings blob
 - `transactions`: stores confirmed expense rows, including vendor, card label, amount, date, status, and optional `batch_id`
 
 Batch history is derived from groups of transactions that share a `batch_id`. There is no separate batches table.
@@ -64,7 +64,7 @@ Batch history is derived from groups of transactions that share a `batch_id`. Th
 
 - Python 3.11
 - A Supabase project with Google auth enabled
-- An Anthropic account for screenshot extraction
+- An Anthropic, OpenAI, or Gemini account for screenshot extraction
 
 ### Setup
 
@@ -104,9 +104,11 @@ python -m unittest discover -s tests -v
 Useful validation commands:
 
 ```bash
-python -m py_compile app.py expense_agent/*.py tests/test_routes_smoke.py
+python -m compileall -q app.py expense_agent tests
 node --check static/js/index.js
 node --check static/js/history.js
+node --check static/js/settings.js
+node --check static/js/profile_settings.js
 ```
 
 ## Deployment Notes
