@@ -820,20 +820,32 @@
       line-height: 1.55;
       font-size: 0.9rem;
       max-width: none;
-      white-space: nowrap;
       margin: 0;
     }
     .upload-card-picker {
-      min-width: min(320px, 100%);
       display: grid;
       gap: 8px;
     }
+    .upload-picker-stack {
+      display: grid;
+      grid-template-columns: 190px 290px;
+      gap: 14px;
+      width: min(494px, 100%);
+    }
     .picker-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      color: #7a8390;
+      color: var(--ink);
       font-weight: 700;
+    }
+    .picker-separator {
+      color: var(--ink);
+      font-size: 0.7rem;
+      line-height: 1;
     }
     .upload-card-row {
       display: flex;
@@ -842,8 +854,8 @@
       flex-wrap: wrap;
     }
     .upload-card-select {
-      flex: 1;
-      min-width: 190px;
+      width: 100%;
+      min-width: 0;
       padding: 13px 46px 13px 15px;
       border-radius: 16px;
       border: 1px solid var(--line-strong);
@@ -902,15 +914,22 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0 16px;
-      border-radius: 16px;
-      border: 1px solid var(--line-strong);
-      background: rgba(255,255,255,0.88);
-      color: var(--ink);
-      font-size: 0.86rem;
+      min-height: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      font-size: inherit;
       font-weight: 700;
+      letter-spacing: inherit;
+      text-transform: uppercase;
       white-space: nowrap;
       text-decoration: none;
+    }
+    .mini-link:hover {
+      color: #162f45;
+      text-decoration: underline;
+      text-underline-offset: 4px;
     }
     .card-empty-state {
       display: none;
@@ -1559,6 +1578,10 @@
         align-items: stretch;
         gap: 10px;
       }
+      .upload-picker-stack {
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
       .upload-card-select {
         width: 100%;
       }
@@ -1566,23 +1589,9 @@
         gap: 4px;
       }
       .upload-card-picker .picker-label {
-        display: none;
-      }
-      /* Mobile: make this a subtle utility action above the picker. */
-      .upload-card-row .mini-link {
-        order: -1;
-        align-self: flex-end;
-        width: auto;
-        min-height: 0;
-        padding: 0;
-        border: none;
-        border-radius: 0;
-        background: transparent;
-        color: var(--accent);
-        font-size: 0.76rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        display: flex;
+        font-size: 0.68rem;
+        gap: 6px;
       }
       .upload-panel {
         gap: 22px;

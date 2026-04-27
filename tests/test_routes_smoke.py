@@ -13,7 +13,7 @@ class RouteSmokeTests(TestCase):
     def test_settings_get_smoke(self):
         fake_user = SimpleNamespace(id="user-1")
         with patch.object(app, "get_user_from_request", return_value=fake_user), \
-             patch.object(app, "store_get_user_api_key", return_value="sk-ant-test"), \
+             patch.object(app, "store_get_user_settings_state_for_user", return_value={"anthropic_api_key": "sk-ant-test", "active_ai_provider": "anthropic"}), \
              patch.object(app, "store_ensure_profile_for_user", return_value={"first_name": "Aviral", "last_name": "Agarwal"}), \
              patch.object(app, "store_is_new_user_account", return_value=False), \
              patch.object(app, "store_list_user_cards_for_user", return_value=[]):
@@ -22,6 +22,7 @@ class RouteSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
         self.assertTrue(payload["has_key"])
+        self.assertEqual(payload["active_provider"], "anthropic")
         self.assertEqual(payload["profile"]["first_name"], "Aviral")
 
     def test_upload_smoke(self):
@@ -38,6 +39,7 @@ class RouteSmokeTests(TestCase):
                 "/upload",
                 data={
                     "selected_card_id": "card-1",
+                    "selected_provider": "anthropic",
                     "screenshots": (BytesIO(b"test-image"), "shot.jpg"),
                 },
                 content_type="multipart/form-data",

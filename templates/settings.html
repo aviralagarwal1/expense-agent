@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Connect Anthropic - Expense Agent</title>
+  <title>Connect API Key - Expense Agent</title>
   <link rel="icon" type="image/png" href="{{ url_for('favicon_png') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}" />
 </head>
@@ -50,7 +50,7 @@
             <div class="key-status-main">
               <div>
                 <div class="key-status-title" id="keyStatusTitle">No API Key Saved</div>
-                <div class="key-status-copy" id="keyStatusCopy">Add your Anthropic key to unlock screenshot uploads.</div>
+                <div class="key-status-copy" id="keyStatusCopy">Add a provider key to unlock screenshot uploads.</div>
               </div>
             </div>
             <a class="inline-link" id="statusReturnLink" href="/app">Return to Workspace</a>
@@ -58,20 +58,24 @@
 
           <h1><span class="api-key-title-desktop">Connect Your API Key.</span><span class="api-key-title-mobile">Add Your API Key</span></h1>
           <p class="lead">
-            Save it once to your account and uploads are ready immediately.
+            Save one key per provider and choose which one to use when analyzing screenshots.
           </p>
 
           <div class="field-shell">
+            <div class="provider-tabs" id="providerTabs" role="tablist" aria-label="API provider">
+              <button class="provider-tab active" type="button" data-provider="anthropic">Anthropic</button>
+              <button class="provider-tab" type="button" data-provider="openai">OpenAI</button>
+              <button class="provider-tab" type="button" data-provider="gemini">Gemini</button>
+            </div>
+
             <div class="field-head">
               <div>
-                <div class="field-label">Anthropic API key</div>
-                <p class="field-copy">
-                  Create one in the
-                  <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic console</a>,
-                  paste it here, and save it to your account.
+                <div class="field-label" id="providerFieldLabel">Anthropic API key</div>
+                <p class="field-copy" id="providerFieldCopy">
+                  Create one in the provider console, paste it here, and save it to your account.
                 </p>
               </div>
-              <a class="inline-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open Console</a>
+              <a class="inline-link" id="providerConsoleLink" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Open Console</a>
             </div>
 
             <div class="input-row">

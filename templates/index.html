@@ -35,7 +35,7 @@
           <section class="auth-card">
             <div class="auth-card-header">
               <h2>{% if auth_mode|default("signin") == "register" %}Launch your workspace{% else %}Enter your workspace{% endif %}</h2>
-              <p>{% if auth_mode|default("signin") == "register" %}Register with Google to start expensing and save yourself hours of busy work and headaches.{% else %}Sign in with Google to access your private expense history and saved Anthropic key.{% endif %}</p>
+              <p>{% if auth_mode|default("signin") == "register" %}Register with Google to start expensing and save yourself hours of busy work and headaches.{% else %}Sign in with Google to access your private expense history and saved API keys.{% endif %}</p>
             </div>
 
             <div class="auth-social">
@@ -54,7 +54,7 @@
           <div class="auth-points">
             <div class="auth-point">
               <strong>Your own API key</strong>
-              <span>Usage bills directly to your Anthropic account.</span>
+              <span>Usage bills directly to your selected provider account.</span>
             </div>
             <div class="auth-point">
               <strong>Duplicate-aware review</strong>
@@ -130,7 +130,7 @@
                 <div class="eyebrow">New account</div>
                 <h1 id="welcomeHeadline">Welcome to Expense Agent.</h1>
                 <p class="welcome-copy">
-                  Your Google account is connected and your private workspace is ready. Next, add your Anthropic key and save a card so screenshot uploads can start working.
+                  Your Google account is connected and your private workspace is ready. Next, add an API key and save a card so screenshot uploads can start working.
                 </p>
                 <div class="welcome-actions">
                   <button class="btn btn-primary" id="welcomeContinueBtn" type="button" onclick="completeWelcome()">Continue Setup</button>
@@ -152,7 +152,7 @@
                   </div>
                   <div class="welcome-point">
                     <strong>This is your first-time setup</strong>
-                    <span>Connect an Anthropic key and save a card, a one-time setup before uploads unlock.</span>
+                    <span>Connect a provider key and save a card, a one-time setup before uploads unlock.</span>
                   </div>
                   <div class="welcome-point">
                     <strong>Your data stays account-specific</strong>
@@ -167,7 +167,7 @@
         <section id="setupView" class="workspace-section">
           <div class="setup-grid" id="keySetupGrid">
             <div class="panel setup-main">
-              <h1>Connect your Anthropic key to unlock uploads.</h1>
+              <h1>Connect an API key to unlock uploads.</h1>
               <p>Save it once to your account and the workspace is activated.</p>
               <div class="setup-actions">
                 <a class="btn btn-primary" href="/connect-key?return_to=%2Fapp">Connect API Key</a>
@@ -177,15 +177,15 @@
             <aside class="panel panel-soft setup-details">
               <div class="setup-detail">
                 <strong>Where to get your key</strong>
-                <p>Create one in the <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console</a>. Sign in, open your organization, generate an API key, and paste it on the next screen.</p>
+                <p>Create a key with Anthropic, OpenAI, or Gemini, then paste it on the next screen.</p>
               </div>
               <div class="setup-detail">
                 <strong>What each screenshot costs</strong>
-                <p>Anthropic bills roughly $0.01 per screenshot from your account.</p>
+                <p>The selected model should stay in the same practical ballpark as the current high-quality setup.</p>
               </div>
               <div class="setup-detail">
                 <strong>Where your key lives</strong>
-                <p>Encrypted in Supabase and used only to read and extract screenshots. Replace or remove any time.</p>
+                <p>Stored in Supabase and used only to read and extract screenshots. Replace or remove any time.</p>
               </div>
             </aside>
           </div>
@@ -223,15 +223,32 @@
                 <h2>Upload Screenshots</h2>
                 <p id="uploadHeaderHint">Choose the saved card, then drop the batch.</p>
               </div>
-              <div class="upload-card-picker" id="uploadCardPicker">
-                <div class="picker-label">Saved card</div>
-                <div class="upload-card-row">
-                  <select class="upload-card-select" id="uploadCardSelect">
-                    <option value="">Select a card</option>
-                  </select>
-                  <a class="mini-link" href="/settings?return_to=%2Fapp">Manage cards</a>
+              <div class="upload-picker-stack">
+                <div class="upload-card-picker" id="uploadProviderPicker">
+                  <div class="picker-label">
+                    <span>API key</span>
+                    <span class="picker-separator" aria-hidden="true">•</span>
+                    <a class="mini-link" href="/connect-key?return_to=%2Fapp">Manage keys</a>
+                  </div>
+                  <div class="upload-card-row">
+                    <select class="upload-card-select" id="uploadProviderSelect">
+                      <option value="">Select a provider</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="picker-hint" id="pickerHint">Choose a card to analyze.</div>
+                <div class="upload-card-picker" id="uploadCardPicker">
+                  <div class="picker-label">
+                    <span>Credit card</span>
+                    <span class="picker-separator" aria-hidden="true">•</span>
+                    <a class="mini-link" href="/settings?return_to=%2Fapp">Manage cards</a>
+                  </div>
+                  <div class="upload-card-row">
+                    <select class="upload-card-select" id="uploadCardSelect">
+                      <option value="">Select a card</option>
+                    </select>
+                  </div>
+                  <div class="picker-hint" id="pickerHint">Choose a card to analyze.</div>
+                </div>
               </div>
             </div>
 

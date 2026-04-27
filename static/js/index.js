@@ -1,7 +1,9 @@
   let sessionToken = sessionStorage.getItem("expense_token") || "";
   let hasApiKey = false;
   let savedCards = [];
+  let savedProviders = [];
   let selectedCardId = "";
+  let selectedProvider = "";
   let profileFirstName = "";
   let isNewAccount = false;
   let shouldFlashLoginSuccess = false;
@@ -16,7 +18,9 @@
   const uploadMarkEl = document.getElementById("uploadMark");
   const uploadPanel = document.getElementById("uploadPanel");
   const uploadCardSelect = document.getElementById("uploadCardSelect");
+  const uploadProviderSelect = document.getElementById("uploadProviderSelect");
   const uploadCardPickerEl = document.getElementById("uploadCardPicker");
+  const uploadProviderPickerEl = document.getElementById("uploadProviderPicker");
   const uploadHeaderHintEl = document.getElementById("uploadHeaderHint");
   const cardEmptyStateEl = document.getElementById("cardEmptyState");
   const loadingSpinnerEl = document.querySelector("#loadingView .spinner");
@@ -87,7 +91,9 @@
     sessionToken = "";
     hasApiKey = false;
     savedCards = [];
+    savedProviders = [];
     selectedCardId = "";
+    selectedProvider = "";
     profileFirstName = "";
     isNewAccount = false;
     sessionStorage.removeItem("expense_token");
@@ -122,6 +128,11 @@
     return userId ? `expense_saved_card_${userId}` : "";
   }
 
+  function getSavedProviderKey() {
+    const userId = getUserIdFromToken(sessionToken);
+    return userId ? `expense_saved_provider_${userId}` : "";
+  }
+
   function persistSelectedCard(cardId) {
     const key = getSavedCardKey();
     if (!key) return;
@@ -137,21 +148,45 @@
     return key ? localStorage.getItem(key) || "" : "";
   }
 
+  function persistSelectedProvider(providerId) {
+    const key = getSavedProviderKey();
+    if (!key) return;
+    if (providerId) {
+      localStorage.setItem(key, providerId);
+    } else {
+      localStorage.removeItem(key);
+    }
+  }
+
+  function getPersistedSelectedProvider() {
+    const key = getSavedProviderKey();
+    return key ? localStorage.getItem(key) || "" : "";
+  }
+
   function findSavedCard(cardId) {
     return savedCards.find(card => card.id === cardId) || null;
   }
 
+  function findSavedProvider(providerId) {
+    return savedProviders.find(provider => provider.id === providerId) || null;
+  }
+
   function updateUploadHint() {
     const selectedCard = findSavedCard(selectedCardId);
+    const provider = findSavedProvider(selectedProvider);
     if (!selectedCard) {
-      uploadHeaderHintEl.textContent = "Choose the saved card, then drop the batch.";
+      uploadHeaderHintEl.textContent = "Choose the saved card and API key, then drop the batch.";
       return;
     }
-    uploadHeaderHintEl.textContent = `This batch will be filed under ${selectedCard.label}.`;
+    if (!provider) {
+      uploadHeaderHintEl.textContent = `Choose an API key for screenshots filed under ${selectedCard.label}.`;
+      return;
+    }
+    uploadHeaderHintEl.textContent = `This batch will use ${provider.label} and be filed under ${selectedCard.label}.`;
   }
 
   function updateAnalyzeAvailability() {
-    analyzeBtn.disabled = files.length === 0 || !hasApiKey || !selectedCardId;
+    analyzeBtn.disabled = files.length === 0 || !hasApiKey || !selectedCardId || !selectedProvider;
     updateUploadHint();
     updateCardPickerState();
   }
@@ -160,6 +195,10 @@
     if (!uploadCardPickerEl) return;
     const needsCard = files.length > 0 && !selectedCardId && savedCards.length > 0;
     uploadCardPickerEl.classList.toggle("needs-card", needsCard);
+    if (uploadProviderPickerEl) {
+      const needsProvider = files.length > 0 && !selectedProvider && savedProviders.length > 0;
+      uploadProviderPickerEl.classList.toggle("needs-card", needsProvider);
+    }
   }
 
   function syncSelectedCard() {
@@ -180,6 +219,24 @@
     }
 
     uploadCardSelect.value = selectedCardId;
+    updateAnalyzeAvailability();
+  }
+
+  function syncSelectedProvider(activeProvider = "") {
+    const persistedProvider = getPersistedSelectedProvider();
+    if (selectedProvider && findSavedProvider(selectedProvider)) {
+    } else if (persistedProvider && findSavedProvider(persistedProvider)) {
+      selectedProvider = persistedProvider;
+    } else if (activeProvider && findSavedProvider(activeProvider)) {
+      selectedProvider = activeProvider;
+    } else if (savedProviders.length === 1) {
+      selectedProvider = savedProviders[0].id;
+    } else {
+      selectedProvider = "";
+    }
+
+    persistSelectedProvider(selectedProvider);
+    if (uploadProviderSelect) uploadProviderSelect.value = selectedProvider;
     updateAnalyzeAvailability();
   }
 
@@ -217,9 +274,47 @@
     syncSelectedCard();
   }
 
+  function renderSavedProviderOptions(activeProvider = "") {
+    if (!uploadProviderSelect) return;
+    uploadProviderSelect.innerHTML = "";
+
+    if (savedProviders.length > 1) {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select a provider";
+      uploadProviderSelect.appendChild(placeholder);
+    }
+
+    if (!savedProviders.length) {
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "No saved keys";
+      uploadProviderSelect.appendChild(emptyOption);
+      uploadProviderSelect.disabled = true;
+      selectedProvider = "";
+      updateAnalyzeAvailability();
+      return;
+    }
+
+    savedProviders.forEach(provider => {
+      const option = document.createElement("option");
+      option.value = provider.id;
+      option.textContent = provider.label;
+      uploadProviderSelect.appendChild(option);
+    });
+
+    uploadProviderSelect.disabled = false;
+    syncSelectedProvider(activeProvider);
+  }
+
   function syncSavedCards(cards) {
     savedCards = Array.isArray(cards) ? cards : [];
     renderSavedCardOptions();
+  }
+
+  function syncSavedProviders(providers, activeProvider = "") {
+    savedProviders = Array.isArray(providers) ? providers.filter(provider => provider.has_key) : [];
+    renderSavedProviderOptions(activeProvider);
   }
 
   function renderTopBarIdentity() {
@@ -252,6 +347,7 @@
       }
       const data = await res.json();
       hasApiKey = data.has_key;
+      syncSavedProviders(data.providers || [], data.active_provider || "");
       syncSavedCards(data.cards || []);
       profileFirstName = (data.profile && data.profile.first_name) || getFirstNameFromToken(sessionToken);
       isNewAccount = Boolean(data.is_new_user) && !hasSeenWelcomeLocally();
@@ -365,6 +461,13 @@
     persistSelectedCard(selectedCardId);
     updateAnalyzeAvailability();
   });
+  if (uploadProviderSelect) {
+    uploadProviderSelect.addEventListener("change", event => {
+      selectedProvider = event.target.value;
+      persistSelectedProvider(selectedProvider);
+      updateAnalyzeAvailability();
+    });
+  }
   dropZone.addEventListener("dragover", e => {
     e.preventDefault();
     dropZone.classList.add("dragover");
@@ -436,7 +539,7 @@
 
   analyzeBtn.addEventListener("click", async () => {
     if (!hasApiKey) {
-      showToast("Add your Anthropic API key in Settings before analyzing screenshots.");
+      showToast("Add an API key before analyzing screenshots.");
       setTimeout(redirectToSettingsForKey, 500);
       return;
     }
@@ -450,10 +553,16 @@
       uploadCardSelect.focus();
       return;
     }
+    if (!selectedProvider) {
+      showToast("Choose an API key for this batch before analyzing.");
+      uploadProviderSelect.focus();
+      return;
+    }
     analyzeBtn.innerHTML = `<span class="spinner"></span>Analyzing`;
     analyzeBtn.disabled = true;
     const formData = new FormData();
     formData.append("selected_card_id", selectedCardId);
+    formData.append("selected_provider", selectedProvider);
     files.forEach(f => formData.append("screenshots", f));
     try {
       const res = await fetch("/upload", {
@@ -470,8 +579,13 @@
         return;
       }
       if (data.error === "no_api_key") {
-        showToast("Add your Anthropic API key in Settings before analyzing screenshots.");
+        showToast("Add an API key before analyzing screenshots.");
         setTimeout(redirectToSettingsForKey, 500);
+        return;
+      }
+      if (data.error === "no_provider_selected") {
+        showToast("Choose an API key for this batch before analyzing.");
+        uploadProviderSelect.focus();
         return;
       }
       if (data.error === "no_card_selected") {
@@ -876,6 +990,8 @@
 
   const ALLOWED_TOAST_HELP_URLS = new Set([
     "https://console.anthropic.com/settings/keys",
+    "https://platform.openai.com/api-keys",
+    "https://aistudio.google.com/app/apikey",
   ]);
 
   let toastHideTimer = null;
@@ -896,7 +1012,7 @@
       a.href = safeHelp;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.textContent = "Open Anthropic Console";
+      a.textContent = "Open provider console";
       toast.appendChild(line);
       toast.appendChild(a);
       toast.appendChild(document.createTextNode("."));

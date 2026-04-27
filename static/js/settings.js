@@ -3,6 +3,33 @@
     window.location.href = "/app";
   }
 
+  const PROVIDERS = {
+    anthropic: {
+      label: "Anthropic",
+      keyName: "anthropic_api_key",
+      placeholder: "sk-ant-...",
+      consoleUrl: "https://console.anthropic.com/settings/keys",
+      consoleName: "Anthropic Console",
+      prefix: "sk-ant-",
+    },
+    openai: {
+      label: "OpenAI",
+      keyName: "openai_api_key",
+      placeholder: "sk-...",
+      consoleUrl: "https://platform.openai.com/api-keys",
+      consoleName: "OpenAI API Keys",
+      prefix: "sk-",
+    },
+    gemini: {
+      label: "Gemini",
+      keyName: "gemini_api_key",
+      placeholder: "AIza...",
+      consoleUrl: "https://aistudio.google.com/app/apikey",
+      consoleName: "Google AI Studio",
+      prefix: "",
+    },
+  };
+
   const params = new URLSearchParams(window.location.search);
   const returnTo = params.get("return_to") || "/app";
   const workspaceReturn = "/app";
@@ -16,20 +43,34 @@
   const apiKeyInput = document.getElementById("apiKeyInput");
   const saveBtn = document.getElementById("saveBtn");
   const toggleKeyBtn = document.getElementById("toggleKeyBtn");
+  const providerFieldLabel = document.getElementById("providerFieldLabel");
+  const providerFieldCopy = document.getElementById("providerFieldCopy");
+  const providerConsoleLink = document.getElementById("providerConsoleLink");
+  const providerTabs = Array.from(document.querySelectorAll(".provider-tab"));
 
-  let serverHasKey = false;
+  let providerState = {};
+  let activeProvider = "anthropic";
+  let serverHasAnyKey = false;
 
   returnLink.href = workspaceReturn;
   statusReturnLink.href = workspaceReturn;
   workspaceLink.href = workspaceReturn;
   profileLink.href = `/settings?return_to=${encodeURIComponent(returnTo)}`;
 
+  function getProvider(provider = activeProvider) {
+    return PROVIDERS[provider] || PROVIDERS.anthropic;
+  }
+
+  function providerHasKey(provider = activeProvider) {
+    return Boolean(providerState[provider]?.has_key);
+  }
+
   function showReturnLink() {
     returnLink.style.display = "inline-flex";
   }
 
   function refreshSaveButton() {
-    saveBtn.textContent = serverHasKey ? "Clear Key" : "Save Key";
+    saveBtn.textContent = providerHasKey() ? "Clear Key" : "Save Key";
   }
 
   function clearStatus() {
@@ -40,7 +81,7 @@
   }
 
   function syncWorkspaceNav() {
-    if (serverHasKey) {
+    if (serverHasAnyKey) {
       workspaceLink.classList.remove("is-disabled");
       workspaceLink.removeAttribute("aria-disabled");
       workspaceLink.removeAttribute("tabindex");
@@ -53,36 +94,52 @@
     }
   }
 
-  function syncKeyBanner() {
-    if (!serverHasKey) return;
-    keyStatus.className = "key-status set";
-    keyStatusTitle.textContent = "API Key Connected";
-    keyStatusCopy.textContent = "Your key is saved and screenshot uploads are unlocked.";
-    apiKeyInput.placeholder = "sk-ant-...";
-    showReturnLink();
+  function syncProviderFields() {
+    const provider = getProvider();
+    providerTabs.forEach(tab => {
+      tab.classList.toggle("active", tab.dataset.provider === activeProvider);
+    });
+    providerFieldLabel.textContent = `${provider.label} API key`;
+    providerFieldCopy.innerHTML = `Create one in the <a href="${provider.consoleUrl}" target="_blank" rel="noopener">${provider.consoleName}</a>, paste it here, and save it to your account.`;
+    providerConsoleLink.href = provider.consoleUrl;
+    providerConsoleLink.textContent = "Open Console";
+    apiKeyInput.placeholder = provider.placeholder;
+    apiKeyInput.value = "";
+    apiKeyInput.type = "password";
+    toggleKeyBtn.textContent = "Show";
   }
 
-  function updateKeyUi(hasKey) {
-    serverHasKey = hasKey;
+  function syncKeyBanner() {
     keyStatus.style.display = "flex";
     syncWorkspaceNav();
-    if (hasKey) {
-      syncKeyBanner();
-      refreshSaveButton();
-      return;
+    syncProviderFields();
+    const provider = getProvider();
+    if (providerHasKey()) {
+      keyStatus.className = "key-status set";
+      keyStatusTitle.textContent = `${provider.label} Key Connected`;
+      keyStatusCopy.textContent = "This provider is ready for screenshot analysis.";
+      showReturnLink();
+    } else {
+      keyStatus.className = "key-status unset";
+      keyStatusTitle.textContent = `No ${provider.label} Key Saved`;
+      keyStatusCopy.textContent = "Save a key for this provider to use it in the workspace.";
+      returnLink.style.display = serverHasAnyKey ? "inline-flex" : "none";
     }
-
-    keyStatus.className = "key-status unset";
-    keyStatusTitle.textContent = "No API Key Saved";
-    keyStatusCopy.textContent = "Screenshot uploads are locked until you save an Anthropic key below.";
-    apiKeyInput.placeholder = "sk-ant-...";
-    returnLink.style.display = "none";
     refreshSaveButton();
-    requestAnimationFrame(() => apiKeyInput.focus());
+  }
+
+  function updateProviderState(providers = [], selectedProvider = activeProvider) {
+    providerState = {};
+    providers.forEach(provider => {
+      providerState[provider.id] = provider;
+    });
+    serverHasAnyKey = providers.some(provider => provider.has_key);
+    activeProvider = PROVIDERS[selectedProvider] ? selectedProvider : "anthropic";
+    syncKeyBanner();
   }
 
   function onPrimaryKeyAction() {
-    if (serverHasKey) {
+    if (providerHasKey()) {
       clearApiKey();
       return;
     }
@@ -91,7 +148,7 @@
 
   async function clearApiKey() {
     saveBtn.disabled = true;
-    saveBtn.textContent = "Clearing key…";
+    saveBtn.textContent = "Clearing key...";
     try {
       const res = await fetch("/api/settings", {
         method: "POST",
@@ -99,18 +156,15 @@
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ clear_api_key: true }),
+        body: JSON.stringify({ clear_api_key: true, provider: activeProvider }),
       });
       const data = await res.json();
       if (data.error) {
         showStatus(data.error, false);
         return;
       }
-      apiKeyInput.value = "";
-      apiKeyInput.type = "password";
-      toggleKeyBtn.textContent = "Show";
       clearStatus();
-      updateKeyUi(false);
+      updateProviderState(data.providers || [], activeProvider);
     } catch (e) {
       showStatus("Network error - please try again.", false);
     } finally {
@@ -127,7 +181,7 @@
         return;
       }
       const data = await res.json();
-      updateKeyUi(Boolean(data.has_key));
+      updateProviderState(data.providers || [], data.active_provider || "anthropic");
     } catch (e) {
     }
   }
@@ -142,12 +196,13 @@
 
   async function saveKey() {
     const key = apiKeyInput.value.trim();
+    const provider = getProvider();
     if (!key) {
-      showStatus("Please add your API Key.", false);
+      showStatus("Please add your API key.", false);
       return;
     }
-    if (!key.startsWith("sk-ant-")) {
-      showStatus("That does not look like an Anthropic key. It should start with sk-ant-", false);
+    if (provider.prefix && !key.startsWith(provider.prefix)) {
+      showStatus(`That does not look like a ${provider.label} key.`, false);
       return;
     }
     saveBtn.disabled = true;
@@ -156,18 +211,18 @@
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ anthropic_api_key: key }),
+        body: JSON.stringify({
+          provider: activeProvider,
+          api_key: key,
+        }),
       });
       const data = await res.json();
       if (data.error) {
         showStatus(data.error, false);
         return;
       }
-      apiKeyInput.value = "";
-      apiKeyInput.type = "password";
-      toggleKeyBtn.textContent = "Show";
       clearStatus();
-      updateKeyUi(true);
+      updateProviderState(data.providers || [], data.active_provider || activeProvider);
     } catch (e) {
       showStatus("Network error - please try again.", false);
     } finally {
@@ -183,15 +238,23 @@
     el.style.display = "block";
   }
 
+  providerTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      activeProvider = tab.dataset.provider || "anthropic";
+      clearStatus();
+      syncKeyBanner();
+    });
+  });
+
   apiKeyInput.addEventListener("keydown", e => {
     if (e.key !== "Enter") return;
-    if (serverHasKey) {
+    if (providerHasKey()) {
       const k = apiKeyInput.value.trim();
-      if (k.startsWith("sk-ant-")) {
+      const provider = getProvider();
+      if (!provider.prefix || k.startsWith(provider.prefix)) {
         saveKey();
       }
       return;
     }
     saveKey();
   });
-

@@ -274,6 +274,26 @@
         #ffffff;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.62);
     }
+    .provider-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .provider-tab {
+      min-height: 46px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--muted);
+      font-weight: 760;
+      transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+    }
+    .provider-tab.active {
+      border-color: rgba(35, 66, 94, 0.36);
+      background: #ffffff;
+      color: var(--accent);
+      box-shadow: 0 8px 18px rgba(35, 66, 94, 0.08);
+    }
     .field-head {
       display: flex;
       justify-content: space-between;
@@ -463,6 +483,9 @@
       .input-row,
       .action-row {
         flex-direction: column;
+      }
+      .provider-tabs {
+        grid-template-columns: 1fr;
       }
       .key-status {
         align-items: stretch;
