@@ -680,6 +680,11 @@
       .hero h1 {
         max-width: none;
       }
+      .hero p {
+        font-size: 0.95rem;
+        line-height: 1.58;
+        max-width: 45ch;
+      }
       .section {
         gap: 12px;
         padding-top: 22px;
@@ -705,7 +710,7 @@
       .workflow-step {
         width: 32px;
         height: 32px;
-        margin-bottom: 12px;
+        margin-bottom: 18px;
       }
       .summary-grid {
         grid-template-columns: 1fr;
