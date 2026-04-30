@@ -2560,10 +2560,26 @@
 
     /* Only when using Summary → PDF (see history.js); plain Cmd+P elsewhere is unchanged. */
     @media print {
+      @page {
+        margin: 0.45in;
+      }
+      html.print-summary,
+      html.print-summary * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
       html.print-summary body {
-        background: #fff !important;
+        background: #ffffff !important;
+        color: #18212b !important;
+        padding: 0 !important;
       }
       html.print-summary .no-print {
+        display: none !important;
+      }
+      html.print-summary .metric-edit-btn,
+      html.print-summary .metric-popover,
+      html.print-summary .trend-head-wrap,
+      html.print-summary .clear-link {
         display: none !important;
       }
       html.print-summary #transactionsView,
@@ -2571,7 +2587,9 @@
         display: none !important;
       }
       html.print-summary #summaryView {
-        display: block !important;
+        display: grid !important;
+        gap: 12px;
+        color: #18212b;
       }
       html.print-summary #summaryView[hidden] {
         display: none !important;
@@ -2584,12 +2602,194 @@
         border: none;
         border-radius: 0;
         box-shadow: none;
-        background: #fff;
+        background: #ffffff;
+      }
+      html.print-summary #summaryView::before {
+        content: "Expense Agent Summary";
+        display: block;
+        margin: 0 0 8px;
+        color: #18212b;
+        font-size: 20pt;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
       }
       html.print-summary .content {
-        padding: 12px 0;
+        padding: 0;
+        display: block;
       }
       html.print-summary .panel {
         break-inside: avoid;
+        page-break-inside: avoid;
+        border-radius: 14px;
+        border: 1px solid rgba(24, 33, 43, 0.14);
+        background: #ffffff;
+        padding: 18px;
+        box-shadow: none;
+      }
+      html.print-summary .scope-bar {
+        margin: 0 0 12px;
+        padding: 10px 14px;
+        border: 1px solid rgba(35, 66, 94, 0.18);
+        border-left: 4px solid #23425e;
+        border-radius: 12px;
+        background: #eef4f8;
+      }
+      html.print-summary .scope-summary {
+        color: #334556;
+        font-size: 9.5pt;
+        line-height: 1.45;
+        font-weight: 650;
+      }
+      html.print-summary .metrics-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 9px;
+        margin-bottom: 12px;
+      }
+      html.print-summary .metric-card {
+        min-height: 0;
+        border-radius: 14px;
+        padding: 13px 14px;
+        gap: 7px;
+        border-width: 1px;
+      }
+      html.print-summary .metric-card.success {
+        background: #eaf5ef;
+        border-color: #8fbda4;
+      }
+      html.print-summary .metric-card.warning {
+        background: #fbf2df;
+        border-color: #d5b87b;
+      }
+      html.print-summary .metric-card.neutral {
+        background: #e9f1f8;
+        border-color: #9fb9d1;
+      }
+      html.print-summary .metric-card.accent {
+        background: #efedf8;
+        border-color: #b6addd;
+      }
+      html.print-summary .metric-label {
+        color: #4b5966;
+        font-size: 7.5pt;
+        letter-spacing: 0.1em;
+      }
+      html.print-summary .metric-value {
+        color: #18212b;
+        font-size: 18pt;
+        letter-spacing: -0.03em;
+      }
+      html.print-summary .insight-grid,
+      html.print-summary .insight-grid.insight-grid--density-a,
+      html.print-summary .insight-grid.insight-grid--density-b,
+      html.print-summary .insight-grid.insight-grid--density-c {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      html.print-summary .section-head {
+        align-items: baseline;
+        margin-bottom: 12px;
+      }
+      html.print-summary .section-head h2 {
+        color: #18212b;
+        font-size: 13pt;
+      }
+      html.print-summary .section-head span {
+        color: #5d6872;
+        font-size: 8pt;
+      }
+      html.print-summary .compare-head-tools {
+        display: flex;
+      }
+      html.print-summary .compare-mode-pills {
+        padding: 0;
+        border: none;
+        background: transparent;
+      }
+      html.print-summary .compare-mode-pill {
+        display: none;
+      }
+      html.print-summary .compare-mode-pill.active {
+        display: inline-flex;
+        align-items: center;
+        background: #23425e;
+        color: #ffffff;
+        border-radius: 999px;
+        padding: 5px 9px;
+        font-size: 7pt;
+      }
+      html.print-summary .trend-list,
+      html.print-summary .merchant-list,
+      html.print-summary .card-list {
+        gap: 8px;
+      }
+      html.print-summary .trend-row {
+        background: #f7f9fb;
+        border-color: rgba(35, 66, 94, 0.12);
+        border-radius: 10px;
+        padding: 9px 10px;
+        grid-template-columns: 82px minmax(0, 1fr) auto;
+      }
+      html.print-summary .trend-label,
+      html.print-summary .merchant-label,
+      html.print-summary .card-label,
+      html.print-summary .trend-value,
+      html.print-summary .merchant-value,
+      html.print-summary .card-value,
+      html.print-summary .top-value-col {
+        color: #18212b;
+      }
+      html.print-summary .trend-track,
+      html.print-summary .share-track {
+        background: #dfe7ee;
+      }
+      html.print-summary .trend-fill,
+      html.print-summary .share-fill {
+        background: linear-gradient(90deg, #23425e, #7f9cb8);
+      }
+      html.print-summary .compare-chart-shell {
+        min-height: 170px;
+      }
+      html.print-summary .compare-bars {
+        min-height: 122px;
+        border-bottom-color: rgba(24, 33, 43, 0.22);
+      }
+      html.print-summary .compare-bar-value {
+        color: #23425e;
+      }
+      html.print-summary .compare-bar-fill {
+        background: linear-gradient(180deg, #5f7f9c, #23425e);
+      }
+      html.print-summary .compare-y-axis,
+      html.print-summary .compare-y-axis-label {
+        border-right-color: rgba(24, 33, 43, 0.16);
+      }
+      html.print-summary .compare-y-axis,
+      html.print-summary .compare-x-labels span,
+      html.print-summary .compare-y-axis-label-text,
+      html.print-summary .compare-footnote,
+      html.print-summary .card-meta,
+      html.print-summary .merchant-meta,
+      html.print-summary .top-share-label {
+        color: #5d6872;
+      }
+      html.print-summary .top-table {
+        border-radius: 12px;
+        border-color: rgba(24, 33, 43, 0.14);
+        background: #ffffff;
+      }
+      html.print-summary .top-thead {
+        background: #edf2f6;
+        border-bottom-color: rgba(24, 33, 43, 0.14);
+        color: #4b5966;
+        padding: 9px 14px;
+        font-size: 7.5pt;
+      }
+      html.print-summary .top-table .merchant-row,
+      html.print-summary .top-table .card-row {
+        padding: 10px 14px;
+        border-bottom-color: rgba(24, 33, 43, 0.12);
+        background: #ffffff;
       }
     }
