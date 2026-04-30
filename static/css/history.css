@@ -1190,9 +1190,43 @@
       letter-spacing: -0.01em;
     }
     .merchant-sub {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
       color: var(--muted);
       font-size: 0.82rem;
       line-height: 1.45;
+    }
+    .merchant-sub-separator {
+      color: rgba(27, 39, 51, 0.58);
+      font-size: 0.72rem;
+      line-height: 1;
+    }
+    .merchant-note-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      font: inherit;
+      font-weight: 700;
+      line-height: inherit;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .merchant-note-link:hover {
+      color: #162f45;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    .merchant-note-link:focus-visible {
+      outline: 2px solid rgba(35, 66, 94, 0.34);
+      outline-offset: 3px;
+      border-radius: 4px;
     }
     .amount-cell {
       font-weight: 700;

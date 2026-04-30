@@ -1013,11 +1013,24 @@
           </div>
         </div>`;
     }
+    const hasMemo = Boolean(tx.memo);
+    const noteLabel = hasMemo ? "Edit Note" : "Add Note";
     return `
       <div class="merchant-cell-shell">
         <div class="merchant-cell">
           <div class="merchant-name">${escapeHtml(tx.vendor)}</div>
-          <div class="merchant-sub">${escapeHtml(tx.monthKey ? monthLabel(tx.monthKey) : "Undated entry")}</div>
+          <div class="merchant-sub">
+            <span>${escapeHtml(tx.monthKey ? monthLabel(tx.monthKey) : "Undated entry")}</span>
+            <span class="merchant-sub-separator" aria-hidden="true">&bull;</span>
+            <button
+              type="button"
+              class="merchant-note-link"
+              data-action="open-memo"
+              data-tx-id="${escapeHtml(tx.id)}"
+              title="${escapeHtml(`${noteLabel} for ${tx.vendor}`)}"
+              aria-label="${escapeHtml(`${noteLabel} for ${tx.vendor}`)}"
+            >${noteLabel}</button>
+          </div>
         </div>
         ${renderIconButton({ action: "start-inline-edit", txId: tx.id, field: "vendor", label: `Edit merchant for ${tx.vendor}`, title: "Edit merchant", icon: ICONS.pencil, className: "cell-icon-btn cell-edit-btn" })}
       </div>`;
