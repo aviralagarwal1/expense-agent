@@ -18,6 +18,7 @@
   let allTransactions = [];
   let activeBatch = null;
   let activeTxId = "";
+  let activeMemoTxId = "";
   let activeInlineEdit = { txId: "", field: "" };
   let toastTimer = null;
   const ICONS = {
@@ -39,6 +40,13 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M18 6L6 18"/>
         <path d="M6 6l12 12"/>
+      </svg>`,
+    memo: `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <path d="M14 2v6h6"/>
+        <path d="M8 13h8"/>
+        <path d="M8 17h5"/>
       </svg>`,
   };
   const initialParams = new URLSearchParams(window.location.search);
@@ -259,6 +267,7 @@
     const vendor = (tx.vendor || "Unknown merchant").trim();
     const card = (tx.card || "Unassigned").trim();
     const status = tx.status === "pending" ? "pending" : "settled";
+    const memo = (tx.memo || "").trim();
     return {
       ...tx,
       id: tx.id || `${vendor}-${card}-${index}`,
@@ -266,6 +275,7 @@
       vendor,
       card,
       status,
+      memo,
       parsedDate,
       monthKey: parsedDate ? monthKey(parsedDate) : null,
       searchBlob: `${vendor} ${card} ${status} ${parsedDate ? shortDate(parsedDate) : ""}`.toLowerCase(),
@@ -932,6 +942,9 @@
     if (activeTxId === updated.id && document.getElementById("txModal").classList.contains("visible")) {
       populateTxModal(updated);
     }
+    if (activeMemoTxId === updated.id && document.getElementById("memoModal").classList.contains("visible")) {
+      populateMemoModal(updated);
+    }
     return updated;
   }
 
@@ -1028,6 +1041,18 @@
       </td>`;
   }
 
+  function renderMemoButton(tx) {
+    const hasMemo = Boolean(tx.memo);
+    return renderIconButton({
+      action: "open-memo",
+      txId: tx.id,
+      label: `${hasMemo ? "Edit" : "Add"} note for ${tx.vendor}`,
+      title: hasMemo ? "Edit note" : "Add note",
+      icon: ICONS.memo,
+      className: `cell-icon-btn tx-memo-btn${hasMemo ? " tx-memo-btn--active" : ""}`,
+    });
+  }
+
   function renderAmountCell(tx) {
     const editing = activeInlineEdit.txId === tx.id && activeInlineEdit.field === "amount";
     if (editing) {
@@ -1047,6 +1072,7 @@
       <div class="amount-cell-inner">
         <span class="amount-value">${escapeHtml(currencyExact.format(tx.amount))}</span>
         ${renderIconButton({ action: "start-inline-edit", txId: tx.id, field: "amount", label: `Edit amount for ${tx.vendor}`, title: "Edit amount", icon: ICONS.pencil, className: "cell-icon-btn cell-edit-btn" })}
+        ${renderMemoButton(tx)}
       </div>`;
   }
 
@@ -1184,6 +1210,10 @@
         toggleTransactionStatus(txId, actionBtn.dataset.nextStatus || "", actionBtn);
         return;
       }
+      if (action === "open-memo") {
+        openMemoModal(txId);
+        return;
+      }
     }
 
     const mobileRow = event.target.closest(".mobile-ledger-row");
@@ -1229,6 +1259,7 @@
     document.getElementById("txModalMerchantInput").value = tx.vendor;
     document.getElementById("txModalDateInput").value = txIsoDate(tx);
     document.getElementById("txModalAmountInput").value = tx.amount.toFixed(2);
+    document.getElementById("txModalMemoInput").value = tx.memo || "";
 
     const statusBtn = document.getElementById("txModalStatusBtn");
     const nextStatus = pending ? "settled" : "pending";
@@ -1258,6 +1289,38 @@
     activeTxId = "";
   }
 
+  function populateMemoModal(tx) {
+    const pending = tx.status === "pending";
+    document.getElementById("memoModalTitle").textContent = `Note for "${tx.vendor}"`;
+    document.getElementById("memoModalSubtitle").textContent = shortDate(tx.parsedDate);
+    document.getElementById("memoModalAmount").textContent = currencyExact.format(tx.amount);
+    document.getElementById("memoModalCard").textContent = tx.card;
+    document.getElementById("memoModalDate").textContent = shortDate(tx.parsedDate);
+    const statusEl = document.getElementById("memoModalStatus");
+    statusEl.textContent = pending ? "Pending" : "Settled";
+    statusEl.classList.remove("settled", "pending");
+    statusEl.classList.add(pending ? "pending" : "settled");
+    document.getElementById("memoModalInput").value = tx.memo || "";
+
+    const saveBtn = document.getElementById("memoModalSaveBtn");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Note";
+  }
+
+  function openMemoModal(txId) {
+    const tx = getTransactionById(txId);
+    if (!tx) return;
+    activeMemoTxId = tx.id;
+    populateMemoModal(tx);
+    document.getElementById("memoModal").classList.add("visible");
+    requestAnimationFrame(() => document.getElementById("memoModalInput").focus());
+  }
+
+  function closeMemoModal() {
+    document.getElementById("memoModal").classList.remove("visible");
+    activeMemoTxId = "";
+  }
+
   async function toggleTxStatusFromModal() {
     if (!activeTxId) return;
     const btn = document.getElementById("txModalStatusBtn");
@@ -1281,6 +1344,7 @@
     const merchant = document.getElementById("txModalMerchantInput").value.trim().replace(/\s+/g, " ");
     const date = document.getElementById("txModalDateInput").value.trim();
     const amountRaw = document.getElementById("txModalAmountInput").value.trim();
+    const memo = document.getElementById("txModalMemoInput").value.replace(/\r\n?/g, "\n").trim();
     const payload = {};
 
     if (!merchant) {
@@ -1304,6 +1368,12 @@
     if (date !== txIsoDate(tx)) payload.date = date;
     const nextAmount = Number(parsedAmount.toFixed(2));
     if (Math.abs(nextAmount - tx.amount) >= 0.005) payload.amount = nextAmount;
+    if (memo.length > 1000) {
+      showToast("Note must be 1000 characters or fewer.");
+      document.getElementById("txModalMemoInput").focus();
+      return;
+    }
+    if (memo !== (tx.memo || "")) payload.memo = memo;
 
     if (!Object.keys(payload).length) {
       closeTxModal();
@@ -1321,6 +1391,36 @@
     }
     showToast("Transaction updated.");
     closeTxModal();
+  }
+
+  async function saveMemoFromModal() {
+    if (!activeMemoTxId) return;
+    const tx = getTransactionById(activeMemoTxId);
+    if (!tx) return;
+
+    const input = document.getElementById("memoModalInput");
+    const memo = input.value.replace(/\r\n?/g, "\n").trim();
+    if (memo.length > 1000) {
+      showToast("Note must be 1000 characters or fewer.");
+      input.focus();
+      return;
+    }
+    if (memo === (tx.memo || "")) {
+      closeMemoModal();
+      return;
+    }
+
+    const btn = document.getElementById("memoModalSaveBtn");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span><span>Saving</span>`;
+    const updated = await patchTransaction(activeMemoTxId, { memo }, "Could not save note");
+    if (!updated) {
+      btn.disabled = false;
+      btn.textContent = "Save Note";
+      return;
+    }
+    showToast(memo ? "Note saved." : "Note cleared.");
+    closeMemoModal();
   }
 
   function setHeader(_txs) {
@@ -1713,7 +1813,7 @@
       showToast("No transactions to export for the current filters.");
       return;
     }
-    const lines = [["date", "vendor", "card", "amount", "status"].map(csvEscape).join(",")];
+    const lines = [["date", "vendor", "card", "amount", "status", "memo"].map(csvEscape).join(",")];
     for (const tx of rows) {
       lines.push([
         csvEscape(txIsoDate(tx)),
@@ -1721,6 +1821,7 @@
         csvEscape(tx.card),
         csvEscape(tx.amount),
         csvEscape(tx.status),
+        csvEscape(tx.memo || ""),
       ].join(","));
     }
     downloadTextFile(
@@ -1978,6 +2079,11 @@
   document.getElementById("txModalSaveBtn").addEventListener("click", saveTxFromModal);
   document.getElementById("txModal").addEventListener("click", (event) => {
     if (event.target.id === "txModal") closeTxModal();
+  });
+  document.getElementById("memoModalCloseBtn").addEventListener("click", closeMemoModal);
+  document.getElementById("memoModalSaveBtn").addEventListener("click", saveMemoFromModal);
+  document.getElementById("memoModal").addEventListener("click", (event) => {
+    if (event.target.id === "memoModal") closeMemoModal();
   });
 
   document.getElementById("rollingDaysBtn").addEventListener("click", event => {

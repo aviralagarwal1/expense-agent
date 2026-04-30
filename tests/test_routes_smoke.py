@@ -125,6 +125,7 @@ class RouteSmokeTests(TestCase):
                 "status": "settled",
                 "created_at": "2026-04-20T10:00:00Z",
                 "batch_id": "batch-1",
+                "memo": "Lunch with client",
             }
         ]
         with patch.object(app, "get_user_id_from_request", return_value="user-1"), \
@@ -135,3 +136,48 @@ class RouteSmokeTests(TestCase):
         payload = response.get_json()
         self.assertEqual(payload["transactions"][0]["vendor"], "Cava")
         self.assertTrue(payload["transactions"][0]["card"])
+        self.assertEqual(payload["transactions"][0]["memo"], "Lunch with client")
+
+    def test_transaction_patch_accepts_memo(self):
+        updated = {
+            "id": "tx-1",
+            "vendor": "Cava",
+            "card": "visa 1234",
+            "date": "2026-04-20",
+            "amount": 15.8,
+            "status": "settled",
+            "created_at": "2026-04-20T10:00:00Z",
+            "batch_id": "batch-1",
+            "memo": "Reimbursable lunch",
+        }
+        fake_result = SimpleNamespace(data=[updated])
+
+        with patch.object(app, "get_user_id_from_request", return_value="user-1"), \
+             patch.object(app, "store_update_transaction_for_user", return_value=fake_result) as update:
+            response = self.client.patch("/api/transactions/tx-1", json={"memo": " Reimbursable lunch \r\n"})
+
+        self.assertEqual(response.status_code, 200)
+        update.assert_called_once_with(app.supabase_admin, "user-1", "tx-1", {"memo": "Reimbursable lunch"})
+        payload = response.get_json()
+        self.assertEqual(payload["transaction"]["memo"], "Reimbursable lunch")
+
+    def test_transaction_patch_clears_memo(self):
+        updated = {
+            "id": "tx-1",
+            "vendor": "Cava",
+            "card": "visa 1234",
+            "date": "2026-04-20",
+            "amount": 15.8,
+            "status": "settled",
+            "created_at": "2026-04-20T10:00:00Z",
+            "batch_id": "batch-1",
+            "memo": None,
+        }
+        fake_result = SimpleNamespace(data=[updated])
+
+        with patch.object(app, "get_user_id_from_request", return_value="user-1"), \
+             patch.object(app, "store_update_transaction_for_user", return_value=fake_result) as update:
+            response = self.client.patch("/api/transactions/tx-1", json={"memo": ""})
+
+        self.assertEqual(response.status_code, 200)
+        update.assert_called_once_with(app.supabase_admin, "user-1", "tx-1", {"memo": None})

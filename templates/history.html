@@ -422,10 +422,48 @@
         </div>
       </div>
 
+      <div class="modal-section">
+        <h3>Note</h3>
+        <label class="memo-field" for="txModalMemoInput">
+          <span class="sr-only">Note</span>
+          <textarea class="memo-textarea" id="txModalMemoInput" maxlength="1000" rows="5" placeholder="Add a note for this transaction"></textarea>
+        </label>
+      </div>
+
       <div class="modal-actions tx-modal-actions">
         <button class="modal-btn modal-btn-secondary" id="txModalCloseBtn" type="button">Close</button>
         <button class="modal-btn modal-btn-tx-status" id="txModalStatusBtn" type="button">Mark Pending</button>
         <button class="modal-btn modal-btn-tx-save" id="txModalSaveBtn" type="button">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="memoModal" role="dialog" aria-modal="true" aria-labelledby="memoModalTitle">
+    <div class="modal-card memo-modal-card">
+      <div class="modal-title" id="memoModalTitle">Note</div>
+      <div class="modal-subtitle" id="memoModalSubtitle">-</div>
+
+      <div class="modal-section">
+        <h3>Transaction</h3>
+        <div class="modal-stats memo-modal-stats">
+          <div class="modal-stat"><span>Amount</span><strong id="memoModalAmount">$0.00</strong></div>
+          <div class="modal-stat"><span>Card</span><strong id="memoModalCard">-</strong></div>
+          <div class="modal-stat"><span>Date</span><strong id="memoModalDate">-</strong></div>
+          <div class="modal-stat"><span>Status</span><strong id="memoModalStatus" class="modal-status-pill settled">Settled</strong></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>Note</h3>
+        <label class="memo-field" for="memoModalInput">
+          <span class="sr-only">Note</span>
+          <textarea class="memo-textarea" id="memoModalInput" maxlength="1000" rows="7" placeholder="Add a note for this transaction"></textarea>
+        </label>
+      </div>
+
+      <div class="modal-actions memo-modal-actions">
+        <button class="modal-btn modal-btn-secondary" id="memoModalCloseBtn" type="button">Close</button>
+        <button class="modal-btn modal-btn-tx-save" id="memoModalSaveBtn" type="button">Save Note</button>
       </div>
     </div>
   </div>

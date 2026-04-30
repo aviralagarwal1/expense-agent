@@ -628,6 +628,12 @@ def api_transaction_patch(tx_id: str):
             return jsonify({"error": "amount must be greater than 0"}), 400
         updates["amount"] = amount
 
+    if "memo" in data:
+        memo = str(data.get("memo") or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+        if len(memo) > 1000:
+            return jsonify({"error": "note must be 1000 characters or fewer"}), 400
+        updates["memo"] = memo or None
+
     if not updates:
         return jsonify({"error": "No editable fields were provided"}), 400
 

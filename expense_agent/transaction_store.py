@@ -44,6 +44,7 @@ def append_transactions_for_user(client, user_id: str, transactions: list, batch
             "amount": float(str(t["amount"]).replace("$", "").replace(",", "")),
             "status": t.get("status"),
             "batch_id": batch_id,
+            "memo": (t.get("memo") or None),
         })
     result = client.table("transactions").insert(rows).execute()
     return [row.get("id") for row in (result.data or []) if row.get("id")]
@@ -52,7 +53,7 @@ def append_transactions_for_user(client, user_id: str, transactions: list, batch
 def list_transactions_for_user(client, user_id: str):
     result = (
         client.table("transactions")
-        .select("id,vendor,card,date,amount,status,created_at,batch_id")
+        .select("id,vendor,card,date,amount,status,created_at,batch_id,memo")
         .eq("user_id", user_id)
         .order("date", desc=True)
         .execute()

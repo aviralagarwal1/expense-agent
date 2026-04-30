@@ -22,6 +22,7 @@ The app lets a user intentionally upload batches of screenshots from credit card
 - Confirmation step before insertion
 - Unified transaction history across cards
 - Summary, transaction, and batch history views
+- Per-transaction notes for user context
 - CSV export for transactions and batches
 - PDF and PPTX-style summary export from the history page
 
@@ -54,7 +55,7 @@ The app entry point is `app.py`, with backend domain logic split into the `expen
 The runtime uses two main persistence concepts:
 
 - `user_settings`: stores the user's API keys, active provider, profile data, and saved credit cards in a serialized settings blob
-- `transactions`: stores confirmed expense rows, including vendor, card label, amount, date, status, and optional `batch_id`
+- `transactions`: stores confirmed expense rows, including vendor, card label, amount, date, status, optional `memo`, and optional `batch_id`
 
 Batch history is derived from groups of transactions that share a `batch_id`. There is no separate batches table.
 
