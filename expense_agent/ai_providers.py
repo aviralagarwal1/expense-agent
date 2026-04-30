@@ -1,4 +1,14 @@
+import re
+
+
 SUPPORTED_AI_PROVIDERS = ("anthropic", "openai", "gemini")
+
+
+_API_KEY_PATTERNS = {
+    "anthropic": re.compile(r"^sk-ant-api\d{2}-[A-Za-z0-9_-]{32,}$"),
+    "openai": re.compile(r"^(sk-(proj|svcacct)-[A-Za-z0-9_-]{32,}|sk-[A-Za-z0-9]{32,})$"),
+    "gemini": re.compile(r"^AIza[A-Za-z0-9_-]{30,}$"),
+}
 
 
 AI_PROVIDER_META = {
@@ -39,6 +49,19 @@ def get_provider_meta(provider: str | None) -> dict:
 
 def get_provider_key_field(provider: str | None) -> str:
     return get_provider_meta(provider)["key_field"]
+
+
+def validate_provider_api_key(provider: str | None, api_key: str | None) -> tuple[bool, str]:
+    provider = normalize_ai_provider(provider)
+    label = get_provider_meta(provider)["label"]
+    key = (api_key or "").strip()
+    if not key:
+        return False, "API key is required"
+    if re.search(r"\s", key):
+        return False, "API keys cannot include spaces or line breaks."
+    if not _API_KEY_PATTERNS[provider].match(key):
+        return False, f"This key is not valid for {label}."
+    return True, ""
 
 
 def list_provider_states(settings: dict) -> list[dict]:
