@@ -354,6 +354,12 @@
       color: #ffffff;
       box-shadow: 0 14px 28px rgba(35, 66, 94, 0.18);
     }
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+      border-color: rgba(36, 102, 74, 0.36);
+      box-shadow: 0 14px 28px rgba(36, 102, 74, 0.16);
+    }
     .btn-ghost {
       background: rgba(255,255,255,0.84);
       color: var(--ink);
@@ -366,7 +372,8 @@
       padding: 15px 24px;
     }
     .btn-primary:disabled,
-    .btn-ghost:disabled {
+    .btn-ghost:disabled,
+    .btn-success:disabled {
       opacity: 0.45;
       cursor: not-allowed;
       transform: none;
