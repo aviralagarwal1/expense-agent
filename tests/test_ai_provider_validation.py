@@ -36,6 +36,21 @@ class AIProviderValidationTests(TestCase):
         self.assertTrue(valid)
         self.assertEqual(message, "")
 
+    def test_accepts_google_cloud_gemini_key(self):
+        valid, message = validate_provider_api_key(
+            "gemini",
+            "AQ." + "A" * 40,
+        )
+
+        self.assertTrue(valid)
+        self.assertEqual(message, "")
+
+    def test_rejects_short_google_cloud_gemini_key(self):
+        valid, message = validate_provider_api_key("gemini", "AQ.short")
+
+        self.assertFalse(valid)
+        self.assertEqual(message, "This key is not valid for Gemini.")
+
 
 class APISettingsValidationTests(TestCase):
     def setUp(self):

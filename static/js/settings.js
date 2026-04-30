@@ -23,10 +23,10 @@
     gemini: {
       label: "Gemini",
       keyName: "gemini_api_key",
-      placeholder: "AIza...",
+      placeholder: "AIza... or AQ....",
       consoleUrl: "https://aistudio.google.com/app/apikey",
       consoleName: "Google AI Studio",
-      keyPattern: /^AIza[A-Za-z0-9_-]{30,}$/,
+      keyPattern: /^(AIza[A-Za-z0-9_-]{30,}|AQ\.[A-Za-z0-9_-]{40,})$/,
     },
   };
 

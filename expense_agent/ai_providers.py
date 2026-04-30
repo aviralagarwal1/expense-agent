@@ -4,7 +4,7 @@ import re
 _API_KEY_PATTERNS = {
     "anthropic": re.compile(r"^sk-ant-api\d{2}-[A-Za-z0-9_-]{32,}$"),
     "openai": re.compile(r"^(sk-(proj|svcacct)-[A-Za-z0-9_-]{32,}|sk-[A-Za-z0-9]{32,})$"),
-    "gemini": re.compile(r"^AIza[A-Za-z0-9_-]{30,}$"),
+    "gemini": re.compile(r"^(AIza[A-Za-z0-9_-]{30,}|AQ\.[A-Za-z0-9_-]{40,})$"),
 }
 
 
