@@ -24,7 +24,7 @@ The app lets a user intentionally upload batches of screenshots from credit card
 - Summary, transaction, and batch history views
 - Per-transaction notes for user context
 - CSV export for transactions and batches
-- PDF and PPTX-style summary export from the history page
+- Browser PDF/print and PPTX summary export from the history page
 
 ## Typical Flow
 
@@ -49,6 +49,8 @@ Expense Agent is a small server-rendered web app with a deliberately simple stac
 - Deployment: Docker, designed for Google Cloud Run
 
 The app entry point is `app.py`, with backend domain logic split into the `expense_agent/` package. Templates live in `templates/`, and page assets live in `static/css/` and `static/js/`. There is no frontend build step, bundler, or client framework.
+
+Configured extraction providers are Anthropic, OpenAI, and Gemini. API keys are supplied by each user and are checked for plausible provider-specific formats before storage; Gemini accepts both Google AI Studio-style `AIza...` keys and Google Cloud-style `AQ....` keys.
 
 ## Data Model
 
@@ -95,6 +97,7 @@ http://127.0.0.1:5000/auth/callback
 ## Tests
 
 The repo includes a lightweight smoke suite for the most refactor-sensitive backend routes.
+It also includes focused validation tests for provider API key format checks.
 
 Run it with:
 
