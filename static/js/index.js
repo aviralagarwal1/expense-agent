@@ -1034,6 +1034,7 @@
   if (authError) {
     const authErrorMessages = {
       google_sign_in_unavailable: "Google sign-in could not start. Check APP_URL and the Supabase Google redirect URLs.",
+      google_callback_provider_error: "Google sign-in was cancelled or rejected before returning to the app.",
       google_callback_missing_code: "Google returned without an auth code. Recheck the Supabase redirect URL for Google OAuth.",
       google_callback_exchange_failed: "Google sign-in returned, but Supabase could not finish the session exchange.",
     };

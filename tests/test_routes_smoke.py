@@ -25,6 +25,47 @@ class RouteSmokeTests(TestCase):
         self.assertEqual(payload["active_provider"], "anthropic")
         self.assertEqual(payload["profile"]["first_name"], "Aviral")
 
+    def test_auth_callback_reuses_cached_redirect_for_duplicate_code(self):
+        fake_session = SimpleNamespace(access_token="access-token", refresh_token="refresh-token")
+        fake_response = SimpleNamespace(session=fake_session)
+        app.auth_code_redirect_cache.clear()
+        verifier = "verifier-1"
+        cookie_value = app.auth_serializer.dumps({"code_verifier": verifier})
+        self.client.set_cookie(app.AUTH_PKCE_COOKIE, cookie_value, path="/auth")
+
+        with patch.object(app.supabase_admin.auth, "exchange_code_for_session", return_value=fake_response) as exchange:
+            first = self.client.get("/auth/callback?code=code-1")
+            self.client.set_cookie(app.AUTH_PKCE_COOKIE, cookie_value, path="/auth")
+            second = self.client.get("/auth/callback?code=code-1")
+
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(second.status_code, 302)
+        self.assertEqual(exchange.call_count, 1)
+        exchange.assert_called_once_with({
+            "auth_code": "code-1",
+            "code_verifier": verifier,
+            "redirect_to": "http://localhost/auth/callback",
+        })
+        self.assertIn("/app#access_token=access-token", first.headers["Location"])
+        self.assertEqual(first.headers["Location"], second.headers["Location"])
+
+    def test_local_oauth_ignores_production_app_url(self):
+        fake_oauth_response = SimpleNamespace(url="https://supabase.example/auth/v1/authorize?redirect_to=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Fcallback")
+        with patch.object(app, "APP_URL", "https://expenseagent.aviralagarwal.com"), \
+             patch.object(app.supabase_admin.auth, "sign_in_with_oauth", return_value=fake_oauth_response), \
+             patch.object(app, "get_supabase_pkce_verifier", return_value="verifier-1"):
+            response = self.client.get("/auth/google", base_url="http://localhost:5000")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("redirect_to=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Fcallback", response.headers["Location"])
+        self.assertNotIn("state=", response.headers["Location"])
+        self.assertIn("expense_oauth_pkce=", response.headers.get("Set-Cookie", ""))
+        self.assertNotIn("Secure", response.headers.get("Set-Cookie", ""))
+
+    def test_ipv6_localhost_is_treated_as_local(self):
+        with app.app.test_request_context(base_url="http://[::1]:5000"):
+            self.assertEqual(app.get_external_app_url("/auth/callback"), "http://[::1]:5000/auth/callback")
+
     def test_upload_smoke(self):
         with patch.object(app, "get_user_id_from_request", return_value="user-1"), \
              patch.object(app, "store_get_user_api_key", return_value="sk-ant-test"), \

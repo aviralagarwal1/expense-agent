@@ -1,12 +1,15 @@
 import os
 import base64
 import re
+import time
+from threading import Lock
 from uuid import uuid4
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 load_dotenv()
 from supabase import create_client, Client
-from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory
+from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory, make_response
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from datetime import datetime
 from werkzeug.middleware.proxy_fix import ProxyFix
 from expense_agent.ai_providers import (
@@ -15,6 +18,7 @@ from expense_agent.ai_providers import (
     get_provider_meta,
     list_provider_states,
     normalize_ai_provider,
+    validate_provider_api_key,
 )
 from expense_agent.cards import canonicalize_card_label
 from expense_agent.profile import get_profile_seed_from_user
@@ -57,15 +61,38 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 SUPABASE_URL         = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 APP_URL              = (os.environ.get("APP_URL") or "").rstrip("/")
+AUTH_COOKIE_SECRET   = os.environ.get("AUTH_COOKIE_SECRET") or os.environ.get("SECRET_KEY") or SUPABASE_SERVICE_KEY
 
 supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+AUTH_CODE_CACHE_TTL_SECONDS = 120
+AUTH_PKCE_COOKIE = "expense_oauth_pkce"
+AUTH_PKCE_MAX_AGE_SECONDS = 600
+auth_code_redirect_cache: dict[str, tuple[float, str]] = {}
+auth_code_exchange_lock = Lock()
+auth_serializer = URLSafeTimedSerializer(AUTH_COOKIE_SECRET, salt="expense-agent-oauth-pkce")
+
+
+def is_local_request_host(host: str):
+    raw_host = (host or "").strip().lower()
+    if raw_host.startswith("["):
+        normalized = raw_host.split("]", 1)[0].strip("[]")
+    else:
+        normalized = raw_host.split(":", 1)[0]
+    return (
+        normalized in {"localhost", "0.0.0.0", "::1"}
+        or normalized.startswith("127.")
+    )
+
+
 def get_external_app_url(path: str = "/"):
+    if not path.startswith("/"):
+        path = f"/{path}"
     request_root = request.url_root.rstrip("/")
-    request_host = (request.host or "").split(":", 1)[0].strip().lower()
 
     # Local development should always round-trip back to localhost, even if a
     # production APP_URL is present in the environment.
-    if request_host in {"localhost", "127.0.0.1"}:
+    if is_local_request_host(request.host):
         base_url = request_root
     else:
         base_url = APP_URL or request_root
@@ -74,6 +101,76 @@ def get_external_app_url(path: str = "/"):
 
 def redirect_to_app_with_error(error_code: str):
     return redirect(url_for("index", auth_error=error_code))
+
+
+def redirect_to_app_with_auth_error(error_code: str):
+    response = make_response(redirect_to_app_with_error(error_code))
+    response.delete_cookie(AUTH_PKCE_COOKIE, path="/auth")
+    return response
+
+
+def get_supabase_pkce_verifier():
+    storage = getattr(supabase_admin.auth, "_storage", None)
+    storage_key = getattr(supabase_admin.auth, "_storage_key", "supabase.auth.token")
+    if not storage:
+        raise RuntimeError("Supabase auth storage is unavailable")
+    code_verifier = (storage.get_item(f"{storage_key}-code-verifier") or "").strip()
+    if not code_verifier:
+        raise RuntimeError("Supabase did not generate a PKCE code verifier")
+    return code_verifier
+
+
+def set_pkce_cookie(response, code_verifier: str):
+    cookie_value = auth_serializer.dumps({
+        "code_verifier": code_verifier,
+    })
+    response.set_cookie(
+        AUTH_PKCE_COOKIE,
+        cookie_value,
+        max_age=AUTH_PKCE_MAX_AGE_SECONDS,
+        httponly=True,
+        secure=request.is_secure,
+        samesite="Lax",
+        path="/auth",
+    )
+    return response
+
+
+def load_pkce_cookie():
+    raw_cookie = request.cookies.get(AUTH_PKCE_COOKIE, "")
+    if not raw_cookie:
+        raise RuntimeError("Missing OAuth PKCE cookie")
+    try:
+        payload = auth_serializer.loads(raw_cookie, max_age=AUTH_PKCE_MAX_AGE_SECONDS)
+    except (BadSignature, SignatureExpired) as exc:
+        raise RuntimeError("Invalid or expired OAuth PKCE cookie") from exc
+    code_verifier = (payload.get("code_verifier") or "").strip()
+    if not code_verifier:
+        raise RuntimeError("OAuth PKCE cookie did not include a code verifier")
+    return code_verifier
+
+
+def get_cached_auth_redirect(auth_code: str):
+    cached = auth_code_redirect_cache.get(auth_code)
+    if not cached:
+        return None
+    expires_at, redirect_url = cached
+    if expires_at < time.time():
+        auth_code_redirect_cache.pop(auth_code, None)
+        return None
+    return redirect_url
+
+
+def cache_auth_redirect(auth_code: str, redirect_url: str):
+    now = time.time()
+    expired_codes = [
+        code
+        for code, (expires_at, _) in auth_code_redirect_cache.items()
+        if expires_at < now
+    ]
+    for code in expired_codes:
+        auth_code_redirect_cache.pop(code, None)
+    auth_code_redirect_cache[auth_code] = (now + AUTH_CODE_CACHE_TTL_SECONDS, redirect_url)
 
 
 def get_user_from_request():
@@ -163,36 +260,65 @@ def auth_google():
         auth_url = getattr(response, "url", "")
         if not auth_url:
             raise RuntimeError("Supabase did not return an OAuth URL")
-        return redirect(auth_url)
+        code_verifier = get_supabase_pkce_verifier()
+        app.logger.info("Starting Google OAuth with redirect_to=%s", redirect_to)
+        return set_pkce_cookie(make_response(redirect(auth_url)), code_verifier)
     except Exception:
         app.logger.exception("Failed to start Google OAuth")
-        return redirect_to_app_with_error("google_sign_in_unavailable")
+        return redirect_to_app_with_auth_error("google_sign_in_unavailable")
 
 
 @app.route("/auth/callback")
 def auth_callback():
-    auth_code = request.args.get("code")
+    provider_error = (request.args.get("error") or "").strip()
+    if provider_error:
+        app.logger.error("OAuth provider returned an error: %s args=%s", provider_error, dict(request.args))
+        return redirect_to_app_with_auth_error("google_callback_provider_error")
+
+    auth_code = (request.args.get("code") or "").strip()
     if not auth_code:
         app.logger.error("Missing OAuth code on callback: %s", dict(request.args))
-        return redirect_to_app_with_error("google_callback_missing_code")
+        return redirect_to_app_with_auth_error("google_callback_missing_code")
 
     try:
-        response = supabase_admin.auth.exchange_code_for_session({
-            "auth_code": auth_code,
-        })
-        session = getattr(response, "session", None)
-        access_token = getattr(session, "access_token", "") if session else ""
-        refresh_token = getattr(session, "refresh_token", "") if session else ""
-        if not access_token:
-            raise RuntimeError("Supabase did not return an access token")
-        fragment = urlencode({
-            "access_token": access_token,
-            "refresh_token": refresh_token or "",
-        })
-        return redirect(f"{get_external_app_url('/app')}#{fragment}")
+        redirect_to = get_external_app_url("/auth/callback")
+        code_verifier = load_pkce_cookie()
+        with auth_code_exchange_lock:
+            cached_redirect = get_cached_auth_redirect(auth_code)
+            if cached_redirect:
+                app.logger.info("Reusing cached OAuth session redirect for duplicate callback")
+                response = make_response(redirect(cached_redirect))
+                response.delete_cookie(AUTH_PKCE_COOKIE, path="/auth")
+                return response
+
+            response = supabase_admin.auth.exchange_code_for_session({
+                "auth_code": auth_code,
+                "code_verifier": code_verifier,
+                "redirect_to": redirect_to,
+            })
+            session = getattr(response, "session", None)
+            access_token = getattr(session, "access_token", "") if session else ""
+            refresh_token = getattr(session, "refresh_token", "") if session else ""
+            if not access_token:
+                raise RuntimeError("Supabase did not return an access token")
+            fragment = urlencode({
+                "access_token": access_token,
+                "refresh_token": refresh_token or "",
+            })
+            redirect_url = f"{get_external_app_url('/app')}#{fragment}"
+            cache_auth_redirect(auth_code, redirect_url)
+            response = make_response(redirect(redirect_url))
+            response.delete_cookie(AUTH_PKCE_COOKIE, path="/auth")
+            return response
     except Exception:
-        app.logger.exception("Failed to exchange Google OAuth code for session")
-        return redirect_to_app_with_error("google_callback_exchange_failed")
+        cached_redirect = get_cached_auth_redirect(auth_code)
+        if cached_redirect:
+            app.logger.info("OAuth exchange failed after a successful duplicate callback; using cached redirect")
+            response = make_response(redirect(cached_redirect))
+            response.delete_cookie(AUTH_PKCE_COOKIE, path="/auth")
+            return response
+        app.logger.exception("Failed to exchange Google OAuth code for session; callback args=%s", dict(request.args))
+        return redirect_to_app_with_auth_error("google_callback_exchange_failed")
 
 
 @app.route("/api/settings", methods=["GET"])
@@ -254,6 +380,9 @@ def api_settings_save():
     ).strip()
     if not api_key:
         return jsonify({"error": "API key is required"}), 400
+    is_valid_key, key_error = validate_provider_api_key(provider, api_key)
+    if not is_valid_key:
+        return jsonify({"error": key_error}), 400
     settings = store_get_user_settings_state_for_user(supabase_admin, user_id)
     settings[key_field] = api_key
     settings["active_ai_provider"] = provider
