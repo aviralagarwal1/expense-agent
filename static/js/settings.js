@@ -10,7 +10,7 @@
       placeholder: "sk-ant-...",
       consoleUrl: "https://console.anthropic.com/settings/keys",
       consoleName: "Anthropic Console",
-      prefix: "sk-ant-",
+      keyPattern: /^sk-ant-api\d{2}-[A-Za-z0-9_-]{32,}$/,
     },
     openai: {
       label: "OpenAI",
@@ -18,7 +18,7 @@
       placeholder: "sk-...",
       consoleUrl: "https://platform.openai.com/api-keys",
       consoleName: "OpenAI API Keys",
-      prefix: "sk-",
+      keyPattern: /^(sk-(proj|svcacct)-[A-Za-z0-9_-]{32,}|sk-[A-Za-z0-9]{32,})$/,
     },
     gemini: {
       label: "Gemini",
@@ -26,7 +26,7 @@
       placeholder: "AIza...",
       consoleUrl: "https://aistudio.google.com/app/apikey",
       consoleName: "Google AI Studio",
-      prefix: "",
+      keyPattern: /^AIza[A-Za-z0-9_-]{30,}$/,
     },
   };
 
@@ -65,12 +65,16 @@
     return Boolean(providerState[provider]?.has_key);
   }
 
+  function hasTypedKey() {
+    return Boolean(apiKeyInput.value.trim());
+  }
+
   function showReturnLink() {
     returnLink.style.display = "inline-flex";
   }
 
   function refreshSaveButton() {
-    saveBtn.textContent = providerHasKey() ? "Clear Key" : "Save Key";
+    saveBtn.textContent = providerHasKey() && !hasTypedKey() ? "Clear Key" : "Save Key";
   }
 
   function clearStatus() {
@@ -117,7 +121,7 @@
     if (providerHasKey()) {
       keyStatus.className = "key-status set";
       keyStatusTitle.textContent = `${provider.label} Key Connected`;
-      keyStatusCopy.textContent = "This provider is ready for screenshot analysis.";
+      keyStatusCopy.textContent = "This provider is ready to use in the workspace.";
       showReturnLink();
     } else {
       keyStatus.className = "key-status unset";
@@ -139,7 +143,7 @@
   }
 
   function onPrimaryKeyAction() {
-    if (providerHasKey()) {
+    if (providerHasKey() && !hasTypedKey()) {
       clearApiKey();
       return;
     }
@@ -201,8 +205,12 @@
       showStatus("Please add your API key.", false);
       return;
     }
-    if (provider.prefix && !key.startsWith(provider.prefix)) {
-      showStatus(`That does not look like a ${provider.label} key.`, false);
+    if (/\s/.test(key)) {
+      showStatus("API keys cannot include spaces or line breaks.", false);
+      return;
+    }
+    if (!provider.keyPattern.test(key)) {
+      showStatus(`This key is not valid for ${provider.label}.`, false);
       return;
     }
     saveBtn.disabled = true;
@@ -246,15 +254,15 @@
     });
   });
 
+  apiKeyInput.addEventListener("input", refreshSaveButton);
+
   apiKeyInput.addEventListener("keydown", e => {
     if (e.key !== "Enter") return;
-    if (providerHasKey()) {
-      const k = apiKeyInput.value.trim();
-      const provider = getProvider();
-      if (!provider.prefix || k.startsWith(provider.prefix)) {
-        saveKey();
-      }
+    if (hasTypedKey()) {
+      saveKey();
       return;
     }
-    saveKey();
+    if (!providerHasKey()) {
+      saveKey();
+    }
   });
