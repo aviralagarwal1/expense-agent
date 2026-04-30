@@ -191,12 +191,6 @@ def get_user_id_from_request():
     return user.id if user else None
 
 
-# ── User settings (BYOA) ─────────────────────────────────────────────────────
-
-# ── Supabase storage ─────────────────────────────────────────────────────────
-
-
-# ── AI extraction ────────────────────────────────────────────────────────────
 @app.route("/")
 def landing():
     return render_template("landing.html")

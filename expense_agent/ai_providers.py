@@ -1,9 +1,6 @@
 import re
 
 
-SUPPORTED_AI_PROVIDERS = ("anthropic", "openai", "gemini")
-
-
 _API_KEY_PATTERNS = {
     "anthropic": re.compile(r"^sk-ant-api\d{2}-[A-Za-z0-9_-]{32,}$"),
     "openai": re.compile(r"^(sk-(proj|svcacct)-[A-Za-z0-9_-]{32,}|sk-[A-Za-z0-9]{32,})$"),

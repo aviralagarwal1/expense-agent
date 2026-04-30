@@ -1423,9 +1423,6 @@
     closeMemoModal();
   }
 
-  function setHeader(_txs) {
-  }
-
   function clearTransactionsFilters() {
     transactionsState.search = "";
     transactionsState.status = "all";
