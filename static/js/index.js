@@ -7,6 +7,8 @@
   let profileFirstName = "";
   let isNewAccount = false;
   let shouldFlashLoginSuccess = false;
+  let hostedAiEnabled = false;
+  let hostedDailyLimit = 0;
   const authError = new URLSearchParams(window.location.search).get("auth_error");
   const authPublicPath = window.location.pathname === "/register" ? "/register" : "/app";
   const loadingView = document.getElementById("loadingView");
@@ -175,11 +177,11 @@
     const selectedCard = findSavedCard(selectedCardId);
     const provider = findSavedProvider(selectedProvider);
     if (!selectedCard) {
-      uploadHeaderHintEl.textContent = "Choose the saved card and API key, then drop the batch.";
+      uploadHeaderHintEl.textContent = "Choose the saved card and analysis option, then drop the batch.";
       return;
     }
     if (!provider) {
-      uploadHeaderHintEl.textContent = `Choose an API key for screenshots filed under ${selectedCard.label}.`;
+      uploadHeaderHintEl.textContent = `Choose an analysis option for screenshots filed under ${selectedCard.label}.`;
       return;
     }
     uploadHeaderHintEl.textContent = `This batch will use ${provider.label} and be filed under ${selectedCard.label}.`;
@@ -274,6 +276,13 @@
     syncSelectedCard();
   }
 
+  function providerOptionLabel(provider) {
+    if (provider.hosted && provider.daily_limit) {
+      return `${provider.label} (${provider.daily_limit}/day)`;
+    }
+    return provider.label;
+  }
+
   function renderSavedProviderOptions(activeProvider = "") {
     if (!uploadProviderSelect) return;
     uploadProviderSelect.innerHTML = "";
@@ -281,7 +290,7 @@
     if (savedProviders.length > 1) {
       const placeholder = document.createElement("option");
       placeholder.value = "";
-      placeholder.textContent = "Select a provider";
+      placeholder.textContent = "Select an option";
       uploadProviderSelect.appendChild(placeholder);
     }
 
@@ -299,7 +308,7 @@
     savedProviders.forEach(provider => {
       const option = document.createElement("option");
       option.value = provider.id;
-      option.textContent = provider.label;
+      option.textContent = providerOptionLabel(provider);
       uploadProviderSelect.appendChild(option);
     });
 
@@ -347,6 +356,8 @@
       }
       const data = await res.json();
       hasApiKey = data.has_key;
+      hostedAiEnabled = Boolean(data.hosted_ai_enabled);
+      hostedDailyLimit = Number(data.hosted_daily_screenshot_limit) || 0;
       syncSavedProviders(data.providers || [], data.active_provider || "");
       syncSavedCards(data.cards || []);
       profileFirstName = (data.profile && data.profile.first_name) || getFirstNameFromToken(sessionToken);
@@ -581,6 +592,10 @@
       if (data.error === "no_api_key") {
         showToast("Add an API key before analyzing screenshots.");
         setTimeout(redirectToSettingsForKey, 500);
+        return;
+      }
+      if (data.error === "hosted_limit_exceeded") {
+        showToast("Hosted credits are used up for today. Add your own API key or try again tomorrow.");
         return;
       }
       if (data.error === "no_provider_selected") {

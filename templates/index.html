@@ -130,7 +130,7 @@
                 <div class="eyebrow">New account</div>
                 <h1 id="welcomeHeadline">Welcome to Expense Agent.</h1>
                 <p class="welcome-copy">
-                  Your Google account is connected and your private workspace is ready. Next, add an API key and save a card so screenshot uploads can start working.
+                  {% if hosted_ai_enabled %}Your Google account is connected and your private workspace is ready. Save a card so screenshot uploads can start working — included demo credits are already available.{% else %}Your Google account is connected and your private workspace is ready. Next, add an API key and save a card so screenshot uploads can start working.{% endif %}
                 </p>
                 <div class="welcome-actions">
                   <button class="btn btn-primary" id="welcomeContinueBtn" type="button" onclick="completeWelcome()">Continue Setup</button>
@@ -152,7 +152,7 @@
                   </div>
                   <div class="welcome-point">
                     <strong>This is your first-time setup</strong>
-                    <span>Connect a provider key and save a card, a one-time setup before uploads unlock.</span>
+                    <span>{% if hosted_ai_enabled %}Save a card to start uploading. Add your own provider key any time for direct provider usage.{% else %}Connect a provider key and save a card, a one-time setup before uploads unlock.{% endif %}</span>
                   </div>
                   <div class="welcome-point">
                     <strong>Your data stays account-specific</strong>
@@ -226,13 +226,13 @@
               <div class="upload-picker-stack">
                 <div class="upload-card-picker" id="uploadProviderPicker">
                   <div class="picker-label">
-                    <span>API key</span>
+                    <span>Analysis</span>
                     <span class="picker-separator" aria-hidden="true">•</span>
                     <a class="mini-link" href="/connect-key?return_to=%2Fapp">Manage keys</a>
                   </div>
                   <div class="upload-card-row">
                     <select class="upload-card-select" id="uploadProviderSelect">
-                      <option value="">Select a provider</option>
+                      <option value="">Select an option</option>
                     </select>
                   </div>
                 </div>
