@@ -51,6 +51,8 @@
   let providerState = {};
   let activeProvider = "anthropic";
   let serverHasAnyKey = false;
+  let hostedAiEnabled = false;
+  let hostedDailyLimit = 0;
 
   returnLink.href = workspaceReturn;
   statusReturnLink.href = workspaceReturn;
@@ -123,6 +125,13 @@
       keyStatusTitle.textContent = `${provider.label} Key Connected`;
       keyStatusCopy.textContent = "This provider is ready to use in the workspace.";
       showReturnLink();
+    } else if (hostedAiEnabled) {
+      keyStatus.className = "key-status hosted";
+      keyStatusTitle.textContent = "Default API Key Active";
+      const limitText = hostedDailyLimit > 0 ? `${hostedDailyLimit} screenshots per day` : "a daily screenshot cap";
+      const article = /^[aeiou]/i.test(provider.label) ? "an" : "a";
+      keyStatusCopy.textContent = `You are on the free plan with ${limitText}. Save ${article} ${provider.label} key to unlock unlimited usage on your own provider account.`;
+      returnLink.style.display = "inline-flex";
     } else {
       keyStatus.className = "key-status unset";
       keyStatusTitle.textContent = `No ${provider.label} Key Saved`;
@@ -135,7 +144,10 @@
   function updateProviderState(providers = [], selectedProvider = activeProvider) {
     providerState = {};
     providers.forEach(provider => {
-      providerState[provider.id] = provider;
+      // Skip the synthetic hosted entry — it isn't a per-provider key tab.
+      if (PROVIDERS[provider.id]) {
+        providerState[provider.id] = provider;
+      }
     });
     serverHasAnyKey = providers.some(provider => provider.has_key);
     activeProvider = PROVIDERS[selectedProvider] ? selectedProvider : "anthropic";
@@ -168,6 +180,8 @@
         return;
       }
       clearStatus();
+      hostedAiEnabled = Boolean(data.hosted_ai_enabled);
+      hostedDailyLimit = Number(data.hosted_daily_screenshot_limit) || hostedDailyLimit;
       updateProviderState(data.providers || [], activeProvider);
     } catch (e) {
       showStatus("Network error - please try again.", false);
@@ -185,6 +199,8 @@
         return;
       }
       const data = await res.json();
+      hostedAiEnabled = Boolean(data.hosted_ai_enabled);
+      hostedDailyLimit = Number(data.hosted_daily_screenshot_limit) || 0;
       updateProviderState(data.providers || [], data.active_provider || "anthropic");
     } catch (e) {
     }
@@ -230,6 +246,8 @@
         return;
       }
       clearStatus();
+      hostedAiEnabled = Boolean(data.hosted_ai_enabled);
+      hostedDailyLimit = Number(data.hosted_daily_screenshot_limit) || hostedDailyLimit;
       updateProviderState(data.providers || [], data.active_provider || activeProvider);
     } catch (e) {
       showStatus("Network error - please try again.", false);

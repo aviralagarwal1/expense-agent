@@ -46,6 +46,17 @@
 
       <div class="shell">
         <section class="panel">
+          {% if hosted_ai_enabled %}
+          <div class="key-status set" id="hostedBanner" style="margin-bottom: 16px;">
+            <div class="key-status-main">
+              <div>
+                <div class="key-status-title">Hosted Credits Active</div>
+                <div class="key-status-copy">Included demo credits are available. Capped at {{ hosted_daily_screenshot_limit }} screenshots per day. Save a key only if you want direct provider usage.</div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
           <div id="keyStatus" class="key-status unset">
             <div class="key-status-main">
               <div>
@@ -56,10 +67,17 @@
             <a class="inline-link" id="statusReturnLink" href="/app">Return to Workspace</a>
           </div>
 
+          {% if hosted_ai_enabled %}
+          <h1><span class="api-key-title-desktop">Use Your Own API Key.</span><span class="api-key-title-mobile">Use Your Own API Key</span></h1>
+          <p class="lead">
+            You are currently on our free plan with a maximum of 10 screenshots per day. Save your own API key to unlock unlimited usage and bill directly to your provider account.
+          </p>
+          {% else %}
           <h1><span class="api-key-title-desktop">Connect Your API Key.</span><span class="api-key-title-mobile">Add Your API Key</span></h1>
           <p class="lead">
             Save one key per provider and choose which one to use when analyzing screenshots.
           </p>
+          {% endif %}
 
           <div class="field-shell">
             <div class="provider-tabs" id="providerTabs" role="tablist" aria-label="API provider">
