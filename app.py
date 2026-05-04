@@ -10,7 +10,7 @@ load_dotenv()
 from supabase import create_client, Client
 from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory, make_response
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
-from datetime import datetime
+from datetime import datetime, timezone
 from werkzeug.middleware.proxy_fix import ProxyFix
 from expense_agent.ai_providers import (
     active_or_first_configured_provider,
@@ -64,16 +64,31 @@ from expense_agent.user_data import (
 )
 
 
+HOSTED_USAGE_RESET_LABEL = "12:00 AM UTC"
+
+
+def hosted_usage_day_key() -> str:
+    """Hosted free-tier quota resets at the UTC day boundary."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def hosted_quota_state_for_settings(settings: dict) -> dict:
+    limit = hosted_daily_screenshot_limit() if hosted_ai_enabled() else 0
+    usage = normalize_hosted_usage(settings.get("hosted_usage"))
+    used_today = usage["screenshots"] if usage["date"] == hosted_usage_day_key() else 0
+    remaining = max(limit - used_today, 0) if limit > 0 else 0
+    return {
+        "daily_limit": limit,
+        "screenshots_uploaded_today": used_today,
+        "screenshots_remaining": remaining,
+        "reset_label": HOSTED_USAGE_RESET_LABEL,
+    }
+
+
 def hosted_screenshots_remaining_for_settings(settings: dict) -> int:
     if not hosted_ai_enabled():
         return 0
-    limit = hosted_daily_screenshot_limit()
-    if limit <= 0:
-        return 0
-    usage = normalize_hosted_usage(settings.get("hosted_usage"))
-    today_str = datetime.today().strftime("%Y-%m-%d")
-    used = usage["screenshots"] if usage["date"] == today_str else 0
-    return max(limit - used, 0)
+    return hosted_quota_state_for_settings(settings)["screenshots_remaining"]
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -368,6 +383,7 @@ def api_settings_get():
         cards = store_list_user_cards_for_user(supabase_admin, user.id)
     except Exception:
         cards = []
+    hosted_quota = hosted_quota_state_for_settings(settings)
     return jsonify({
         "has_key": any(provider["has_key"] for provider in providers),
         "active_provider": active_provider,
@@ -376,8 +392,10 @@ def api_settings_get():
         "is_new_user": is_new_user,
         "cards": cards,
         "hosted_ai_enabled": hosted_ai_enabled(),
-        "hosted_daily_screenshot_limit": hosted_daily_screenshot_limit(),
-        "hosted_screenshots_remaining": hosted_screenshots_remaining_for_settings(settings),
+        "hosted_daily_screenshot_limit": hosted_quota["daily_limit"],
+        "hosted_screenshots_uploaded_today": hosted_quota["screenshots_uploaded_today"],
+        "hosted_screenshots_remaining": hosted_quota["screenshots_remaining"],
+        "hosted_quota_reset_label": hosted_quota["reset_label"],
     })
 
 
@@ -531,21 +549,34 @@ def upload():
     if not files:
         return jsonify({"error": "No files uploaded"}), 400
 
+    hosted_quota_response = None
     if is_hosted_provider:
         daily_limit = hosted_daily_screenshot_limit()
-        today_key = datetime.today().strftime("%Y-%m-%d")
+        today_key = hosted_usage_day_key()
         try:
-            allowed, _used, _limit = store_reserve_hosted_screenshots_for_user(
+            allowed, used_today, _limit = store_reserve_hosted_screenshots_for_user(
                 supabase_admin, user_id, len(files), today_key, daily_limit
             )
         except Exception as e:
             app.logger.exception("Failed to reserve hosted screenshots for user_id=%s", user_id)
             return jsonify({"error": f"Failed to reserve hosted screenshots: {str(e)}"}), 500
+        remaining = max(daily_limit - used_today, 0) if daily_limit > 0 else 0
+        hosted_quota_response = {
+            "hosted_daily_screenshot_limit": daily_limit,
+            "hosted_screenshots_uploaded_today": used_today,
+            "hosted_screenshots_remaining": remaining,
+            "hosted_quota_reset_label": HOSTED_USAGE_RESET_LABEL,
+        }
         if not allowed:
             return jsonify({
                 "error": "hosted_limit_exceeded",
                 "limit": daily_limit,
-                "remaining": 0,
+                "uploaded_today": used_today,
+                "remaining": remaining,
+                "hosted_daily_screenshot_limit": daily_limit,
+                "hosted_screenshots_uploaded_today": used_today,
+                "hosted_screenshots_remaining": remaining,
+                "hosted_quota_reset_label": HOSTED_USAGE_RESET_LABEL,
             }), 429
 
     image_data_list = []
@@ -598,13 +629,16 @@ def upload():
     # grouped and (if the user filed to the wrong card) deleted as a unit.
     batch_id = str(uuid4())
 
-    return jsonify({
+    response_payload = {
         "batch_id":        batch_id,
         "new":             definite_new,
         "skipped":         definite_dup,
         "possible":        possible_dup,
         "total_extracted": len(all_transactions),
-    })
+    }
+    if hosted_quota_response:
+        response_payload.update(hosted_quota_response)
+    return jsonify(response_payload)
 
 
 @app.route("/history")

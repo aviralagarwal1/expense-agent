@@ -9,11 +9,13 @@ let isNewAccount = false;
 let shouldFlashLoginSuccess = false;
 let hostedAiEnabled = false;
 let hostedDailyLimit = 0;
+let hostedScreenshotsUploadedToday = 0;
 let hostedScreenshotsRemaining = 0;
 let selectedUserKeyProvider = "";
 const PROCESSING_HOSTED = "hosted";
 const PROCESSING_USER_KEY = "user_key";
 const MANAGE_KEY_URL = "/connect-key?return_to=%2Fapp";
+let hostedQuotaResetLabel = "12:00 AM UTC";
 const authError = new URLSearchParams(window.location.search).get("auth_error");
 const authPublicPath = window.location.pathname === "/register" ? "/register" : "/app";
 const loadingView = document.getElementById("loadingView");
@@ -253,6 +255,43 @@ function setStatusLineWithLink(prefix, linkText, href) {
   uploadStatusLineEl.appendChild(a);
 }
 
+function syncHostedQuotaState(data) {
+  if (!data) return;
+  if (data.hosted_daily_screenshot_limit !== undefined) {
+    hostedDailyLimit = Number(data.hosted_daily_screenshot_limit) || 0;
+  }
+  if (data.hosted_screenshots_uploaded_today !== undefined) {
+    hostedScreenshotsUploadedToday = Math.max(0, Number(data.hosted_screenshots_uploaded_today) || 0);
+  }
+  if (data.hosted_screenshots_remaining !== undefined) {
+    hostedScreenshotsRemaining = Math.max(0, Number(data.hosted_screenshots_remaining) || 0);
+  } else {
+    hostedScreenshotsRemaining = Math.max(0, hostedDailyLimit - hostedScreenshotsUploadedToday);
+  }
+  if (data.hosted_quota_reset_label) {
+    hostedQuotaResetLabel = data.hosted_quota_reset_label;
+  }
+}
+
+function setHostedQuotaStatusLine() {
+  const remaining = Math.max(0, Number(hostedScreenshotsRemaining) || 0);
+  const resetCopy = hostedQuotaResetLabel || "12:00 AM UTC";
+  if (remaining <= 0) {
+    setStatusLineText(`You've reached your free tier limit for today. Limits reset at ${resetCopy}.`);
+    return;
+  }
+  const noun = remaining === 1 ? "screenshot" : "screenshots";
+  uploadStatusLineEl.textContent = "";
+  uploadStatusLineEl.appendChild(document.createTextNode("Free hosted tier: "));
+  const quotaCount = document.createElement("strong");
+  quotaCount.className = "upload-status-emphasis";
+  quotaCount.textContent = `${remaining} ${noun}`;
+  uploadStatusLineEl.appendChild(quotaCount);
+  uploadStatusLineEl.appendChild(
+    document.createTextNode(` remaining today. Resets at ${resetCopy}. For unlimited usage, switch to your own API key.`)
+  );
+}
+
 function updateUploadStatusLine() {
   if (!uploadStatusLineEl) return;
   uploadStatusLineEl.classList.remove("is-warning", "is-blocked");
@@ -263,15 +302,10 @@ function updateUploadStatusLine() {
   }
   uploadStatusLineEl.classList.add("is-visible");
   if (isHostedSelection()) {
-    const remaining = Math.max(0, Number(hostedScreenshotsRemaining) || 0);
-    if (remaining <= 0) {
-      setStatusLineText("0 screenshots remaining · Switch to your API key or add more usage");
+    setHostedQuotaStatusLine();
+    if (hostedHasNoCreditsLeft()) {
       uploadStatusLineEl.classList.add("is-blocked");
-      return;
-    }
-    const noun = remaining === 1 ? "screenshot" : "screenshots";
-    setStatusLineText(`Using Hosted processing · ${remaining} ${noun} remaining`);
-    if (remaining <= 3) {
+    } else if (hostedScreenshotsRemaining <= 3) {
       uploadStatusLineEl.classList.add("is-warning");
     }
     return;
@@ -542,8 +576,7 @@ async function checkApiKeyAndEnter() {
     const data = await res.json();
     hasApiKey = data.has_key;
     hostedAiEnabled = Boolean(data.hosted_ai_enabled);
-    hostedDailyLimit = Number(data.hosted_daily_screenshot_limit) || 0;
-    hostedScreenshotsRemaining = Number(data.hosted_screenshots_remaining) || 0;
+    syncHostedQuotaState(data);
     syncSavedProviders(data.providers || [], data.active_provider || "");
     syncSavedCards(data.cards || []);
     profileFirstName = (data.profile && data.profile.first_name) || getFirstNameFromToken(sessionToken);
@@ -758,7 +791,7 @@ analyzeBtn.addEventListener("click", async () => {
     return;
   }
   if (hostedHasNoCreditsLeft()) {
-    showToast("0 hosted screenshots remaining today. Switch to your API key.");
+    showToast("You've reached your free tier limit for today. Switch to your API key for unlimited usage.");
     uploadProviderSelect.focus();
     return;
   }
@@ -803,9 +836,14 @@ analyzeBtn.addEventListener("click", async () => {
       return;
     }
     if (data.error === "hosted_limit_exceeded") {
-      hostedScreenshotsRemaining = 0;
+      syncHostedQuotaState(data);
       updateAnalyzeAvailability();
-      showToast("0 screenshots remaining today. Switch to your API key or try again tomorrow.");
+      if (hostedScreenshotsRemaining > 0) {
+        const noun = hostedScreenshotsRemaining === 1 ? "screenshot" : "screenshots";
+        showToast(`Only ${hostedScreenshotsRemaining} hosted ${noun} remaining today.`);
+      } else {
+        showToast("You've reached your free tier limit for today.");
+      }
       return;
     }
     if (data.error === "no_provider_selected") {
@@ -833,7 +871,11 @@ analyzeBtn.addEventListener("click", async () => {
       return;
     }
     if (usedHostedThisRun) {
-      hostedScreenshotsRemaining = Math.max(0, hostedScreenshotsRemaining - filesAtSubmit);
+      syncHostedQuotaState(data);
+      if (data.hosted_screenshots_remaining === undefined) {
+        hostedScreenshotsUploadedToday = Math.max(0, hostedScreenshotsUploadedToday + filesAtSubmit);
+        hostedScreenshotsRemaining = Math.max(0, hostedDailyLimit - hostedScreenshotsUploadedToday);
+      }
     }
     currentBatchId = data.batch_id || "";
     newTransactions = data.new;
