@@ -16,13 +16,11 @@ from expense_agent.ai_providers import (
     active_or_first_configured_provider,
     get_provider_key_field,
     get_provider_meta,
-    list_provider_states,
     normalize_ai_provider,
     validate_provider_api_key,
 )
 from expense_agent.cards import canonicalize_card_label
 from expense_agent.hosted import (
-    HOSTED_PROVIDER_ID,
     active_extraction_provider,
     hosted_ai_enabled,
     hosted_daily_screenshot_limit,
@@ -53,7 +51,6 @@ from expense_agent.user_data import (
     create_user_card_for_user as store_create_user_card_for_user,
     delete_user_card_for_user as store_delete_user_card_for_user,
     ensure_profile_for_user as store_ensure_profile_for_user,
-    get_user_api_key as store_get_user_api_key,
     get_user_card_for_user as store_get_user_card_for_user,
     get_user_settings_state_for_user as store_get_user_settings_state_for_user,
     is_new_user_account as store_is_new_user_account,
@@ -84,11 +81,6 @@ def hosted_quota_state_for_settings(settings: dict) -> dict:
         "reset_label": HOSTED_USAGE_RESET_LABEL,
     }
 
-
-def hosted_screenshots_remaining_for_settings(settings: dict) -> int:
-    if not hosted_ai_enabled():
-        return 0
-    return hosted_quota_state_for_settings(settings)["screenshots_remaining"]
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
