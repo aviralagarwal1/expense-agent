@@ -31,10 +31,26 @@ TRANSACTION_SCHEMA = {
 
 
 class ProviderAPIError(Exception):
-    def __init__(self, provider: str, status_code: int | None = None):
+    def __init__(
+        self,
+        provider: str,
+        status_code: int | None = None,
+        request_id: str | None = None,
+        retry_after: str | None = None,
+        rate_limit_reset_requests: str | None = None,
+        rate_limit_reset_tokens: str | None = None,
+        rate_limit_remaining_requests: str | None = None,
+        rate_limit_remaining_tokens: str | None = None,
+    ):
         super().__init__(provider)
         self.provider = provider
         self.status_code = status_code
+        self.request_id = request_id
+        self.retry_after = retry_after
+        self.rate_limit_reset_requests = rate_limit_reset_requests
+        self.rate_limit_reset_tokens = rate_limit_reset_tokens
+        self.rate_limit_remaining_requests = rate_limit_remaining_requests
+        self.rate_limit_remaining_tokens = rate_limit_remaining_tokens
 
 
 def _provider_help_url(provider: str | None) -> str:
@@ -79,6 +95,13 @@ def user_facing_extraction_error(exc: Exception, provider: str | None = "anthrop
     if isinstance(exc, anthropic.RateLimitError) or (
         isinstance(exc, ProviderAPIError) and getattr(exc, "status_code", None) == 429
     ):
+        if provider == "openai":
+            retry_after = (getattr(exc, "retry_after", None) or "").strip()
+            wait_hint = f" Wait {retry_after} seconds and try again." if retry_after.isdigit() else ""
+            return (
+                f"{label} rate limited this screenshot batch.{wait_hint} Try fewer screenshots, or check your project limits and billing.",
+                url,
+            )
         return (
             f"{label} is rate limiting requests. Wait a minute and try again, or check your usage.",
             url,
@@ -189,7 +212,7 @@ def _extract_with_openai(image_data_list: list, api_key: str, today_str: str = "
     except ImportError as exc:
         raise RuntimeError("OpenAI SDK is not installed") from exc
 
-    client = OpenAI(api_key=api_key, timeout=90.0)
+    client = OpenAI(api_key=api_key, timeout=90.0, max_retries=0)
     content = [{"type": "input_text", "text": _extraction_prompt(today_str)}]
     for b64, mime_type in image_data_list:
         content.append({
@@ -214,7 +237,18 @@ def _extract_with_openai(image_data_list: list, api_key: str, today_str: str = "
             max_output_tokens=4096,
         )
     except APIError as exc:
-        raise ProviderAPIError("openai", getattr(exc, "status_code", None)) from exc
+        response = getattr(exc, "response", None)
+        headers = getattr(response, "headers", {}) or {}
+        raise ProviderAPIError(
+            "openai",
+            getattr(exc, "status_code", None) or getattr(response, "status_code", None),
+            request_id=getattr(exc, "request_id", None) or headers.get("x-request-id"),
+            retry_after=headers.get("retry-after"),
+            rate_limit_reset_requests=headers.get("x-ratelimit-reset-requests"),
+            rate_limit_reset_tokens=headers.get("x-ratelimit-reset-tokens"),
+            rate_limit_remaining_requests=headers.get("x-ratelimit-remaining-requests"),
+            rate_limit_remaining_tokens=headers.get("x-ratelimit-remaining-tokens"),
+        ) from exc
 
     return _json_array_from_text(response.output_text)
 

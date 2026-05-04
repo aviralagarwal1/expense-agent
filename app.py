@@ -510,7 +510,20 @@ def upload():
         all_transactions = domain_attach_selected_card_to_transactions(extracted_transactions, selected_card["label"])
         all_transactions = domain_apply_date_fallback(all_transactions, today_str)
     except Exception as e:
-        app.logger.exception("%s extraction failed for user_id=%s", get_provider_meta(selected_provider)["label"], user_id)
+        app.logger.exception(
+            "%s extraction failed for user_id=%s status_code=%s request_id=%s retry_after=%s "
+            "rate_limit_reset_requests=%s rate_limit_reset_tokens=%s "
+            "rate_limit_remaining_requests=%s rate_limit_remaining_tokens=%s",
+            get_provider_meta(selected_provider)["label"],
+            user_id,
+            getattr(e, "status_code", None),
+            getattr(e, "request_id", None),
+            getattr(e, "retry_after", None),
+            getattr(e, "rate_limit_reset_requests", None),
+            getattr(e, "rate_limit_reset_tokens", None),
+            getattr(e, "rate_limit_remaining_requests", None),
+            getattr(e, "rate_limit_remaining_tokens", None),
+        )
         msg, help_url = domain_user_facing_extraction_error(e, selected_provider)
         return jsonify({"error": msg, "help_url": help_url}), 500
 
