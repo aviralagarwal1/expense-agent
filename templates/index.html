@@ -218,39 +218,32 @@
 
         <div id="workspaceView" class="workspace-section">
           <section class="panel upload-panel" id="uploadPanel">
-            <div class="upload-header">
-              <div class="upload-header-copy">
-                <h2>Upload Screenshots</h2>
-                <p id="uploadHeaderHint">Choose the saved card, then drop the batch.</p>
+            <div class="upload-card-head">
+              <h2>Upload Screenshots</h2>
+            </div>
+
+            <div class="upload-config-row" id="uploadConfigRow">
+              <div class="upload-config-field" id="uploadProviderPicker">
+                <label class="config-label" for="uploadProviderSelect">Processing System</label>
+                <select class="upload-card-select" id="uploadProviderSelect"></select>
               </div>
-              <div class="upload-picker-stack">
-                <div class="upload-card-picker" id="uploadProviderPicker">
-                  <div class="picker-label">
-                    <span>Analysis</span>
-                    <span class="picker-separator" aria-hidden="true">•</span>
-                    <a class="mini-link" href="/connect-key?return_to=%2Fapp">Manage keys</a>
-                  </div>
-                  <div class="upload-card-row">
-                    <select class="upload-card-select" id="uploadProviderSelect">
-                      <option value="">Select an option</option>
-                    </select>
-                  </div>
+              <div class="upload-config-field" id="uploadKeyPicker" hidden>
+                <div class="config-label-row">
+                  <label class="config-label" for="uploadKeySelect">API Key</label>
+                  <span class="config-label-sep" aria-hidden="true">·</span>
+                  <a class="config-label-link" href="/connect-key?return_to=%2Fapp">Manage Keys</a>
                 </div>
-                <div class="upload-card-picker" id="uploadCardPicker">
-                  <div class="picker-label">
-                    <span>Credit card</span>
-                    <span class="picker-separator" aria-hidden="true">•</span>
-                    <a class="mini-link" href="/settings?return_to=%2Fapp">Manage cards</a>
-                  </div>
-                  <div class="upload-card-row">
-                    <select class="upload-card-select" id="uploadCardSelect">
-                      <option value="">Select a card</option>
-                    </select>
-                  </div>
-                  <div class="picker-hint" id="pickerHint">Choose a card to analyze.</div>
-                </div>
+                <select class="upload-card-select" id="uploadKeySelect"></select>
+              </div>
+              <div class="upload-config-field" id="uploadCardPicker">
+                <label class="config-label" for="uploadCardSelect">Credit Card</label>
+                <select class="upload-card-select" id="uploadCardSelect">
+                  <option value="">Select a card</option>
+                </select>
               </div>
             </div>
+
+            <div class="upload-status-line" id="uploadStatusLine"></div>
 
             <div class="card-empty-state" id="cardEmptyState">
               <strong>Add a saved card before you analyze.</strong>
@@ -261,7 +254,11 @@
               <input type="file" id="fileInput" accept="image/*" multiple />
               <div class="upload-mark" id="uploadMark">EA</div>
               <strong>Drop your screenshots here.</strong>
-              <p>Overlapping screenshots are fine. We filter duplicates automatically.</p>
+              <p>Drag and drop or click to upload. We filter duplicates automatically.</p>
+            </div>
+
+            <div class="upload-selection" id="uploadSelection" hidden>
+              <span class="upload-selection-count" id="uploadSelectionCount">0 screenshots selected</span>
             </div>
 
             <div class="preview-grid" id="previewGrid"></div>

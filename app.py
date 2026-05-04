@@ -48,6 +48,7 @@ from expense_agent.transactions import (
     classify_transactions as domain_classify_transactions,
     filter_out_non_expenses as domain_filter_out_non_expenses,
 )
+from expense_agent.settings_blob import normalize_hosted_usage
 from expense_agent.user_data import (
     create_user_card_for_user as store_create_user_card_for_user,
     delete_user_card_for_user as store_delete_user_card_for_user,
@@ -61,6 +62,18 @@ from expense_agent.user_data import (
     save_user_settings_state_for_user as store_save_user_settings_state_for_user,
     upsert_profile_for_user as store_upsert_profile_for_user,
 )
+
+
+def hosted_screenshots_remaining_for_settings(settings: dict) -> int:
+    if not hosted_ai_enabled():
+        return 0
+    limit = hosted_daily_screenshot_limit()
+    if limit <= 0:
+        return 0
+    usage = normalize_hosted_usage(settings.get("hosted_usage"))
+    today_str = datetime.today().strftime("%Y-%m-%d")
+    used = usage["screenshots"] if usage["date"] == today_str else 0
+    return max(limit - used, 0)
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -364,6 +377,7 @@ def api_settings_get():
         "cards": cards,
         "hosted_ai_enabled": hosted_ai_enabled(),
         "hosted_daily_screenshot_limit": hosted_daily_screenshot_limit(),
+        "hosted_screenshots_remaining": hosted_screenshots_remaining_for_settings(settings),
     })
 
 
