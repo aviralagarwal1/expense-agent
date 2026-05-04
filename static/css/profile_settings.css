@@ -288,9 +288,10 @@
       border-color: var(--line-strong);
     }
     .btn-danger {
-      background: rgba(255,255,255,0.86);
-      color: var(--danger);
-      border-color: rgba(161, 72, 66, 0.18);
+      background: #8f3f38;
+      color: #ffffff;
+      border-color: rgba(143, 63, 56, 0.42);
+      box-shadow: 0 14px 28px rgba(143, 63, 56, 0.14);
     }
     .btn-success {
       background: var(--success);
