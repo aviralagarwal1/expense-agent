@@ -53,8 +53,13 @@
 
           <div class="auth-points">
             <div class="auth-point">
+              {% if hosted_ai_enabled %}
+              <strong>Free hosted credits</strong>
+              <span>Start with {{ hosted_daily_screenshot_limit }} screenshots per day, then add your own key any time.</span>
+              {% else %}
               <strong>Your own API key</strong>
               <span>Usage bills directly to your selected provider account.</span>
+              {% endif %}
             </div>
             <div class="auth-point">
               <strong>Duplicate-aware review</strong>
