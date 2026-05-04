@@ -21,6 +21,14 @@ from expense_agent.ai_providers import (
     validate_provider_api_key,
 )
 from expense_agent.cards import canonicalize_card_label
+from expense_agent.hosted import (
+    HOSTED_PROVIDER_ID,
+    active_extraction_provider,
+    hosted_ai_enabled,
+    hosted_daily_screenshot_limit,
+    list_extraction_provider_states,
+    resolve_extraction_credentials,
+)
 from expense_agent.profile import get_profile_seed_from_user
 from expense_agent.extraction import (
     extract_transactions_from_images as domain_extract_transactions_from_images,
@@ -49,6 +57,7 @@ from expense_agent.user_data import (
     get_user_settings_state_for_user as store_get_user_settings_state_for_user,
     is_new_user_account as store_is_new_user_account,
     list_user_cards_for_user as store_list_user_cards_for_user,
+    reserve_hosted_screenshots_for_user as store_reserve_hosted_screenshots_for_user,
     save_user_settings_state_for_user as store_save_user_settings_state_for_user,
     upsert_profile_for_user as store_upsert_profile_for_user,
 )
@@ -171,6 +180,14 @@ def cache_auth_redirect(auth_code: str, redirect_url: str):
     for code in expired_codes:
         auth_code_redirect_cache.pop(code, None)
     auth_code_redirect_cache[auth_code] = (now + AUTH_CODE_CACHE_TTL_SECONDS, redirect_url)
+
+
+@app.context_processor
+def inject_hosted_state():
+    return {
+        "hosted_ai_enabled": hosted_ai_enabled(),
+        "hosted_daily_screenshot_limit": hosted_daily_screenshot_limit(),
+    }
 
 
 def get_user_from_request():
@@ -321,15 +338,17 @@ def api_settings_get():
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
     settings = store_get_user_settings_state_for_user(supabase_admin, user.id)
-    active_provider = active_or_first_configured_provider(settings)
-    key = settings.get(get_provider_key_field(active_provider))
-    providers = list_provider_states(settings)
+    providers = list_extraction_provider_states(settings)
+    active_provider = active_extraction_provider(settings)
+    has_user_key = bool(
+        (settings.get(get_provider_key_field(active_or_first_configured_provider(settings))) or "").strip()
+    )
     try:
         profile = store_ensure_profile_for_user(supabase_admin, user)
     except Exception:
         profile = get_profile_seed_from_user(user)
     try:
-        is_new_user = store_is_new_user_account(supabase_admin, user.id, bool(key), profile)
+        is_new_user = store_is_new_user_account(supabase_admin, user.id, has_user_key, profile)
     except Exception:
         is_new_user = False
     try:
@@ -343,6 +362,8 @@ def api_settings_get():
         "profile": profile,
         "is_new_user": is_new_user,
         "cards": cards,
+        "hosted_ai_enabled": hosted_ai_enabled(),
+        "hosted_daily_screenshot_limit": hosted_daily_screenshot_limit(),
     })
 
 
@@ -360,12 +381,14 @@ def api_settings_save():
         if settings.get("active_ai_provider") == provider:
             settings["active_ai_provider"] = active_or_first_configured_provider(settings)
         store_save_user_settings_state_for_user(supabase_admin, user_id, settings)
-        providers = list_provider_states(settings)
+        providers = list_extraction_provider_states(settings)
         return jsonify({
             "success": True,
             "has_key": any(item["has_key"] for item in providers),
-            "active_provider": active_or_first_configured_provider(settings),
+            "active_provider": active_extraction_provider(settings),
             "providers": providers,
+            "hosted_ai_enabled": hosted_ai_enabled(),
+            "hosted_daily_screenshot_limit": hosted_daily_screenshot_limit(),
         })
     api_key = (
         data.get(key_field)
@@ -381,12 +404,14 @@ def api_settings_save():
     settings[key_field] = api_key
     settings["active_ai_provider"] = provider
     store_save_user_settings_state_for_user(supabase_admin, user_id, settings)
-    providers = list_provider_states(settings)
+    providers = list_extraction_provider_states(settings)
     return jsonify({
         "success": True,
         "has_key": True,
         "active_provider": provider,
         "providers": providers,
+        "hosted_ai_enabled": hosted_ai_enabled(),
+        "hosted_daily_screenshot_limit": hosted_daily_screenshot_limit(),
     })
 
 
@@ -472,8 +497,11 @@ def upload():
     raw_selected_provider = (request.form.get("selected_provider") or "").strip()
     if not raw_selected_provider:
         return jsonify({"error": "no_provider_selected"}), 400
-    selected_provider = normalize_ai_provider(raw_selected_provider)
-    api_key = store_get_user_api_key(supabase_admin, user_id, selected_provider)
+    selected_provider, api_key, is_hosted_provider = resolve_extraction_credentials(
+        supabase_admin,
+        user_id,
+        raw_selected_provider,
+    )
     if not api_key:
         return jsonify({"error": "no_api_key"}), 400
 
@@ -488,6 +516,23 @@ def upload():
     files = request.files.getlist("screenshots")
     if not files:
         return jsonify({"error": "No files uploaded"}), 400
+
+    if is_hosted_provider:
+        daily_limit = hosted_daily_screenshot_limit()
+        today_key = datetime.today().strftime("%Y-%m-%d")
+        try:
+            allowed, _used, _limit = store_reserve_hosted_screenshots_for_user(
+                supabase_admin, user_id, len(files), today_key, daily_limit
+            )
+        except Exception as e:
+            app.logger.exception("Failed to reserve hosted screenshots for user_id=%s", user_id)
+            return jsonify({"error": f"Failed to reserve hosted screenshots: {str(e)}"}), 500
+        if not allowed:
+            return jsonify({
+                "error": "hosted_limit_exceeded",
+                "limit": daily_limit,
+                "remaining": 0,
+            }), 429
 
     image_data_list = []
     for f in files:

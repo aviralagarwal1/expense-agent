@@ -12,6 +12,7 @@ from .cards import (
 from .profile import get_profile_seed_from_user
 from .settings_blob import (
     build_empty_user_settings,
+    normalize_hosted_usage,
     normalize_stored_profile,
     parse_user_settings_blob,
     serialize_user_settings_blob,
@@ -149,6 +150,32 @@ def ensure_profile_for_user(client, user):
         "first_name": profile.get("first_name") or seed.get("first_name"),
         "last_name": profile.get("last_name") or seed.get("last_name"),
     }
+
+
+def reserve_hosted_screenshots_for_user(
+    client,
+    user_id: str,
+    count: int,
+    today_str: str,
+    daily_limit: int,
+):
+    """Reserve ``count`` hosted screenshots against today's daily budget.
+
+    Returns ``(allowed, used_after, limit)``. If ``allowed`` is ``False`` the
+    settings row is left untouched, so the caller can return 429 without
+    burning quota.
+    """
+    settings = get_user_settings_state_for_user(client, user_id)
+    usage = normalize_hosted_usage(settings.get("hosted_usage"))
+    if usage["date"] != today_str:
+        usage = {"date": today_str, "screenshots": 0}
+    requested = max(0, int(count or 0))
+    new_total = usage["screenshots"] + requested
+    if daily_limit > 0 and new_total > daily_limit:
+        return False, usage["screenshots"], daily_limit
+    settings["hosted_usage"] = {"date": today_str, "screenshots": new_total}
+    save_user_settings_state_for_user(client, user_id, settings)
+    return True, new_total, daily_limit
 
 
 def is_new_user_account(client, user_id: str, has_key: bool, profile: dict | None):

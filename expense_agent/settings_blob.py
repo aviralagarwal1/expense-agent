@@ -13,6 +13,7 @@ def build_empty_user_settings():
         "active_ai_provider": "anthropic",
         "profile": {"first_name": None, "last_name": None},
         "cards": [],
+        "hosted_usage": {"date": None, "screenshots": 0},
     }
 
 
@@ -22,6 +23,16 @@ def normalize_stored_profile(profile: dict | None):
         "first_name": (profile.get("first_name") or "").strip() or None,
         "last_name": (profile.get("last_name") or "").strip() or None,
     }
+
+
+def normalize_hosted_usage(usage: dict | None):
+    usage = usage if isinstance(usage, dict) else {}
+    raw_date = (str(usage.get("date") or "")).strip() or None
+    try:
+        screenshots = int(usage.get("screenshots") or 0)
+    except (TypeError, ValueError):
+        screenshots = 0
+    return {"date": raw_date, "screenshots": max(0, screenshots)}
 
 
 def parse_user_settings_blob(raw_value: str | None):
@@ -48,6 +59,7 @@ def parse_user_settings_blob(raw_value: str | None):
         for card in (payload.get("cards") or [])
         if isinstance(card, dict)
     ]
+    settings["hosted_usage"] = normalize_hosted_usage(payload.get("hosted_usage"))
     return settings
 
 
@@ -65,6 +77,7 @@ def serialize_user_settings_blob(settings: dict):
             for card in (settings.get("cards") or [])
             if isinstance(card, dict)
         ],
+        "hosted_usage": normalize_hosted_usage(settings.get("hosted_usage")),
     }
     for meta in AI_PROVIDER_META.values():
         key_field = meta["key_field"]
