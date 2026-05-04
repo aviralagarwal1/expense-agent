@@ -44,6 +44,12 @@ def main() -> None:
         "SUPABASE_SERVICE_KEY": service_key,
         "APP_URL": app_url,
     }
+
+    hosted_api_key = (env.get("HOSTED_AI_API_KEY") or env.get("HOSTED_API_KEY") or "").strip()
+    if hosted_api_key:
+        cfg["HOSTED_AI_PROVIDER"] = (env.get("HOSTED_AI_PROVIDER") or "anthropic").strip() or "anthropic"
+        cfg["HOSTED_AI_API_KEY"] = hosted_api_key
+        cfg["HOSTED_DAILY_SCREENSHOT_LIMIT"] = (env.get("HOSTED_DAILY_SCREENSHOT_LIMIT") or "20").strip() or "20"
     fd, path = tempfile.mkstemp(suffix=".yaml", text=True)
     p = Path(path)
     p.write_text(

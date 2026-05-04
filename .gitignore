@@ -27,6 +27,7 @@ Thumbs.db
 .claude/
 CLAUDE.md
 .cursor/
+Handoff.txt
 
 # Local diagnostics
 scripts/auth_doctor.py
