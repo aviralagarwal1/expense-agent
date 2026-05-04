@@ -30,6 +30,7 @@ const uploadCardPickerEl = document.getElementById("uploadCardPicker");
 const uploadProviderPickerEl = document.getElementById("uploadProviderPicker");
 const uploadKeyPickerEl = document.getElementById("uploadKeyPicker");
 const uploadKeySelect = document.getElementById("uploadKeySelect");
+const uploadKeyManageLink = document.getElementById("uploadKeyManageLink");
 const uploadConfigRowEl = document.getElementById("uploadConfigRow");
 const uploadStatusLineEl = document.getElementById("uploadStatusLine");
 const uploadSelectionEl = document.getElementById("uploadSelection");
@@ -278,8 +279,8 @@ function updateUploadStatusLine() {
   if (isUserKeySelection()) {
     const list = listSavedUserKeyProviders();
     if (list.length === 0) {
-      setStatusLineWithLink("No API key saved · ", "Add key to analyze", MANAGE_KEY_URL);
-      uploadStatusLineEl.classList.add("is-blocked");
+      uploadStatusLineEl.textContent = "";
+      uploadStatusLineEl.classList.remove("is-visible");
       return;
     }
     uploadStatusLineEl.textContent = "";
@@ -305,6 +306,9 @@ function renderUserKeyOptions() {
   const list = listSavedUserKeyProviders();
   uploadKeySelect.innerHTML = "";
   uploadKeySelect.disabled = list.length === 0;
+  if (uploadKeyManageLink) {
+    uploadKeyManageLink.textContent = list.length === 0 ? "Add Key" : "Manage Keys";
+  }
   list.forEach(p => {
     const opt = document.createElement("option");
     opt.value = p.id;
