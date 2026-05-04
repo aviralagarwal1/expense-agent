@@ -12,12 +12,12 @@ Most expense tools force one of two extremes: fully manual entry, or full automa
 
 The app lets a user intentionally upload batches of screenshots from credit card apps, extract the visible transactions, compare them against prior history, and confirm what should actually be saved. The result is one reviewed ledger across multiple cards without direct bank integrations.
 
-The live app ships with a hosted demo path — visitors can sign in and start uploading immediately with up to 10 screenshots per day, with no provider account or API key of their own. Power users and self-hosters can plug in a personal Anthropic, OpenAI, or Gemini key at any time and route their usage through their own provider account.
+The live app ships with a hosted demo path: visitors can sign in and start uploading immediately with up to 10 screenshots per day, with no provider account or API key of their own. Power users and self-hosters can plug in a personal Anthropic, OpenAI, or Gemini key at any time and route their usage through their own provider account.
 
 ## What It Does
 
 - Google sign-in through Supabase
-- Hosted "Expense Agent Credits" demo path so new visitors can try the live app instantly, with a 10-screenshot daily cap on the public deployment
+- Hosted demo path so new visitors can try the live app instantly with included credits, capped at 10 screenshots per day on the public deployment
 - Optional personal Anthropic, OpenAI, or Gemini API key for direct provider usage
 - Saved credit card labels with optional identifying digits
 - Screenshot upload and provider-selectable vision extraction
@@ -32,7 +32,7 @@ The live app ships with a hosted demo path — visitors can sign in and start up
 ## Typical Flow
 
 1. Sign in with Google.
-2. Save at least one credit card label. (No personal API key required when hosted credits are enabled — that step becomes optional and lives on the API Key page for users who want to bring their own provider account.)
+2. Save at least one credit card label. (No personal API key required when hosted credits are enabled; that step becomes optional and lives on the API Key page for users who want to bring their own provider account.)
 3. Upload one or more screenshots from a credit card app.
 4. Review new transactions, skipped duplicates, and possible duplicates.
 5. Confirm the rows that should be written to history.
@@ -54,7 +54,7 @@ The app entry point is `app.py`, with backend domain logic split into the `expen
 
 Configured extraction providers are Anthropic, OpenAI, and Gemini. Personal user keys are checked for plausible provider-specific formats before storage; Gemini accepts both Google AI Studio-style `AIza...` keys and Google Cloud-style `AQ....` keys.
 
-Alongside the three real providers, the app exposes one synthetic provider id, `hosted`, labeled "Expense Agent Credits" in the UI. It is enabled when the deployment sets a single server-side key via `HOSTED_AI_API_KEY` (with `HOSTED_API_KEY` accepted as a legacy alias) and is resolved at request time to the underlying real provider — the literal string `"hosted"` is never sent to a vision model. Each hosted upload reserves `len(files)` against a per-user daily quota stored inside the existing `user_settings` row; the public deployment uses a 10-screenshot daily limit. Once the quota is exhausted, `/upload` returns HTTP 429 without calling the provider. Self-hosters who want the original BYO-key-only behavior can simply leave `HOSTED_AI_API_KEY` blank. The hosted key is server-side only — it is never stored in Supabase, sent to the browser, or accepted on the in-app API key page.
+Alongside the three real providers, the app exposes one synthetic provider id, `hosted`, for the server-funded hosted demo path. It is enabled when the deployment sets a single server-side key via `HOSTED_AI_API_KEY` (with `HOSTED_API_KEY` accepted as a legacy alias) and is resolved at request time to the underlying real provider; the literal string `"hosted"` is never sent to a vision model. The API metadata currently labels this synthetic entry "Expense Agent Credits", while the workspace processing selector presents it as hosted usage. Each hosted upload reserves `len(files)` against a per-user daily quota stored inside the existing `user_settings` row; the public deployment uses a 10-screenshot daily limit. Once the quota is exhausted, `/upload` returns HTTP 429 without calling the provider. Self-hosters who want the original BYO-key-only behavior can simply leave `HOSTED_AI_API_KEY` blank. The hosted key is server-side only: it is never stored in Supabase, sent to the browser, or accepted on the in-app API key page.
 
 ## Data Model
 
