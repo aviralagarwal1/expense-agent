@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 from types import SimpleNamespace
 from unittest import TestCase
@@ -67,8 +68,10 @@ class RouteSmokeTests(TestCase):
             self.assertEqual(app.get_external_app_url("/auth/callback"), "http://[::1]:5000/auth/callback")
 
     def test_upload_smoke(self):
+        # /upload routes through resolve_extraction_credentials, which calls
+        # expense_agent.user_data.get_user_api_key directly. Patch that source.
         with patch.object(app, "get_user_id_from_request", return_value="user-1"), \
-             patch.object(app, "store_get_user_api_key", return_value="sk-ant-test"), \
+             patch("expense_agent.user_data.get_user_settings_state_for_user", return_value={"anthropic_api_key": "sk-ant-test", "active_ai_provider": "anthropic"}), \
              patch.object(app, "store_get_user_card_for_user", return_value={"id": "card-1", "label": "Visa •1234"}), \
              patch.object(
                  app,
@@ -160,6 +163,150 @@ class RouteSmokeTests(TestCase):
         update.assert_called_once_with(app.supabase_admin, "user-1", "tx-1", {"memo": "Reimbursable lunch"})
         payload = response.get_json()
         self.assertEqual(payload["transaction"]["memo"], "Reimbursable lunch")
+
+    def test_settings_get_exposes_hosted_when_env_configured(self):
+        fake_user = SimpleNamespace(id="user-1")
+        empty_settings = {
+            "anthropic_api_key": None,
+            "openai_api_key": None,
+            "gemini_api_key": None,
+            "active_ai_provider": "anthropic",
+        }
+        with patch.dict(os.environ, {
+            "HOSTED_AI_API_KEY": "sk-ant-api03-" + "Z" * 32,
+            "HOSTED_AI_PROVIDER": "anthropic",
+            "HOSTED_DAILY_SCREENSHOT_LIMIT": "20",
+        }, clear=False), \
+             patch.object(app, "get_user_from_request", return_value=fake_user), \
+             patch.object(app, "store_get_user_settings_state_for_user", return_value=empty_settings), \
+             patch.object(app, "store_ensure_profile_for_user", return_value={"first_name": "A", "last_name": "B"}), \
+             patch.object(app, "store_is_new_user_account", return_value=False), \
+             patch.object(app, "store_list_user_cards_for_user", return_value=[]):
+            response = self.client.get("/api/settings")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload["hosted_ai_enabled"])
+        self.assertEqual(payload["hosted_daily_screenshot_limit"], 20)
+        # User has no real key; hosted should be the active extraction option.
+        self.assertEqual(payload["active_provider"], "hosted")
+        self.assertTrue(payload["has_key"])
+        provider_ids = [p["id"] for p in payload["providers"]]
+        self.assertEqual(provider_ids[0], "hosted")
+        self.assertIn("anthropic", provider_ids)
+
+    def test_settings_get_omits_hosted_when_env_unconfigured(self):
+        fake_user = SimpleNamespace(id="user-1")
+        empty_settings = {
+            "anthropic_api_key": None,
+            "openai_api_key": None,
+            "gemini_api_key": None,
+            "active_ai_provider": "anthropic",
+        }
+        env_clear = {k: "" for k in ("HOSTED_AI_API_KEY", "HOSTED_API_KEY")}
+        with patch.dict(os.environ, env_clear, clear=False), \
+             patch.object(app, "get_user_from_request", return_value=fake_user), \
+             patch.object(app, "store_get_user_settings_state_for_user", return_value=empty_settings), \
+             patch.object(app, "store_ensure_profile_for_user", return_value={"first_name": "A", "last_name": "B"}), \
+             patch.object(app, "store_is_new_user_account", return_value=False), \
+             patch.object(app, "store_list_user_cards_for_user", return_value=[]):
+            response = self.client.get("/api/settings")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertFalse(payload["hosted_ai_enabled"])
+        self.assertFalse(payload["has_key"])
+        provider_ids = [p["id"] for p in payload["providers"]]
+        self.assertNotIn("hosted", provider_ids)
+
+    def test_upload_with_hosted_uses_underlying_provider(self):
+        captured = {}
+
+        def fake_extract(images, api_key, today, provider):
+            captured["api_key"] = api_key
+            captured["provider"] = provider
+            return [{"vendor": "Cava", "date": "2026-04-20", "amount": "15.80", "status": "settled"}]
+
+        with patch.dict(os.environ, {
+            "HOSTED_AI_API_KEY": "hosted-server-secret",
+            "HOSTED_AI_PROVIDER": "anthropic",
+            "HOSTED_DAILY_SCREENSHOT_LIMIT": "20",
+        }, clear=False), \
+             patch.object(app, "get_user_id_from_request", return_value="user-1"), \
+             patch.object(app, "store_reserve_hosted_screenshots_for_user", return_value=(True, 1, 20)) as reserve, \
+             patch.object(app, "store_get_user_card_for_user", return_value={"id": "card-1", "label": "Visa •1234"}), \
+             patch.object(app, "domain_extract_transactions_from_images", side_effect=fake_extract), \
+             patch.object(app, "store_get_existing_transactions_for_user", return_value=[]):
+            response = self.client.post(
+                "/upload",
+                data={
+                    "selected_card_id": "card-1",
+                    "selected_provider": "hosted",
+                    "screenshots": (BytesIO(b"img"), "shot.jpg"),
+                },
+                content_type="multipart/form-data",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(captured["api_key"], "hosted-server-secret")
+        self.assertEqual(captured["provider"], "anthropic")
+        reserve.assert_called_once()
+        # Reserve received len(files)=1
+        self.assertEqual(reserve.call_args[0][2], 1)
+
+    def test_upload_with_hosted_alias_env_var(self):
+        with patch.dict(os.environ, {
+            "HOSTED_AI_API_KEY": "",
+            "HOSTED_API_KEY": "alias-secret",
+            "HOSTED_AI_PROVIDER": "openai",
+            "HOSTED_DAILY_SCREENSHOT_LIMIT": "20",
+        }, clear=False), \
+             patch.object(app, "get_user_id_from_request", return_value="user-1"), \
+             patch.object(app, "store_reserve_hosted_screenshots_for_user", return_value=(True, 1, 20)), \
+             patch.object(app, "store_get_user_card_for_user", return_value={"id": "card-1", "label": "Visa •1234"}), \
+             patch.object(
+                 app,
+                 "domain_extract_transactions_from_images",
+                 return_value=[{"vendor": "X", "date": "2026-04-20", "amount": "1.00", "status": "settled"}],
+             ), \
+             patch.object(app, "store_get_existing_transactions_for_user", return_value=[]):
+            response = self.client.post(
+                "/upload",
+                data={
+                    "selected_card_id": "card-1",
+                    "selected_provider": "hosted",
+                    "screenshots": (BytesIO(b"img"), "shot.jpg"),
+                },
+                content_type="multipart/form-data",
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_upload_hosted_quota_exceeded_returns_429_without_extraction(self):
+        with patch.dict(os.environ, {
+            "HOSTED_AI_API_KEY": "hosted-server-secret",
+            "HOSTED_AI_PROVIDER": "anthropic",
+            "HOSTED_DAILY_SCREENSHOT_LIMIT": "20",
+        }, clear=False), \
+             patch.object(app, "get_user_id_from_request", return_value="user-1"), \
+             patch.object(app, "store_reserve_hosted_screenshots_for_user", return_value=(False, 20, 20)), \
+             patch.object(app, "store_get_user_card_for_user", return_value={"id": "card-1", "label": "Visa •1234"}), \
+             patch.object(app, "domain_extract_transactions_from_images") as extract:
+            response = self.client.post(
+                "/upload",
+                data={
+                    "selected_card_id": "card-1",
+                    "selected_provider": "hosted",
+                    "screenshots": (BytesIO(b"img"), "shot.jpg"),
+                },
+                content_type="multipart/form-data",
+            )
+
+        self.assertEqual(response.status_code, 429)
+        payload = response.get_json()
+        self.assertEqual(payload["error"], "hosted_limit_exceeded")
+        self.assertEqual(payload["limit"], 20)
+        extract.assert_not_called()
 
     def test_transaction_patch_clears_memo(self):
         updated = {
