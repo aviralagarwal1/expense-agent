@@ -20,7 +20,7 @@ from .ai_providers import (
 
 
 HOSTED_PROVIDER_ID = "hosted"
-HOSTED_PROVIDER_LABEL = "Expense Agent Credits"
+HOSTED_PROVIDER_LABEL = "Compline Credits"
 DEFAULT_HOSTED_DAILY_LIMIT = 20
 
 

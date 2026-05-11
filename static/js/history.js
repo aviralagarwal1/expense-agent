@@ -1926,11 +1926,11 @@
     try {
     const filtered = getSummarySelection();
     const pptx = new PptxGenJS();
-    pptx.author = "Expense Agent";
-    pptx.title = "Expense Agent Summary";
+    pptx.author = "Compline";
+    pptx.title = "Compline Summary";
 
     const s1 = pptx.addSlide();
-    s1.addText("Expense Agent — Summary", { x: 0.5, y: 0.6, w: 12, fontSize: 28, bold: true, color: "18212B" });
+    s1.addText("Compline — Summary", { x: 0.5, y: 0.6, w: 12, fontSize: 28, bold: true, color: "18212B" });
     s1.addText(new Date().toLocaleString(), { x: 0.5, y: 1.35, w: 12, fontSize: 11, color: "5D6872" });
     s1.addText(summaryFilterLine(), { x: 0.5, y: 1.85, w: 12, fontSize: 12, color: "18212B" });
 

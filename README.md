@@ -1,14 +1,14 @@
-# Expense Agent
+# Compline
 
-Expense Agent turns credit card app screenshots into a reviewed expense log.
+Compline turns credit card app screenshots into a reviewed expense log.
 
 Live app: [expenseagent.aviralagarwal.com](https://expenseagent.aviralagarwal.com)
 
-![Expense Agent screenshot](static/expense-agent-screenshot.png)
+![Compline screenshot](static/compile-screenshot.png)
 
 ## Overview
 
-Most expense tools force one of two extremes: fully manual entry, or full automatic import across every account. Expense Agent is built for the middle ground.
+Most expense tools force one of two extremes: fully manual entry, or full automatic import across every account. Compline is built for the middle ground.
 
 The app lets a user intentionally upload batches of screenshots from credit card apps, extract the visible transactions, compare them against prior history, and confirm what should actually be saved. The result is one reviewed ledger across multiple cards without direct bank integrations.
 
@@ -42,7 +42,7 @@ Each upload is tied to one selected credit card, but all confirmed rows are writ
 
 ## Architecture
 
-Expense Agent is a small server-rendered web app with a deliberately simple stack.
+Compline is a small server-rendered web app with a deliberately simple stack.
 
 - Backend: Python + Flask
 - Frontend: HTML, CSS, and vanilla JavaScript
@@ -54,7 +54,7 @@ The app entry point is `app.py`, with backend domain logic split into the `expen
 
 Configured extraction providers are Anthropic, OpenAI, and Gemini. Personal user keys are checked for plausible provider-specific formats before storage; Gemini accepts both Google AI Studio-style `AIza...` keys and Google Cloud-style `AQ....` keys.
 
-Alongside the three real providers, the app exposes one synthetic provider id, `hosted`, for the server-funded hosted demo path. It is enabled when the deployment sets a single server-side key via `HOSTED_AI_API_KEY` (with `HOSTED_API_KEY` accepted as a legacy alias) and is resolved at request time to the underlying real provider; the literal string `"hosted"` is never sent to a vision model. The API metadata currently labels this synthetic entry "Expense Agent Credits", while the workspace processing selector presents it as hosted usage. Each hosted upload reserves `len(files)` against a per-user daily quota stored inside the existing `user_settings` row; the public deployment uses a 10-screenshot daily limit. Once the quota is exhausted, `/upload` returns HTTP 429 without calling the provider. Self-hosters who want the original BYO-key-only behavior can simply leave `HOSTED_AI_API_KEY` blank. The hosted key is server-side only: it is never stored in Supabase, sent to the browser, or accepted on the in-app API key page.
+Alongside the three real providers, the app exposes one synthetic provider id, `hosted`, for the server-funded hosted demo path. It is enabled when the deployment sets a single server-side key via `HOSTED_AI_API_KEY` (with `HOSTED_API_KEY` accepted as a legacy alias) and is resolved at request time to the underlying real provider; the literal string `"hosted"` is never sent to a vision model. The API metadata currently labels this synthetic entry "Compline Credits", while the workspace processing selector presents it as hosted usage. Each hosted upload reserves `len(files)` against a per-user daily quota stored inside the existing `user_settings` row; the public deployment uses a 10-screenshot daily limit. Once the quota is exhausted, `/upload` returns HTTP 429 without calling the provider. Self-hosters who want the original BYO-key-only behavior can simply leave `HOSTED_AI_API_KEY` blank. The hosted key is server-side only: it is never stored in Supabase, sent to the browser, or accepted on the in-app API key page.
 
 ## Data Model
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Expense Agent</title>
+  <title>Compline</title>
   <link rel="icon" type="image/png" href="{{ url_for('favicon_png') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
 
@@ -26,7 +26,7 @@
               <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
               <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
             </svg>
-            <span>Expense Agent</span>
+            <span>Compline</span>
           </a>
           <a class="auth-nav-link" href="/">Home</a>
         </nav>
@@ -77,7 +77,7 @@
     <div id="mainApp" class="frame" style="display:none;">
       <div class="top-bar" id="appTopBar">
         <div class="top-bar-left">
-          <span class="brand" aria-label="Expense Agent">
+          <span class="brand" aria-label="Compline">
             <svg class="brand-mark" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <defs>
                 <linearGradient id="brandMarkGradientApp" x1="3" y1="7" x2="25" y2="23" gradientUnits="userSpaceOnUse">
@@ -90,7 +90,7 @@
               <rect x="6" y="15.4" width="5" height="1.7" rx="0.6" fill="#ffffff" opacity="0.85"/>
               <rect x="12.5" y="15.4" width="3" height="1.7" rx="0.6" fill="#ffffff" opacity="0.55"/>
             </svg>
-            <span>Expense Agent</span>
+            <span>Compline</span>
           </span>
         </div>
         <button type="button" class="top-bar-menu-btn" id="appMenuBtn" aria-expanded="false" aria-controls="appMenuPanel" aria-label="Open menu">
@@ -133,7 +133,7 @@
             <div class="welcome-main">
               <div>
                 <div class="eyebrow">New account</div>
-                <h1 id="welcomeHeadline">Welcome to Expense Agent.</h1>
+                <h1 id="welcomeHeadline">Welcome to Compline.</h1>
                 <p class="welcome-copy">
                   {% if hosted_ai_enabled %}Your Google account is connected and your private workspace is ready. Save a card so screenshot uploads can start working — included demo credits are already available.{% else %}Your Google account is connected and your private workspace is ready. Next, add an API key and save a card so screenshot uploads can start working.{% endif %}
                 </p>

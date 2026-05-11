@@ -606,7 +606,7 @@ function showMainApp() {
   const firstName = profileFirstName || getFirstNameFromToken(sessionToken);
   loadingView.classList.remove("visible");
   if (isNewAccount) {
-    const welcomeName = firstName ? `Welcome to Expense Agent, ${firstName}.` : "Welcome to Expense Agent.";
+    const welcomeName = firstName ? `Welcome to Compline, ${firstName}.` : "Welcome to Compline.";
     welcomeHeadlineEl.textContent = welcomeName;
     welcomeView.classList.add("visible");
     setupView.classList.remove("visible");
