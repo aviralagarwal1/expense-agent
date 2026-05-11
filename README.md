@@ -2,7 +2,7 @@
 
 Compline turns credit card app screenshots into a reviewed expense log.
 
-Live app: [expenseagent.aviralagarwal.com](https://expenseagent.aviralagarwal.com)
+Live app: [compline.aviralagarwal.com](https://compline.aviralagarwal.com)
 
 ![Compline screenshot](static/compile-screenshot.png)
 
