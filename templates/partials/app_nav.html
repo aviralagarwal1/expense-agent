@@ -1,0 +1,41 @@
+{# Shared signed-in nav. Rendering one partial everywhere keeps the brand in an
+   identical position across /app, /history and /settings.
+   Callers set: current ('workspace'|'history'|'profile'), return_to, no_print. #}
+<nav class="nav app-nav{% if no_print %} no-print{% endif %}{% if public %} nav-signed-in{% endif %}"{% if not public %} id="siteNav"{% endif %}>
+  <a class="brand" href="/">
+    {% include "partials/brand.html" %}
+    <span>Compline</span>
+  </a>
+
+  <div class="nav-actions">
+    {% if current == 'workspace' %}
+      <span class="nav-pill" aria-current="page">Workspace</span>
+    {% else %}
+      <a class="nav-link" href="/app">Workspace</a>
+    {% endif %}
+    {% if current == 'history' %}
+      <span class="nav-pill" aria-current="page">History</span>
+    {% else %}
+      <a class="nav-link" href="/history">History</a>
+    {% endif %}
+  </div>
+
+  <div class="account" data-menu>
+    <button class="account-btn" data-menu-btn type="button" aria-haspopup="true" aria-expanded="false" aria-controls="accountPanel">
+      <span class="account-avatar" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </span>
+      <span class="account-name">Account</span>
+      <svg class="account-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="account-panel" id="accountPanel" data-menu-panel>
+      {% if current == 'profile' %}
+        <span class="account-item" aria-current="page">Profile</span>
+      {% else %}
+        <a class="account-item" href="/settings?return_to={{ return_to | default('%2Fapp') }}">Profile</a>
+      {% endif %}
+      <hr class="account-sep" />
+      <button class="account-item account-item--danger" type="button" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+</nav>
