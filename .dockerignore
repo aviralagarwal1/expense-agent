@@ -1,0 +1,39 @@
+# Git / docker metadata
+.git
+.local-tools
+artifacts
+.gitignore
+.dockerignore
+
+# Secrets (runtime env comes from Cloud Run, not baked in)
+.env
+.env.local
+.env.*.local
+.env.example
+credentials.json
+key.json
+*.pem
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editors and local tooling
+.vscode/
+.idea/
+.claude/
+
+# Docs and private notes never go in the image
+README.md
+AGENTS.md
+CLAUDE.md
+notes/
+tests/

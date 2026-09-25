@@ -1,0 +1,40 @@
+# Secrets and credentials
+.env
+.env.local
+.env.*.local
+credentials.json
+key.json
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Local assistants
+.claude/
+.cursor/
+
+# Local diagnostics
+scripts/auth_doctor.py
+
+# Local validation tools and generated browser evidence
+.local-tools/
+artifacts/
+
+# Private notes and agent guides (see AGENTS.md)
+AGENTS.md
+CLAUDE.md
+notes/

@@ -1,0 +1,5 @@
+# Store text with LF endings for every contributor, whatever their OS.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
