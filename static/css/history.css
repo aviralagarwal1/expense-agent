@@ -1,0 +1,93 @@
+/* History: the shared dashboard (dashboard.css), then the charges for the
+   selected month and the uploads they came from. Rows open sheets (native
+   <dialog>) for editing. Sizes come from the scales in base.css. */
+.history { width:min(960px,100%); margin:0 auto; padding:var(--s-8) 0 var(--s-10); }
+.history-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s-4); margin-bottom:var(--s-6); }
+.history-status { padding:var(--s-9) 0; text-align:center; color:var(--muted); }
+.history-status[hidden],#historyBody[hidden] { display:none; }
+.history .dash { margin-top:0; }
+.history .app-card { margin-top:var(--s-5); }
+
+/* ── Export menu ────────────────────────────────────────────────────────── */
+.export { position:relative; }
+.export[hidden] { display:none; }
+.export-btn { min-height:40px; padding:var(--s-2) var(--s-4); }
+.export-btn svg { width:14px; height:14px; color:var(--muted); transition:transform var(--dur) var(--ease); }
+.export.is-open .export-btn svg { transform:rotate(180deg); }
+.export-panel { display:none; position:absolute; z-index:30; right:0; top:calc(100% + var(--s-2)); min-width:220px; padding:var(--s-1); border-radius:var(--r-lg); background:var(--surface); box-shadow:var(--shadow-lift); }
+.export.is-open .export-panel { display:grid; }
+.export-item { display:grid; gap:1px; padding:var(--s-2) var(--s-3); border:0; border-radius:var(--r-md); background:transparent; color:var(--ink); font-size:var(--t-sm); font-weight:600; text-align:left; cursor:pointer; }
+.export-item span { font-size:var(--t-xs); font-weight:400; color:var(--muted); }
+.export-item:hover { background:var(--surface-soft); }
+
+/* ── Charges ────────────────────────────────────────────────────────────── */
+.ledger-head { display:flex; align-items:baseline; justify-content:space-between; gap:var(--s-3); }
+.ledger-title { font-size:var(--t-lg); font-weight:600; letter-spacing:var(--track-tight); overflow-wrap:anywhere; }
+.ledger-meta { font-size:var(--t-sm); color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ledger-search { position:relative; display:block; margin:var(--s-4) 0 var(--s-2); }
+.ledger-search svg { position:absolute; left:var(--s-3); top:50%; width:16px; height:16px; color:var(--muted); transform:translateY(-50%); pointer-events:none; }
+#searchInput { padding-left:calc(var(--s-3) + 24px); border-color:var(--line); border-radius:var(--r-pill); background:var(--surface-soft); }
+#searchInput:focus { background:var(--surface); }
+
+/* Rows share one set of columns via subgrid: merchant, card, date, amount. */
+.ledger-list,.upload-list { display:grid; grid-template-columns:minmax(0,1fr) auto auto auto; column-gap:var(--s-5); }
+.ledger-row { grid-column:1/-1; display:grid; grid-template-columns:subgrid; align-items:center; position:relative; isolation:isolate; padding:var(--s-3) 0; border:0; border-bottom:1px solid var(--line); background:transparent; color:inherit; font:inherit; font-size:var(--t-sm); text-align:left; cursor:pointer; }
+.ledger-list > .ledger-row:last-child,.upload-list > .ledger-row:last-child { border-bottom:0; }
+.ledger-row::before { content:""; position:absolute; z-index:-1; inset:1px calc(var(--s-3) * -1) 0; border-radius:var(--r-lg); background:var(--surface-soft); opacity:0; transition:opacity var(--dur) var(--ease); }
+.ledger-row:hover::before,.ledger-row:focus-visible::before { opacity:1; }
+.ledger-row:focus-visible { outline:none; }
+.ledger-name { min-width:0; overflow-wrap:anywhere; hyphens:auto; }
+.ledger-memo { display:block; margin-top:2px; font-size:var(--t-xs); color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ledger-card,.ledger-date { font-size:var(--t-xs); color:var(--muted); white-space:nowrap; }
+/* Phones only: date and card on one line under the merchant. */
+.ledger-sub { display:none; margin-top:2px; font-size:var(--t-xs); color:var(--muted); }
+.ledger-date { text-align:right; font-variant-numeric:tabular-nums; }
+.ledger-amount { font-weight:600; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+.ledger-empty { grid-column:1/-1; padding:var(--s-7) 0 var(--s-3); text-align:center; color:var(--muted); font-size:var(--t-sm); }
+.upload-list { margin-top:var(--s-2); }
+.uploads-more { margin-top:var(--s-3); }
+
+/* ── Sheets ─────────────────────────────────────────────────────────────── */
+.sheet { width:min(520px,calc(100vw - var(--s-7))); max-height:calc(100dvh - var(--s-8)); padding:var(--s-7); border:0; border-radius:var(--r-card); background:var(--surface); color:var(--ink); box-shadow:var(--shadow-lift); }
+.sheet::backdrop { background:#14201a66; backdrop-filter:blur(3px); }
+.sheet[open] { animation:sheet-in var(--dur-slow) var(--ease); }
+@keyframes sheet-in { from { opacity:0; transform:translateY(8px); } }
+.sheet-title { font-size:var(--t-xl); font-weight:600; letter-spacing:var(--track-tight); overflow-wrap:anywhere; }
+.sheet-sub { margin-top:var(--s-1); font-size:var(--t-sm); color:var(--muted); }
+.sheet-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s-3); margin-top:var(--s-6); }
+.field { display:grid; gap:var(--s-1); min-width:0; }
+.field--wide { grid-column:1/-1; }
+.field > span { font-size:var(--t-xs); font-weight:600; color:var(--muted); }
+.field textarea { resize:vertical; min-height:80px; }
+.sheet-list { margin-top:var(--s-5); max-height:50vh; overflow:auto; }
+.sheet-actions { display:flex; align-items:center; justify-content:flex-end; gap:var(--s-2); margin-top:var(--s-6); }
+.sheet-actions .danger-link { margin-right:auto; }
+.danger-link { color:var(--danger); }
+.danger-link:hover { color:var(--danger); }
+.danger-link[data-armed="1"] { text-decoration-thickness:2px; }
+
+/* ── Phones ─────────────────────────────────────────────────────────────── */
+@media (max-width:640px) {
+  .history { padding:var(--s-6) 0 var(--s-8); }
+  .history-head { margin-bottom:var(--s-5); }
+  .history .app-card { padding:var(--s-5); }
+  /* Card and date tuck under the merchant, so merchant and amount always fit. */
+  .ledger-list,.upload-list { grid-template-columns:minmax(0,1fr) auto; column-gap:var(--s-3); }
+  .ledger-card,.ledger-date { display:none; }
+  .ledger-sub { display:block; }
+  .sheet { padding:var(--s-6) var(--s-5); }
+  .sheet-fields { grid-template-columns:1fr 1fr; }
+  .sheet-fields .field:nth-child(4) { grid-column:1/-1; }
+  .sheet-actions { flex-wrap:wrap; }
+  .sheet-actions .btn { flex:1; }
+  .sheet-actions .danger-link { order:3; width:100%; margin:var(--s-2) 0 0; text-align:center; }
+}
+
+/* ── Print (Export › PDF) ───────────────────────────────────────────────── */
+@media print {
+  .no-print,.export,.ledger-search,.skip-link,.toast,.uploads { display:none !important; }
+  body { background:#fff; }
+  .history { width:100%; padding:0; }
+  .dash,.app-card { box-shadow:none; border:1px solid var(--line); break-inside:avoid; }
+  .ledger-row::before { display:none; }
+}

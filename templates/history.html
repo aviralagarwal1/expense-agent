@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>History · Compline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}" />
+</head>
+<body>
+  <a class="skip-link" href="#historyMain">Skip to history</a>
+  <div class="page">
+    <div class="frame">
+      {% with current='history', return_to='%2Fhistory', no_print=true %}{% include "partials/app_nav.html" %}{% endwith %}
+
+      <main class="history" id="historyMain">
+        <header class="history-head">
+          <h1 class="app-title">History</h1>
+          <div class="export" data-menu hidden id="exportMenu">
+            <button class="btn btn-secondary export-btn" type="button" data-menu-btn aria-haspopup="true" aria-expanded="false" aria-controls="exportPanel">
+              Export
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="export-panel" id="exportPanel" data-menu-panel>
+              <button type="button" class="export-item" data-export="csv">CSV<span>Charges in view</span></button>
+              <button type="button" class="export-item" data-export="pdf">PDF<span>Print this page</span></button>
+              <button type="button" class="export-item" data-export="pptx">PowerPoint<span>Year summary</span></button>
+            </div>
+          </div>
+        </header>
+
+        <p class="history-status" id="historyStatus">Loading your history&hellip;</p>
+
+        <div class="app-intro" id="emptyState" hidden>
+          <h2 class="app-title">No charges yet</h2>
+          <p class="app-lede">Upload screenshots from a card app and the charges you add will show up here.</p>
+          <a class="btn btn-primary btn-lg" href="/app">Upload screenshots</a>
+        </div>
+
+        <div id="historyBody" hidden>
+          <section class="dash" data-dash aria-label="Monthly spending"></section>
+
+          <section class="app-card ledger" aria-labelledby="ledgerTitle">
+            <div class="ledger-head">
+              <h2 class="ledger-title" id="ledgerTitle"></h2>
+              <span class="ledger-meta" id="ledgerMeta"></span>
+            </div>
+            <label class="ledger-search">
+              <span class="sr-only">Search all charges</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" id="searchInput" placeholder="Search all charges" autocomplete="off" />
+            </label>
+            <div class="ledger-list" id="ledgerList" role="list"></div>
+          </section>
+
+          <section class="app-card uploads" aria-labelledby="uploadsTitle">
+            <div class="ledger-head">
+              <h2 class="ledger-title" id="uploadsTitle">Uploads</h2>
+              <span class="ledger-meta" id="uploadsMeta"></span>
+            </div>
+            <div class="upload-list" id="uploadList" role="list"></div>
+            <button type="button" class="row-text-btn uploads-more" id="uploadsMore" hidden>Show all uploads</button>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="sheet" id="txDialog" aria-labelledby="txDialogTitle">
+    <form method="dialog" id="txForm">
+      <h2 class="sheet-title" id="txDialogTitle">Edit charge</h2>
+      <p class="sheet-sub" id="txDialogSub"></p>
+      <div class="sheet-fields">
+        <label class="field field--wide"><span>Merchant</span><input id="txMerchant" type="text" maxlength="120" autocomplete="off" required /></label>
+        <label class="field"><span>Date</span><input id="txDate" type="date" required /></label>
+        <label class="field"><span>Amount</span><input id="txAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required /></label>
+        <label class="field"><span>Status</span><select id="txStatus"><option value="settled">Settled</option><option value="pending">Pending</option></select></label>
+        <label class="field field--wide"><span>Note</span><textarea id="txNote" maxlength="1000" rows="3" placeholder="Optional"></textarea></label>
+      </div>
+      <div class="sheet-actions">
+        <button type="button" class="row-text-btn danger-link" id="txDelete">Delete charge</button>
+        <button type="button" class="btn btn-secondary" id="txCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="txSave">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="sheet" id="uploadDialog" aria-labelledby="uploadDialogTitle">
+    <h2 class="sheet-title" id="uploadDialogTitle"></h2>
+    <p class="sheet-sub" id="uploadDialogSub"></p>
+    <div class="ledger-list sheet-list" id="uploadDialogList" role="list"></div>
+    <div class="sheet-actions">
+      <button type="button" class="row-text-btn danger-link" id="uploadDelete">Delete upload</button>
+      <button type="button" class="btn btn-secondary" id="uploadClose" autofocus>Close</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.min.js" defer></script>
+  <script src="{{ url_for('static', filename='js/auth_session.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/site_nav.js') }}"></script>
+</body>
+</html>
