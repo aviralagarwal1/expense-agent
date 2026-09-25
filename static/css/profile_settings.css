@@ -1,0 +1,38 @@
+/* Profile: name and saved card labels, as two cards in one column. */
+.settings { width:min(640px,100%); margin:0 auto; padding:var(--s-8) 0 var(--s-10); }
+.settings .app-title { margin-bottom:var(--s-6); }
+.settings .app-card + .app-card { margin-top:var(--s-5); }
+.settings-title { font-size:var(--t-lg); font-weight:600; letter-spacing:var(--track-tight); }
+.settings-fields { display:grid; grid-template-columns:1fr 1fr; gap:var(--s-3); margin-top:var(--s-4); }
+.card-form { grid-template-columns:minmax(0,1fr) 120px; }
+.field { display:grid; align-content:start; gap:var(--s-1); min-width:0; }
+.field > span { font-size:var(--t-xs); font-weight:600; color:var(--muted); }
+.settings-actions { display:flex; align-items:center; justify-content:flex-end; gap:var(--s-3); margin-top:var(--s-5); }
+.settings-msg { margin-right:auto; font-size:var(--t-sm); color:var(--accent); }
+.settings-msg.is-error { color:var(--danger); }
+.settings-msg[hidden] { display:none; }
+#cardsEmptyState { margin-top:var(--s-3); }
+.field--wide { grid-column:1/-1; }
+.settings-note { margin-top:var(--s-2); font-size:var(--t-sm); color:var(--muted); }
+.btn-danger { background:var(--danger); color:var(--on-accent); }
+.btn-danger:hover:not(:disabled) { background:#962f28; }
+.brand-custom-row { display:none; align-items:center; gap:var(--s-3); }
+.brand-custom-row.is-visible { display:flex; }
+
+/* Saved cards: the same row language as the ledger. */
+.card-list { margin-top:var(--s-3); }
+.saved-card { display:flex; align-items:center; gap:var(--s-3); padding:var(--s-3) 0; border-bottom:1px solid var(--line); }
+.saved-card-mark { display:grid; place-items:center; flex-shrink:0; width:28px; height:28px; border-radius:var(--r-sm); background:var(--accent-soft); color:var(--accent); font-size:var(--t-xs); font-weight:600; }
+.saved-card-label { flex:1; min-width:0; font-size:var(--t-sm); font-weight:500; overflow-wrap:anywhere; }
+.card-list-empty { padding:var(--s-3) 0; border-bottom:1px solid var(--line); font-size:var(--t-sm); color:var(--muted); }
+.saved-card .row-text-btn:hover { color:var(--danger); }
+
+@media (max-width:640px) {
+  .settings { padding:var(--s-6) 0 var(--s-8); }
+  .settings .app-card { padding:var(--s-5); }
+  .settings-fields { grid-template-columns:1fr; }
+  .card-form { grid-template-columns:minmax(0,1fr) 110px; }
+  .settings-actions { flex-direction:column-reverse; align-items:stretch; }
+  .settings-actions .btn { width:100%; }
+  .settings-msg { width:100%; }
+}

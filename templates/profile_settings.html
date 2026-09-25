@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>Profile - Compline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile_settings.css') }}" />
+</head>
+<body>
+  <a class="skip-link" href="#settingsMain">Skip to settings</a>
+  <div class="page">
+    <div class="frame">
+      {% with current='profile' %}{% include "partials/app_nav.html" %}{% endwith %}
+
+      <main class="settings" id="settingsMain">
+        <h1 class="app-title">Profile</h1>
+
+        <section class="app-card" aria-labelledby="nameTitle">
+          <h2 class="settings-title" id="nameTitle">Name</h2>
+          <div class="settings-fields">
+            <label class="field"><span>First name</span><input type="text" id="firstNameInput" maxlength="80" autocomplete="given-name" /></label>
+            <label class="field"><span>Last name</span><input type="text" id="lastNameInput" maxlength="80" autocomplete="family-name" /></label>
+          </div>
+          <div class="settings-actions">
+            <span class="settings-msg" id="profileStatusMsg" role="status" aria-live="polite"></span>
+            <button class="btn btn-primary" id="saveProfileBtn" type="button" onclick="saveProfile()">Save</button>
+          </div>
+        </section>
+
+        <section class="app-card" aria-labelledby="cardsTitle">
+          <h2 class="settings-title" id="cardsTitle">Cards</h2>
+          <div class="card-list" id="savedCardsList" role="list"></div>
+          <p class="settings-msg is-error" id="cardsEmptyState" role="status" aria-live="polite" hidden></p>
+          <div class="settings-fields card-form">
+            <div class="field">
+              <span id="brandLabel">Add a card</span>
+              <select id="cardBrandSelect" aria-labelledby="brandLabel">
+                <option value="" selected disabled>Choose a brand</option>
+                <option value="American Express">American Express</option>
+                <option value="Visa">Visa</option>
+                <option value="Mastercard">Mastercard</option>
+                <option value="Discover">Discover</option>
+                <option value="__custom__">Other</option>
+              </select>
+              <div class="brand-custom-row" id="cardBrandCustomRow">
+                <input type="text" id="cardBrandCustomInput" placeholder="Card brand" maxlength="40" aria-label="Card brand" />
+                <button type="button" class="row-text-btn" id="cardBrandBackToListBtn">List</button>
+              </div>
+            </div>
+            <label class="field"><span>Last digits</span><input type="text" id="cardDigitHintInput" inputmode="numeric" maxlength="2" placeholder="Optional" /></label>
+          </div>
+          <div class="settings-actions">
+            <a class="btn btn-secondary" id="returnToWorkspaceBtn" href="/app" style="display:none;">Back to workspace</a>
+            <button class="btn btn-primary" id="saveCardBtn" type="button" onclick="addCard()">Add card</button>
+          </div>
+        </section>
+
+        <section class="app-card" aria-labelledby="deleteTitle">
+          <h2 class="settings-title" id="deleteTitle">Delete account</h2>
+          <p class="settings-note">Permanently removes your charges, cards, and sign-in. This can&rsquo;t be undone.</p>
+          <div class="settings-fields">
+            <label class="field field--wide"><span>Type &ldquo;delete&rdquo; to confirm</span><input type="text" id="deleteConfirmInput" autocomplete="off" autocapitalize="off" spellcheck="false" /></label>
+          </div>
+          <div class="settings-actions">
+            <span class="settings-msg is-error" id="deleteMsg" role="status" aria-live="polite"></span>
+            <button class="btn btn-danger" id="deleteAccountBtn" type="button" disabled>Delete account</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/auth_session.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/profile_settings.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/site_nav.js') }}"></script>
+</body>
+</html>
