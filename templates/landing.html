@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>Compline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+</head>
+<body class="landing">
+  <a class="skip-link" href="#mainContent">Skip to content</a>
+  <div class="page">
+    <div class="frame">
+      {% with public=true %}{% include "partials/app_nav.html" %}{% endwith %}
+      <nav class="nav nav-guest" id="siteNav">
+        <a class="brand" href="/">
+          {% include "partials/brand.html" %}
+          <span>Compline</span>
+        </a>
+        <button type="button" class="nav-menu-btn" id="navMenuBtn" aria-expanded="false" aria-controls="navActionsPanel" aria-label="Open menu">
+          <span class="sr-only">Menu</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="nav-actions" id="navActionsPanel">
+          <a class="nav-about" href="/about">About</a>
+          <a class="nav-cta" href="/auth/google">Continue with Google</a>
+        </div>
+      </nav>
+
+      <main id="mainContent">
+        {% if request.args.get('account_deleted') %}
+        <p class="callout auth-error" role="status"><span class="callout-label">Your account and data were deleted.</span></p>
+        {% endif %}
+        {% set auth_error = request.args.get('auth_error') %}
+        {% if auth_error %}
+        <p class="callout callout--danger auth-error" role="alert">
+          <span class="callout-label">
+            {%- if auth_error == 'google_callback_provider_error' -%}
+              Sign-in was cancelled before returning to Compline.
+            {%- else -%}
+              We could not finish signing you in.
+            {%- endif -%}
+          </span>
+          <span>Please try again.</span>
+        </p>
+        {% endif %}
+        <section class="hero" aria-labelledby="heroTitle">
+          <h1 id="heroTitle">Know exactly what you spend</h1>
+          <p class="hero-sub">Compline turns credit card app screenshots into one expense history you can review and trust.</p>
+          <div class="hero-actions">
+            <a class="btn-pill btn-pill--solid" href="/auth/google">Continue with Google</a>
+          </div>
+        </section>
+
+        <section class="showcase reveal" aria-label="Illustrative Compline expense history">
+          <div class="ledger" data-ledger>
+            <div class="ledger-head">
+              <span class="ledger-label">Your history</span>
+              <span class="ledger-range">Mar 3 &ndash; Mar 9</span>
+            </div>
+            <div class="ledger-figure">
+              <strong data-ledger-total>$336.07</strong>
+              <span data-ledger-caption>6 charges reviewed across 3 cards</span>
+            </div>
+            <div class="ledger-rows">
+              <div class="ledger-row" data-amount="6.50"><i aria-hidden="true">B</i><div><b>Blue Bottle Coffee</b><small>Capital One &middot; Mar 9</small></div><strong>$6.50</strong></div>
+              <div class="ledger-row" data-amount="84.00"><i aria-hidden="true">W</i><div><b>Whole Foods Market</b><small>American Express &middot; Mar 8</small></div><strong>$84.00</strong></div>
+              <div class="ledger-row" data-amount="158.00"><i aria-hidden="true">U</i><div><b>United Airlines</b><small>Capital One &middot; Mar 7</small></div><strong>$158.00</strong></div>
+              <div class="ledger-row" data-amount="52.18"><i aria-hidden="true">S</i><div><b>Shell</b><small>American Express &middot; Mar 6</small></div><strong>$52.18</strong></div>
+              <div class="ledger-row" data-amount="23.40"><i aria-hidden="true">C</i><div><b>CVS Pharmacy</b><small>Capital One &middot; Mar 5</small></div><strong>$23.40</strong></div>
+              <div class="ledger-row" data-amount="11.99"><i aria-hidden="true">S</i><div><b>Spotify</b><small>Discover &middot; Mar 3</small></div><strong>$11.99</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="walk" id="howItWorks" aria-labelledby="walkTitle">
+          <div class="walk-head">
+            <h2 class="band-title" id="walkTitle">Track every card in four steps</h2>
+            <p>Copying charges by hand is slow and error-prone. Compline reads them for you, so you only confirm what gets saved.</p>
+          </div>
+
+          <div class="step-block reveal">
+            <div class="step-copy">
+              <span class="step-tag">Step 01</span>
+              <h3>Upload your screenshots</h3>
+              <p>Screenshot the charges in your app and upload them to Compline. Each batch is filed under one of your saved cards.</p>
+            </div>
+            <div class="step-art">
+              <div class="drop">
+                <span class="drop-mark" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-4 4 4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+                </span>
+                <b>Drop screenshots here</b>
+                <span class="drop-meta">PNG, JPG, GIF, or WEBP</span>
+              </div>
+              <div class="thumbs" aria-hidden="true">
+                <span class="thumb"><i></i><i></i><i></i><i></i><i></i></span>
+                <span class="thumb"><i></i><i></i><i></i><i></i></span>
+                <span class="thumb"><i></i><i></i><i></i><i></i><i></i></span>
+                <span class="batch-card"><i></i>Capital One<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-block step-block--flip reveal">
+            <div class="step-copy">
+              <span class="step-tag">Step 02</span>
+              <h3>Each charge becomes a row</h3>
+              <p>Compline reads the merchant, date, and amount of every visible charge, and tags it with the card for that batch.</p>
+            </div>
+            <div class="step-art">
+              <div class="extract">
+                <p class="extract-head"><b>Capital One</b><span>3 screenshots</span></p>
+                <div class="extract-row"><span>Blue Bottle Coffee</span><time>Mar 9</time><b>$6.51</b></div>
+                <div class="extract-row"><span>United Airlines</span><time>Mar 7</time><b>$158.00</b></div>
+                <div class="extract-row"><span>CVS Pharmacy</span><time>Mar 5</time><b>$23.40</b></div>
+                <div class="extract-row"><span>Chipotle</span><time>Mar 1</time><b>$14.85</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-block reveal">
+            <div class="step-copy">
+              <span class="step-tag">Step 03</span>
+              <h3>Duplicates are caught</h3>
+              <p>Compline checks every row against your saved history. Exact repeats are skipped and close matches wait for you.</p>
+            </div>
+            <div class="step-art">
+              <div class="extract check">
+                <p class="extract-head"><b>Capital One</b><span>3 screenshots</span></p>
+                <div class="check-match">
+                  <div class="extract-row"><span>Blue Bottle Coffee</span><time>Mar 9</time><b>$6.5<mark>1</mark></b><em class="tag is-review">Review</em></div>
+                  <div class="extract-row is-saved"><span>Blue Bottle Coffee</span><time>Mar 9</time><b>$6.5<mark>0</mark></b><em class="tag">Saved</em></div>
+                  <div class="check-acts"><em>Add</em><em class="is-primary">Skip</em></div>
+                </div>
+                <div class="extract-row"><span>United Airlines</span><time>Mar 7</time><b>$158.00</b><em class="tag is-new">New</em></div>
+                <div class="extract-row"><span>CVS Pharmacy</span><time>Mar 5</time><b>$23.40</b><em class="tag is-new">New</em></div>
+                <div class="extract-row is-dup"><span>Chipotle</span><time>Mar 1</time><b>$14.85</b><em class="tag">Duplicate</em></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-block step-block--flip reveal">
+            <div class="step-copy">
+              <span class="step-tag">Step 04</span>
+              <h3>Review and save</h3>
+              <p>Edit the merchant, date, or amount, and leave a note if you need one. You have the final say on every row.</p>
+            </div>
+            <div class="step-art">
+              <div class="approve">
+                <div class="approve-fields">
+                  <label><span>Merchant</span><b>United Airlines</b></label>
+                  <label><span>Date</span><b>Mar 7</b></label>
+                  <label><span>Amount</span><b>$158.00</b></label>
+                </div>
+                <div class="approve-note"><span>Note</span><b>Denver trip for client project; expected reimbursement in 2 weeks</b></div>
+                <div class="approve-acts"><em class="is-primary">Add</em><em>Dismiss</em></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="band reveal" aria-labelledby="seeTitle">
+          <div class="band-head">
+            <h2 class="band-title" id="seeTitle">See the full picture</h2>
+            <p>Each card app shows only its own charges. Compline brings them into one history, so you can account for every dollar.</p>
+          </div>
+
+          <div class="dash" data-dash hidden></div>
+          <div class="insight" data-dash-fallback>
+            <div class="insight-panel insight-panel--wide">
+              <div class="split-head">
+                <h3>March</h3>
+                <strong>$1,284</strong>
+              </div>
+              <div class="split-bar" aria-hidden="true">
+                <span style="width:43.8%"></span><span style="width:40.3%"></span><span style="width:15.9%"></span>
+              </div>
+              <ul class="split-legend">
+                <li><i aria-hidden="true"></i><span>Capital One</span><b>$562</b></li>
+                <li><i aria-hidden="true"></i><span>American Express</span><b>$518</b></li>
+                <li><i aria-hidden="true"></i><span>Discover</span><b>$204</b></li>
+              </ul>
+            </div>
+            <div class="insight-panel">
+              <h3>Month by month</h3>
+              <div class="bars">
+                <div class="bar-row"><span class="bar-label">Mar</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><b>$1,284</b></div>
+                <div class="bar-row"><span class="bar-label">Feb</span><span class="bar-track"><span class="bar-fill" style="width:73%"></span></span><b>$942</b></div>
+                <div class="bar-row"><span class="bar-label">Jan</span><span class="bar-track"><span class="bar-fill" style="width:86%"></span></span><b>$1,107</b></div>
+              </div>
+              <p class="insight-note">March came in <b>36%</b> above February.</p>
+            </div>
+            <div class="insight-panel">
+              <h3>Where it concentrates</h3>
+              <div class="ranks">
+                <div class="rank-row"><span>Whole Foods Market</span><span class="rank-share"><span class="rank-fill" style="width:27%"></span></span><b>$350</b></div>
+                <div class="rank-row"><span>United Airlines</span><span class="rank-share"><span class="rank-fill" style="width:21%"></span></span><b>$268</b></div>
+                <div class="rank-row"><span>Shell</span><span class="rank-share"><span class="rank-fill" style="width:11%"></span></span><b>$141</b></div>
+              </div>
+              <p class="insight-note">Ranked only from rows you added.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="band faq-band" aria-labelledby="faqTitle">
+          <div class="faq-head">
+            <h2 class="band-title" id="faqTitle">Frequently asked questions</h2>
+          </div>
+          <div class="faq">
+            <details><summary>Does it connect to my bank?</summary><p>No. There is nothing to link and no credentials to hand over. You upload screenshots from apps you are already signed into.</p></details>
+            <details><summary>Which cards does it work with?</summary><p>Any card whose app shows a list of charges. You save your own card labels by adding the company and reference digits.</p></details>
+            <details><summary>What if a charge is read wrong?</summary><p>Correct the merchant, date, or amount before you add it. Nothing enters your history until you say so, and you can still edit or delete a row afterwards.</p></details>
+            <details><summary>How does it avoid double counting?</summary><p>Exact repeats are skipped automatically. Close matches are left for you to decide.</p></details>
+            <details><summary>What does it cost?</summary><p>Free. We provide a daily allowance of screenshots that is sufficient for most users.</p></details>
+            <details><summary>Can I export my data?</summary><p>Yes. Export the charges you&rsquo;re viewing to CSV, print your history to PDF, or create a PowerPoint summary.</p></details>
+          </div>
+        </section>
+
+        <section class="closer">
+          <h2>Less hassle, more control</h2>
+          <p>Sign in with Google and start tracking your spending in minutes.</p>
+          <a class="btn-pill btn-pill--solid" href="/auth/google">Continue with Google</a>
+        </section>
+
+      </main>
+    </div>
+
+    <footer class="site-foot"><span>Compline</span><span>Built by Aviral Agarwal · © {{ current_year }}</span></footer>
+  </div>
+  <script src="{{ url_for('static', filename='js/site_nav.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+</body>
+</html>

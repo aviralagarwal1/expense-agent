@@ -1,0 +1,283 @@
+/* Landing page. Colours, type, radii and pill actions come from base.css,
+   shared with the product; this file adds the marketing layout and the
+   illustrative mocks. The only landing-only token is the section rhythm. */
+.landing { --band:clamp(var(--s-9),9vw,104px); }
+
+/* ── Pill actions ───────────────────────────────────────────────────────── */
+.btn-pill { display:inline-flex; align-items:center; justify-content:center; min-height:56px; padding:var(--s-3) var(--s-7); border:1px solid transparent; border-radius:999px; font-size:var(--t-md); font-weight:600; text-decoration:none; transition:background var(--dur) var(--ease),color var(--dur) var(--ease),transform var(--dur) var(--ease); }
+.btn-pill:active { transform:translateY(1px); }
+.btn-pill--solid { background:var(--accent); color:#fff; }
+.btn-pill--solid:hover { background:var(--accent-strong); }
+
+/* -- Hero (centred) ------------------------------------------------------ */
+/* One axis. Nothing to balance against, so the pitch carries the section by
+   itself and the product shot gets a full-width moment below. */
+.hero { padding:calc(var(--band) * .9) 0 var(--band); text-align:center; }
+.hero h1 { max-width:19ch; margin:0 auto; font-size:clamp(2.6rem,6vw,4.6rem); font-weight:600; line-height:1.04; letter-spacing:-.035em; text-wrap:balance; }
+.hero-sub { max-width:54ch; margin:var(--s-6) auto 0; font-size:var(--t-lg); color:var(--muted); line-height:1.6; text-wrap:balance; }
+.hero-actions { display:flex; align-items:center; justify-content:center; gap:var(--s-5); margin-top:var(--s-7); flex-wrap:wrap; }
+/* Entrance: headline, subline and action settle in one after another on load.
+   Short travel and a quick stagger, so the hero feels arrived rather than animated;
+   the dashboard further down carries the page's real motion. */
+@keyframes hero-in { from { opacity:0; transform:translateY(8px); } }
+.hero h1,.hero-sub,.hero-actions { animation:hero-in .7s var(--ease) backwards; }
+.hero-sub { animation-delay:.08s; }
+.hero-actions { animation-delay:.16s; }
+
+/* -- Showcase ------------------------------------------------------------ */
+/* The product shot, now wide enough to actually read. */
+.showcase { padding-bottom:var(--band); }
+.ledger { max-width:720px; margin:0 auto; background:var(--surface); border-radius:var(--r-card); padding:clamp(var(--s-5),3vw,var(--s-8)); box-shadow:0 2px 4px #0b2a1e0d, 0 30px 70px #0b2a1e1f; }
+.ledger-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s-3); }
+.ledger-label { font-size:var(--t-xs); font-weight:600; letter-spacing:var(--track-caps); text-transform:uppercase; color:var(--muted); }
+.ledger-range { font-size:var(--t-xs); color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ledger-figure { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:var(--s-3); padding:var(--s-5) 0 var(--s-6); }
+.ledger-figure strong { font-size:clamp(2.1rem,3.4vw,2.9rem); font-weight:600; line-height:1; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+.ledger-figure span { font-size:var(--t-sm); color:var(--muted); }
+.ledger-rows { display:grid; }
+.ledger-row { position:relative; isolation:isolate; display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:var(--s-4); padding:var(--s-4) 0; border-top:1px solid var(--line); transition:opacity var(--dur-slow) var(--ease); }
+/* Row wash: bleeds past the text column so a highlight reads as a row, not a box around the words. */
+.ledger-row::before { content:""; position:absolute; z-index:-1; inset:1px calc(var(--s-3) * -1) 0; border-radius:var(--r-lg); background:var(--accent-soft); opacity:0; transition:opacity var(--dur) var(--ease); }
+.ledger-row:hover::before { opacity:.7; }
+.ledger-row i { position:relative; display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-style:normal; font-size:var(--t-sm); font-weight:600; transition:background var(--dur-slow) var(--ease),color var(--dur-slow) var(--ease); }
+/* Reviewed tick. Its presence is the row's state: no tick, not in your history yet. */
+.ledger-row i::after { content:""; position:absolute; right:-3px; bottom:-3px; width:15px; height:15px; border-radius:50%; background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6.2 5 8.2 9 4' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/11px no-repeat; box-shadow:0 0 0 2px var(--surface); transition:transform .32s cubic-bezier(.3,1.6,.5,1); }
+.ledger-row:hover i { background:var(--accent); color:#fff; }
+.ledger-row b { display:block; font-size:var(--t-md); font-weight:500; overflow-wrap:anywhere; }
+.ledger-row small { display:block; margin-top:1px; font-size:var(--t-xs); color:var(--muted); font-variant-numeric:tabular-nums; }
+.ledger-row > strong { font-size:var(--t-md); font-weight:600; font-variant-numeric:tabular-nums; transition:color var(--dur-slow) var(--ease); }
+
+/* Review sequence (landing.js). Rows start as unreviewed extractions, then are
+   added one at a time: tick lands, the row washes green, the total climbs.
+   Without JS or with reduced motion the ledger simply renders finished. */
+.ledger.is-staged .ledger-row:not(.is-added) { opacity:.42; }
+.ledger.is-staged .ledger-row:not(.is-added) i { background:var(--surface-soft); color:var(--muted); }
+.ledger.is-staged .ledger-row:not(.is-added) i::after { transform:scale(0); }
+.ledger.is-staged .ledger-row:not(.is-added) > strong { color:var(--muted); }
+@keyframes ledger-wash { 0% { opacity:0; } 25% { opacity:1; } 100% { opacity:0; } }
+.ledger-row.is-added::before { animation:ledger-wash 1.1s var(--ease); }
+.ledger-figure strong { transition:color var(--dur-slow) var(--ease); }
+.ledger.is-staged .ledger-figure strong { color:var(--muted); }
+.ledger.is-counting .ledger-figure strong { color:var(--ink); }
+
+/* Scroll-in. Visible by default; the class only adds motion, so no-JS and
+   reduced-motion viewers lose nothing. */
+@keyframes reveal-rise { from { opacity:0; transform:translateY(22px); } }
+.reveal.is-in { animation:reveal-rise .6s var(--ease) both; }
+
+/* ── Bands ──────────────────────────────────────────────────────────────── */
+.band { padding:var(--band) 0; border-top:1px solid var(--line); }
+.band-title { font-size:clamp(1.9rem,3.4vw,2.9rem); font-weight:600; line-height:1.1; letter-spacing:-.03em; text-wrap:pretty; }
+/* Section heads are left-aligned and full width. Titles use `pretty` only to
+   stop a lone last word; taglines wrap plainly to the content edge, with no
+   hidden cap. Balancing is kept for centred text and the narrow step column. */
+.band-head > p,.walk-head > p { margin-top:var(--s-4); font-size:var(--t-lg); color:var(--muted); line-height:1.6; }
+
+/* -- Walkthrough --------------------------------------------------------- */
+/* Each step pairs a short claim with a real fragment of the product, so the
+   page shows the mechanism rather than asserting it. */
+.walk { padding:var(--band) 0; border-top:1px solid var(--line); }
+.step-block { display:grid; grid-template-columns:minmax(0,0.85fr) minmax(0,1fr); align-items:center; gap:clamp(var(--s-7),5vw,var(--s-10)); margin-top:var(--s-10); }
+.step-block--flip { grid-template-columns:minmax(0,1fr) minmax(0,0.85fr); }
+.step-block--flip .step-copy { order:2; }
+.step-tag { display:block; font-size:var(--t-xs); font-weight:600; letter-spacing:var(--track-caps); text-transform:uppercase; color:var(--accent); }
+.step-copy h3 { margin-top:var(--s-3); font-size:clamp(1.4rem,2.3vw,1.9rem); font-weight:600; line-height:1.2; letter-spacing:-.025em; text-wrap:balance; }
+.step-copy p { max-width:44ch; margin-top:var(--s-4); color:var(--muted); font-size:var(--t-md); line-height:1.65; text-wrap:pretty; }
+.step-art { min-width:0; padding:var(--s-6); background:var(--surface); border-radius:var(--r-card); box-shadow:0 1px 2px #0b2a1e0d, 0 18px 44px #0b2a1e14; }
+
+/* 01 - drop target */
+.drop { display:grid; place-items:center; gap:var(--s-2); padding:var(--s-8) var(--s-5); border:1px dashed var(--line-strong); border-radius:var(--r-md); background:var(--surface-soft); text-align:center; }
+.drop-mark { display:grid; place-items:center; width:44px; height:44px; margin-bottom:var(--s-2); border-radius:50%; background:var(--surface); color:var(--accent); }
+.drop b { font-size:var(--t-md); font-weight:600; }
+.drop-meta { font-size:var(--t-xs); color:var(--muted); }
+/* The batch: three phone screenshots of a card app's transaction list, and
+   the saved card they will be filed under, which step 02 picks up. */
+.thumbs { display:flex; align-items:center; gap:var(--s-2); margin-top:var(--s-4); }
+.thumb { display:grid; align-content:start; gap:6px; width:40px; height:66px; padding:0 5px 6px; border:1px solid var(--line); border-radius:7px; background:var(--surface); overflow:hidden; }
+/* First bar is the app header; the rest are rows with a merchant and an amount stub. */
+.thumb i { display:block; height:4px; border-radius:2px; background:linear-gradient(to right,var(--line-strong) 0 52%,transparent 52% 72%,var(--line-strong) 72%); }
+.thumb i:first-child { height:9px; margin:0 -5px 2px; border-radius:0; background:var(--accent-line); }
+.batch-card { display:inline-flex; align-items:center; gap:var(--s-2); margin-left:auto; padding:var(--s-2) var(--s-3); border:1px solid var(--line-strong); border-radius:var(--r-md); background:var(--surface); font-size:var(--t-sm); font-weight:600; white-space:nowrap; }
+.batch-card i { width:10px; height:10px; border-radius:3px; background:var(--accent); }
+.batch-card svg { width:14px; height:14px; color:var(--muted); }
+
+/* 02 - structured output */
+/* Row mocks (02, 03 and the insight panels) put their columns on the list,
+   not the row: each row is a subgrid, so dates, amounts and chips line up
+   down the card however wide any one value is. Numbers sit right-aligned. */
+.extract { display:grid; grid-template-columns:minmax(0,1fr) auto auto; column-gap:var(--s-4); }
+.extract.check { grid-template-columns:minmax(0,1fr) auto auto auto; }
+.extract-row { grid-column:1/-1; display:grid; grid-template-columns:subgrid; align-items:center; padding:var(--s-3) 0; border-bottom:1px solid var(--line); font-size:var(--t-sm); }
+.extract-row:last-child { border-bottom:0; padding-bottom:0; }
+.extract-row span { overflow-wrap:anywhere; }
+.extract-row time { color:var(--muted); font-size:var(--t-xs); font-variant-numeric:tabular-nums; text-align:right; }
+.extract-row b { font-weight:600; font-variant-numeric:tabular-nums; text-align:right; }
+.extract-head { grid-column:1/-1; display:flex; justify-content:space-between; gap:var(--s-3); padding-bottom:var(--s-3); border-bottom:1px solid var(--line); font-size:var(--t-xs); color:var(--muted); }
+.extract-head b { color:var(--ink); font-weight:600; }
+
+/* 03 - the same batch, checked. Each row keeps its step-02 columns and gains
+   an outcome pill. The close match sits with the saved row it resembles and
+   only the differing value is marked, so the reason shows without a caption. */
+.tag { justify-self:stretch; padding:3px var(--s-2); border:1px solid transparent; border-radius:999px; background:var(--surface-soft); color:var(--muted); font-style:normal; font-size:var(--t-2xs); font-weight:600; text-align:center; }
+.tag.is-new { background:var(--accent-soft); color:var(--accent); }
+.tag.is-review { border-color:var(--accent); background:var(--surface); color:var(--accent); }
+.extract-row.is-dup span,.extract-row.is-dup time,.extract-row.is-dup b { opacity:.45; }
+.extract-row.is-dup b { text-decoration:line-through; }
+.check-match { position:relative; isolation:isolate; grid-column:1/-1; display:grid; grid-template-columns:subgrid; margin:var(--s-2) 0; padding-bottom:var(--s-4); }
+.check-match::before { content:""; position:absolute; z-index:-1; inset:0 calc(var(--s-3) * -1); border-radius:var(--r-lg); background:var(--accent-soft); }
+.check-match .extract-row { border-bottom:1px dashed var(--accent-line); }
+.check-match .extract-row.is-saved { border-bottom:0; }
+.check-match .is-saved span,.check-match .is-saved b { color:var(--muted); }
+.check-match .tag:not(.is-review) { background:var(--surface); }
+.extract-row mark { background:none; color:var(--accent); font-weight:700; }
+.check-acts { grid-column:1/-1; display:flex; gap:var(--s-2); margin-top:var(--s-1); }
+.check-acts em { font-style:normal; padding:var(--s-1) var(--s-4); border:1px solid var(--line-strong); border-radius:999px; background:var(--surface); font-size:var(--t-xs); font-weight:600; }
+.check-acts em.is-primary { border-color:var(--accent); background:var(--accent); color:#fff; }
+
+/* 04 - correct and approve */
+/* Merchant, date and amount on one row. Date and amount never shrink below
+   their values, and all three share the spare width, merchant slightly more. */
+.approve-fields { display:grid; grid-template-columns:minmax(0,2.6fr) minmax(max-content,1fr) minmax(max-content,1fr); gap:var(--s-3); }
+.approve-fields label { display:block; padding:var(--s-3); border:1px solid var(--line); border-radius:var(--r-md); }
+.approve-fields span,.approve-note span { display:block; font-size:var(--t-2xs); letter-spacing:var(--track-caps); text-transform:uppercase; color:var(--muted); }
+.approve-fields b,.approve-note b { display:block; margin-top:2px; font-size:var(--t-sm); font-weight:600; overflow-wrap:anywhere; }
+.approve-fields b { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+.approve-note { margin-top:var(--s-3); padding:var(--s-3); border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface-soft); }
+.approve-note b { font-weight:500; }
+.approve-acts { display:flex; gap:var(--s-2); margin-top:var(--s-5); }
+.approve-acts em { font-style:normal; padding:var(--s-2) var(--s-5); border:1px solid var(--line-strong); border-radius:999px; font-size:var(--t-sm); font-weight:600; }
+.approve-acts em.is-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+.insight { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s-4); margin-top:var(--s-8); }
+.insight-panel { display:flex; flex-direction:column; padding:var(--s-6); background:var(--surface); border-radius:var(--r-card); box-shadow:0 1px 2px #0b2a1e0a; }
+/* All-cards split: one bar, one segment per card, summing to the month.
+   Segments step down the accent ramp; the legend carries the numbers. */
+.insight-panel--wide { grid-column:1/-1; }
+.split-head { display:flex; align-items:baseline; justify-content:space-between; gap:var(--s-4); }
+.split-head strong { font-size:var(--t-2xl); font-weight:600; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.split-bar span:nth-child(1),.split-legend li:nth-child(1) i { background:var(--accent); }
+.split-bar span:nth-child(2),.split-legend li:nth-child(2) i { background:color-mix(in srgb,var(--accent) 55%,#fff); }
+.split-bar span:nth-child(3),.split-legend li:nth-child(3) i { background:var(--accent-line); }
+.split-legend { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s-3) var(--s-6); margin:var(--s-5) 0 0; padding:0; list-style:none; }
+.split-legend li { display:flex; align-items:center; gap:var(--s-2); min-width:0; font-size:var(--t-sm); }
+.split-legend i { flex-shrink:0; width:10px; height:10px; border-radius:3px; }
+.split-legend span { color:var(--muted); overflow-wrap:anywhere; }
+.split-legend b { margin-left:var(--s-1); font-weight:600; font-variant-numeric:tabular-nums; }
+.insight-panel h3 { font-size:var(--t-xs); font-weight:600; letter-spacing:var(--track-caps); text-transform:uppercase; color:var(--muted); }
+.bars,.ranks { display:grid; column-gap:var(--s-4); row-gap:var(--s-5); margin-top:var(--s-6); }
+.bars { grid-template-columns:38px minmax(0,1fr) auto; }
+.ranks { grid-template-columns:minmax(0,1fr) 120px auto; }
+.bar-row,.rank-row { grid-column:1/-1; display:grid; grid-template-columns:subgrid; align-items:center; }
+.bar-label { font-size:var(--t-sm); color:var(--muted); }
+.rank-row > span:first-child { font-size:var(--t-sm); overflow-wrap:anywhere; }
+.bar-track,.rank-share { height:10px; border-radius:999px; background:var(--surface-soft); overflow:hidden; }
+.rank-share { height:6px; }
+.bar-fill,.rank-fill { display:block; height:100%; border-radius:999px; background:var(--accent); }
+/* Lighter than the month bars: these are shares of a month, not totals. */
+.rank-fill { background:color-mix(in srgb,var(--accent) 55%,#fff); }
+.bar-row b,.rank-row b { font-size:var(--t-sm); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; text-align:right; }
+.insight-panel .bars,.insight-panel .ranks { margin-bottom:var(--s-6); }
+/* Pinned to the panel floor so both panels close on the same line. */
+.insight-note { margin-top:auto; padding-top:var(--s-4); border-top:1px solid var(--line); font-size:var(--t-xs); color:var(--muted); }
+.insight-note b { color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ── Dashboard motion ──────────────────────────────────────────────────── */
+/* Grow-in: when the section reveals, bars draw from zero and the card split
+   fills segment by segment, so the month visibly adds up. `backwards` fill
+   only covers the delay, leaving transforms free for the hover states. */
+.bar-fill,.rank-fill,.split-bar span { transform-origin:left center; }
+.reveal.is-in .bar-fill,.reveal.is-in .rank-fill,.reveal.is-in .split-bar span { animation:grow-x .9s var(--ease) backwards; }
+.reveal.is-in .split-bar span:nth-child(1) { animation-delay:.25s; }
+.reveal.is-in .split-bar span:nth-child(2) { animation-delay:.45s; }
+.reveal.is-in .split-bar span:nth-child(3) { animation-delay:.65s; }
+.reveal.is-in .bar-row:nth-child(1) .bar-fill { animation-delay:.5s; }
+.reveal.is-in .bar-row:nth-child(2) .bar-fill { animation-delay:.6s; }
+.reveal.is-in .bar-row:nth-child(3) .bar-fill { animation-delay:.7s; }
+.reveal.is-in .rank-row:nth-child(1) .rank-fill { animation-delay:.6s; }
+.reveal.is-in .rank-row:nth-child(2) .rank-fill { animation-delay:.7s; }
+.reveal.is-in .rank-row:nth-child(3) .rank-fill { animation-delay:.8s; }
+
+/* Hover: surfaces lift, and inside a chart the hovered row comes forward
+   while its siblings recede. Pointer devices only; touch keeps the static view. */
+.insight-panel,.step-art { transition:transform var(--dur-slow) var(--ease),box-shadow var(--dur-slow) var(--ease); }
+.bar-row,.rank-row,.split-legend li,.split-bar span { transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease); }
+.bar-track,.rank-share { transition:height var(--dur) var(--ease); }
+.bar-fill,.rank-fill { transition:background var(--dur) var(--ease); }
+.bar-row b,.rank-row b { transition:color var(--dur) var(--ease); }
+@media (hover:hover) {
+  .insight-panel:hover,.step-art:hover { transform:translateY(-4px) scale(1.012); box-shadow:0 2px 4px #0b2a1e0d, 0 26px 60px #0b2a1e1f; }
+  .insight-panel--wide:hover { transform:translateY(-4px) scale(1.004); }
+  .bars:hover .bar-row:not(:hover),.ranks:hover .rank-row:not(:hover) { opacity:.4; }
+  .bar-row:hover .bar-track { height:14px; }
+  .rank-row:hover .rank-share { height:10px; }
+  .rank-row:hover .rank-fill { background:var(--accent); }
+  .bar-row:hover b,.rank-row:hover b { color:var(--accent); }
+  /* Split: a segment and its legend entry light up together, from either side. */
+  .split-bar:hover span:not(:hover),
+  .insight-panel--wide:has(.split-legend li:nth-child(1):hover) .split-bar span:not(:nth-child(1)),
+  .insight-panel--wide:has(.split-legend li:nth-child(2):hover) .split-bar span:not(:nth-child(2)),
+  .insight-panel--wide:has(.split-legend li:nth-child(3):hover) .split-bar span:not(:nth-child(3)),
+  .split-legend:hover li:not(:hover),
+  .insight-panel--wide:has(.split-bar span:nth-child(1):hover) .split-legend li:not(:nth-child(1)),
+  .insight-panel--wide:has(.split-bar span:nth-child(2):hover) .split-legend li:not(:nth-child(2)),
+  .insight-panel--wide:has(.split-bar span:nth-child(3):hover) .split-legend li:not(:nth-child(3)) { opacity:.3; }
+  .split-bar span:hover,
+  .insight-panel--wide:has(.split-legend li:nth-child(1):hover) .split-bar span:nth-child(1),
+  .insight-panel--wide:has(.split-legend li:nth-child(2):hover) .split-bar span:nth-child(2),
+  .insight-panel--wide:has(.split-legend li:nth-child(3):hover) .split-bar span:nth-child(3) { transform:scaleY(1.4); }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .hero h1,.hero-sub,.hero-actions,.reveal.is-in,.reveal.is-in .bar-fill,.reveal.is-in .rank-fill,.reveal.is-in .split-bar span { animation:none; }
+  .insight-panel,.step-art { transition:none; }
+  .insight-panel:hover,.step-art:hover { transform:none; }
+}
+
+/* ── FAQ ────────────────────────────────────────────────────────────────── */
+/* Two columns: the heading holds its place on the left while the answers
+   scroll past in a card on the right, the same surface the other sections use. */
+.faq-band { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr); align-items:start; gap:clamp(var(--s-7),5vw,var(--s-10)); }
+.faq-head { position:sticky; top:var(--s-8); }
+.faq { padding:var(--s-2) var(--s-6); background:var(--surface); border-radius:var(--r-card); box-shadow:0 1px 2px #0b2a1e0d, 0 18px 44px #0b2a1e14; }
+.faq details + details { border-top:1px solid var(--line); }
+.faq summary { display:flex; align-items:center; justify-content:space-between; gap:var(--s-4); padding:var(--s-5) 0; font-size:var(--t-lg); font-weight:500; cursor:pointer; list-style:none; }
+.faq summary::-webkit-details-marker { display:none; }
+.faq summary::after { content:""; flex-shrink:0; width:11px; height:11px; border-right:2px solid var(--muted); border-bottom:2px solid var(--muted); transform:rotate(45deg) translateY(-3px); transition:transform var(--dur) var(--ease); }
+.faq details[open] summary::after { transform:rotate(225deg) translateY(-3px); }
+.faq summary:hover { color:var(--accent); }
+/* Answers run to the same right edge as their question text (the chevron
+   gutter), so they end on a line the reader can see rather than a hidden cap. Plain
+   wrapping: on lines this long, `pretty` visibly pulls words down early. */
+.faq p { padding:0 calc(var(--s-4) + 11px) var(--s-5) 0; color:var(--muted); font-size:var(--t-md); line-height:1.7; }
+
+/* -- Close --------------------------------------------------------------- */
+.closer { padding:var(--band) 0; border-top:1px solid var(--line); text-align:center; }
+.closer h2 { font-size:clamp(1.9rem,3.4vw,2.9rem); font-weight:600; line-height:1.1; letter-spacing:-.03em; text-wrap:balance; }
+.closer p { margin:var(--s-4) auto var(--s-7); color:var(--muted); font-size:var(--t-lg); text-wrap:balance; }
+
+.auth-error { margin-top:var(--s-6); }
+
+@media(max-width:900px) {
+  .step-block { grid-template-columns:1fr; gap:var(--s-6); margin-top:var(--s-8); }
+  .step-block--flip .step-copy { order:0; }
+  .insight { grid-template-columns:1fr; }
+  .faq-band { grid-template-columns:1fr; gap:var(--s-7); }
+  .faq-head { position:static; }
+  .split-legend { grid-template-columns:1fr; }
+  .split-legend b { margin-left:auto; }
+}
+@media(max-width:640px) {
+  .landing .nav { min-height:72px; }
+  .hero { padding:var(--s-7) 0 var(--s-8); }
+  .hero-sub { font-size:var(--t-md); }
+  .hero-actions { gap:var(--s-3); }
+  .hero-actions .btn-pill { width:100%; }
+  .showcase { padding-bottom:var(--s-8); }
+  .step-art { padding:var(--s-5); }
+  .insight-panel { padding:var(--s-5); }
+  .ranks { grid-template-columns:minmax(0,1fr) 56px auto; column-gap:var(--s-3); }
+  .faq summary { font-size:var(--t-md); }
+  .extract { column-gap:var(--s-3); }
+  .faq { padding:var(--s-1) var(--s-5); }
+  .closer p { font-size:var(--t-md); }
+}

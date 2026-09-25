@@ -1,0 +1,101 @@
+/* Spending dashboard (dashboard.js), shared by the landing page and /history.
+   Year switch and a strip of months on top; the chosen month below (total,
+   change, card split and filter) beside its top merchants. */
+.split-bar { display:flex; gap:3px; height:14px; margin-top:var(--s-5); }
+.split-bar span { border-radius:4px; }
+.split-bar span:first-child { border-radius:999px 4px 4px 999px; }
+.split-bar span:last-child { border-radius:4px 999px 999px 4px; }
+@keyframes grow-x { from { transform:scaleX(0); } }
+/* One card: year switch and a strip of months on top, the chosen month below
+   (total, change, card split and filter) beside its top merchants. */
+.dash { margin-top:var(--s-8); padding:var(--s-7); background:var(--surface); border-radius:var(--r-card); box-shadow:var(--shadow); }
+.dash-top { display:flex; align-items:center; justify-content:space-between; gap:var(--s-4); }
+.dash-label { font-size:var(--t-xs); font-weight:600; letter-spacing:var(--track-caps); text-transform:uppercase; color:var(--muted); }
+.dash button { font:inherit; color:inherit; }
+
+.seg { display:inline-flex; gap:2px; padding:3px; border-radius:999px; background:var(--surface-soft); }
+.seg button { padding:var(--s-1) var(--s-4); border:0; border-radius:999px; background:transparent; color:var(--muted); font-size:var(--t-sm); font-weight:600; font-variant-numeric:tabular-nums; transition:background var(--dur) var(--ease),color var(--dur) var(--ease),box-shadow var(--dur) var(--ease); }
+.seg button:hover { color:var(--ink); }
+.seg button[aria-pressed="true"] { background:var(--surface); color:var(--ink); box-shadow:0 1px 3px #0b2a1e1f; }
+
+/* Month strip: each month is a button; its bar height is that month's share
+   of the year's highest month for the current card filter. */
+.dash-months { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:var(--s-2); height:190px; margin-top:var(--s-6); padding-bottom:var(--s-5); border-bottom:1px solid var(--line); }
+.dash-col { display:grid; grid-template-rows:minmax(0,1fr) auto; justify-items:center; gap:var(--s-2); min-width:0; padding:0; border:0; background:transparent; cursor:pointer; }
+.dash-col:disabled { cursor:default; }
+/* The value rides a fixed distance above its own bar (both read --h), so it
+   stays attached as bars change height. The top padding reserves room for the
+   label over the tallest bar. */
+.dash-col-bar { width:100%; height:100%; padding-top:22px; }
+.dash-col-track { position:relative; display:flex; align-items:flex-end; height:100%; }
+.dash-col-bar i { display:block; width:100%; height:var(--h); min-height:4px; border-radius:6px 6px 3px 3px; background:var(--accent-line); transform-origin:bottom; transition:height .45s var(--ease),background var(--dur) var(--ease); }
+.dash-col:disabled .dash-col-bar i { height:4px; background:var(--line); }
+.dash-col-val { position:absolute; left:50%; bottom:calc(var(--h) + 6px); font-size:var(--t-xs); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; opacity:0; transform:translate(-50%,4px); transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease),bottom .45s var(--ease); }
+.dash-col-label { font-size:var(--t-xs); color:var(--muted); transition:color var(--dur) var(--ease); }
+.dash-col-label .is-short { display:none; }
+.dash-col[aria-pressed="true"] .dash-col-bar i { background:var(--accent); }
+.dash-col[aria-pressed="true"] .dash-col-val,.dash-col:not(:disabled):hover .dash-col-val,.dash-col:focus-visible .dash-col-val { opacity:1; transform:translate(-50%,0); }
+.dash-col[aria-pressed="true"] .dash-col-label { color:var(--ink); font-weight:600; }
+.dash-col:not(:disabled):not([aria-pressed="true"]):hover .dash-col-bar i { background:color-mix(in srgb,var(--accent) 55%,#fff); }
+.dash-col:focus-visible { outline:none; }
+.dash-col:focus-visible .dash-col-bar i { box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent); }
+
+.dash-body { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:var(--s-9); margin-top:var(--s-6); }
+/* The month is a section label like "Top merchants", so both columns start on
+   one line; the total gets room in proportion to its size. */
+.dash-period { display:grid; }
+.dash-month { margin-bottom:var(--s-3); }
+.dash-total { font-size:clamp(2rem,3.4vw,2.6rem); font-weight:600; line-height:1.1; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+.dash-delta { margin-top:var(--s-2); font-size:var(--t-sm); color:var(--muted); }
+.dash-delta:empty { display:none; }
+/* Single-card accounts have no split to show; the month's shape goes here instead. */
+.dash-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--s-4); margin:var(--s-6) 0 0; padding-top:var(--s-5); border-top:1px solid var(--line); }
+.dash-stats dt { font-size:var(--t-xs); color:var(--muted); }
+.dash-stats dd { margin:var(--s-1) 0 0; font-size:var(--t-xl); font-weight:600; letter-spacing:var(--track-tight); font-variant-numeric:tabular-nums; }
+.dash-split { margin-top:var(--s-5); }
+.dash-split span { transition:width .45s var(--ease),opacity var(--dur) var(--ease),transform var(--dur) var(--ease); }
+.dash-split span.is-dim { opacity:.25; }
+
+/* Card filter. Each dot repeats its card's segment colour (set inline by dashboard.js). */
+/* Two chips per row when they fit whole; one per row otherwise, never truncated. */
+.dash-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:var(--s-2); margin-top:var(--s-4); }
+.chip { display:flex; align-items:center; gap:var(--s-2); min-width:0; min-height:40px; padding:var(--s-2) var(--s-3); border:1px solid var(--line); border-radius:var(--r-md); background:var(--surface); font-size:var(--t-sm); text-align:left; cursor:pointer; transition:border-color var(--dur) var(--ease),background var(--dur) var(--ease); }
+.chip:hover { border-color:var(--line-strong); }
+.chip[aria-pressed="true"] { border-color:var(--accent); background:var(--accent-soft); }
+.chip i { flex-shrink:0; width:10px; height:10px; border-radius:3px; }
+.chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); }
+.chip[aria-pressed="true"] span { color:var(--ink); }
+.chip b { margin-left:auto; font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* Top merchants: shared columns so bars and amounts align down the list. */
+.dash-ranks { display:grid; grid-template-columns:minmax(0,1fr) minmax(56px,120px) auto; column-gap:var(--s-4); margin:var(--s-4) 0 0; padding:0; list-style:none; }
+.dash-ranks li { grid-column:1/-1; display:grid; grid-template-columns:subgrid; align-items:center; padding:var(--s-3) 0; border-top:1px solid var(--line); }
+.dash-ranks li:first-child { border-top:0; }
+.dash-rank-name { min-width:0; font-size:var(--t-sm); overflow-wrap:anywhere; }
+.dash-rank-name small { display:block; font-size:var(--t-xs); color:var(--muted); }
+.dash-rank-bar { height:6px; border-radius:999px; background:var(--surface-soft); overflow:hidden; }
+.dash-rank-bar i { display:block; height:100%; border-radius:999px; background:var(--accent); animation:grow-x .45s var(--ease) backwards; transform-origin:left center; }
+.dash-ranks b { font-size:var(--t-sm); font-weight:600; font-variant-numeric:tabular-nums; text-align:right; }
+
+/* First reveal: the month strip rises column by column. */
+@keyframes grow-y { from { transform:scaleY(0); } }
+.reveal.is-in .dash-col-bar i { animation:grow-y .7s var(--ease) backwards; animation-delay:calc(.2s + var(--i) * 45ms); }
+
+@media (max-width:900px) {
+  .dash-body { grid-template-columns:1fr; gap:var(--s-7); }
+}
+@media (max-width:640px) {
+  .dash { padding:var(--s-5); }
+  .dash-months { gap:var(--s-1); height:150px; }
+  .dash-col-val { display:none; }
+  .dash-col-bar { padding-top:0; }
+  .dash-col-label .is-long { display:none; }
+  .dash-col-label .is-short { display:inline; }
+  .dash-cards { grid-template-columns:1fr; }
+  .dash-ranks { grid-template-columns:minmax(0,1fr) 64px auto; column-gap:var(--s-3); }
+  .seg button { padding:var(--s-1) var(--s-3); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .reveal.is-in .dash-col-bar i,.dash-rank-bar i { animation:none; }
+  .dash-col-bar i,.dash-split span { transition:none; }
+}
