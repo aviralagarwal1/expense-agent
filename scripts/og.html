@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!-- Source for static/og.png, the 1200x630 link-preview image.
+     Regenerate with: python scripts/render_og.py -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="../static/css/base.css" />
+  <style>
+    html, body { width:1200px; height:630px; margin:0; overflow:hidden; }
+    body { display:grid; grid-template-columns:1fr 440px; align-items:center; gap:56px; padding:0 80px; box-sizing:border-box; background:var(--bg); }
+    .brand { display:flex; align-items:center; gap:14px; font-size:30px; font-weight:650; letter-spacing:-.02em; color:var(--ink); }
+    .brand svg { width:44px; height:44px; color:var(--ink); }
+    h1 { margin-top:44px; font-size:70px; font-weight:600; line-height:1.02; letter-spacing:-.04em; }
+    p { margin-top:24px; font-size:25px; line-height:1.45; color:var(--muted); text-wrap:balance; }
+    .ledger { padding:32px 36px; background:var(--surface); border-radius:28px; box-shadow:0 2px 4px #0b2a1e0d, 0 30px 70px #0b2a1e1f; }
+    .label { font-size:15px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    .total { margin:12px 0 18px; font-size:52px; font-weight:600; letter-spacing:-.035em; font-variant-numeric:tabular-nums; }
+    .row { display:grid; grid-template-columns:40px 1fr auto; align-items:center; gap:16px; padding:15px 0; border-top:1px solid var(--line); }
+    .row i { position:relative; display:grid; place-items:center; width:40px; height:40px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-style:normal; font-size:16px; font-weight:600; }
+    .row i::after { content:""; position:absolute; right:-3px; bottom:-3px; width:17px; height:17px; border-radius:50%; background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6.2 5 8.2 9 4' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; box-shadow:0 0 0 2px var(--surface); }
+    .row b { display:block; font-size:19px; font-weight:500; }
+    .row small { display:block; margin-top:2px; font-size:14px; color:var(--muted); }
+    .row strong { font-size:19px; font-weight:600; font-variant-numeric:tabular-nums; }
+  </style>
+</head>
+<body>
+  <div>
+    <div class="brand">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="currentColor"/><path d="M27 12H18a8 8 0 0 0 0 16h9M18 17h9M18 22h6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+      Compline
+    </div>
+    <h1>Know exactly what you spend</h1>
+    <p>Credit card app screenshots, turned into one expense history you review and trust.</p>
+  </div>
+  <div class="ledger">
+    <div class="label">Your history</div>
+    <div class="total">$336.07</div>
+    <div class="row"><i>B</i><div><b>Blue Bottle Coffee</b><small>Capital One · Mar 9</small></div><strong>$6.50</strong></div>
+    <div class="row"><i>W</i><div><b>Whole Foods Market</b><small>American Express · Mar 8</small></div><strong>$84.00</strong></div>
+    <div class="row"><i>U</i><div><b>United Airlines</b><small>Capital One · Mar 7</small></div><strong>$158.00</strong></div>
+  </div>
+</body>
+</html>

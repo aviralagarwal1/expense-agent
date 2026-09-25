@@ -96,7 +96,7 @@ templates/          Jinja pages and partials
 static/css, js/     Styles and page scripts (base.css holds the shared design tokens)
 supabase/           Database schema
 tests/              unittest suite
-scripts/            Deployment helpers
+scripts/            Deployment helpers and the link-preview image source
 ```
 
 ## License

@@ -11,6 +11,11 @@ class RouteSmokeTests(TestCase):
     def setUp(self):
         self.client = app.app.test_client()
 
+    def test_pages_include_link_preview_tags(self):
+        html = self.client.get("/", base_url="https://compline.example").get_data(as_text=True)
+        self.assertIn('property="og:image" content="https://compline.example/static/og.png"', html)
+        self.assertIn('name="twitter:card" content="summary_large_image"', html)
+
     def test_settings_get_smoke(self):
         fake_user = SimpleNamespace(id="user-1")
         with patch.dict(os.environ, {"HOSTED_AI_API_KEY": "hosted-secret"}, clear=False), \
