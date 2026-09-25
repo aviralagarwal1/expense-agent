@@ -1,0 +1,129 @@
+/* Workspace: the landing page's step 01 (upload) and step 03 (review) made
+   real. One centred column; sizes come from the scales in base.css. */
+.main-app { width:min(760px,100%); margin:0 auto; padding:var(--s-8) 0 var(--s-10); }
+.workspace-section { display:none; }
+.workspace-section.visible { display:block; }
+
+/* ── Headings ───────────────────────────────────────────────────────────── */
+.app-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:var(--s-2) var(--s-5); margin-bottom:var(--s-6); }
+/* Server-driven quota: quiet until it matters. */
+.app-quota { font-size:var(--t-sm); color:var(--muted); }
+.app-quota:empty { display:none; }
+.app-quota.is-warning { color:var(--warning); }
+.app-quota.is-blocked { color:var(--danger); }
+.upload-status-emphasis { color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums; }
+.app-quota.is-warning .upload-status-emphasis { color:var(--warning); }
+.app-quota.is-blocked .upload-status-emphasis { color:var(--danger); }
+
+
+/* ── Loading ────────────────────────────────────────────────────────────── */
+.loading-panel { display:flex; align-items:center; gap:var(--s-5); min-height:180px; }
+.loading-panel .spinner { color:var(--accent); width:22px; height:22px; flex-shrink:0; }
+.loading-title { font-size:var(--t-xl); font-weight:600; letter-spacing:var(--track-tight); }
+.loading-copy { color:var(--muted); font-size:var(--t-sm); margin-top:var(--s-1); }
+.loading-text .btn { margin-top:var(--s-4); }
+.loading-success-mark { display:none; width:28px; color:var(--accent); }
+
+/* ── Cards and actions ──────────────────────────────────────────────────── */
+.app-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:var(--s-2); margin-top:var(--s-5); }
+.results-actions { margin-top:var(--s-5); }
+.results-actions:not(:has(> :not([style*="none"]))) { display:none; }
+
+/* ── Upload (landing step 01) ───────────────────────────────────────────── */
+.upload-zone { display:grid; place-items:center; gap:var(--s-2); padding:var(--s-9) var(--s-5); border:1px dashed var(--line-strong); border-radius:var(--r-lg); background:var(--surface-soft); text-align:center; cursor:pointer; transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease); }
+.upload-zone:hover { border-color:var(--accent-line); background:var(--accent-soft); }
+.upload-zone:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.upload-zone.dragover { border-style:solid; border-color:var(--accent); background:var(--accent-soft); }
+.upload-mark { display:grid; place-items:center; width:48px; height:48px; margin-bottom:var(--s-2); border-radius:50%; background:var(--surface); color:var(--accent); transition:transform var(--dur) var(--ease),background var(--dur) var(--ease),color var(--dur) var(--ease); }
+.upload-mark svg { width:20px; height:20px; }
+.upload-zone:hover .upload-mark { transform:translateY(-2px); }
+.upload-zone.dragover .upload-mark { background:var(--accent); color:var(--on-accent); }
+.upload-zone strong { font-size:var(--t-md); font-weight:600; }
+.upload-help { font-size:var(--t-xs); color:var(--muted); }
+
+/* The batch: chosen screenshots on the left, the card they file under on the right. */
+.batch-row { display:flex; align-items:center; gap:var(--s-3); margin-top:var(--s-4); min-height:66px; }
+.preview-strip { display:flex; flex-wrap:wrap; gap:var(--s-2); min-width:0; }
+.preview-thumb { position:relative; width:40px; height:66px; border:1px solid var(--line); border-radius:7px; background:var(--surface-soft); overflow:hidden; }
+.preview-thumb img { width:100%; height:100%; object-fit:cover; object-position:top; }
+.preview-remove { position:absolute; top:3px; right:3px; display:grid; place-items:center; width:18px; height:18px; padding:0; border:0; border-radius:50%; background:#14201acc; color:#fff; opacity:0; transition:opacity var(--dur) var(--ease); }
+.preview-remove svg { width:10px; height:10px; }
+.preview-remove::after { content:""; position:absolute; inset:-10px; }
+.preview-thumb:hover .preview-remove,.preview-remove:focus-visible { opacity:1; }
+@media (hover:none) { .preview-remove { opacity:1; } }
+
+/* Card picker: a native select dressed as the landing's card chip. */
+.card-picker { position:relative; display:inline-flex; align-items:center; margin-left:auto; flex-shrink:0; }
+.card-picker::before { content:""; position:absolute; left:var(--s-3); width:10px; height:10px; border-radius:3px; background:var(--accent); pointer-events:none; }
+.card-picker select { width:auto; min-width:0; min-height:40px; padding:var(--s-2) var(--s-7) var(--s-2) calc(var(--s-3) + 18px); border:1px solid var(--line-strong); border-radius:var(--r-md); background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235d6b62' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right var(--s-3) center/14px no-repeat; font-size:var(--t-sm); font-weight:600; appearance:none; cursor:pointer; }
+.card-picker.needs-attention select { border-color:var(--warning); box-shadow:0 0 0 3px #94631626; }
+#cardEmptyState { margin-top:var(--s-4); }
+#cardEmptyState a { color:inherit; font-weight:600; }
+
+/* ── Review (landing step 03) ───────────────────────────────────────────── */
+.review { display:none; }
+.review.visible { display:block; }
+.review:focus { outline:none; }
+.review-head { display:flex; justify-content:space-between; gap:var(--s-3); padding-bottom:var(--s-3); border-bottom:1px solid var(--line); font-size:var(--t-xs); color:var(--muted); }
+.review-head b { color:var(--ink); font-weight:600; }
+
+/* Rows share one set of columns (merchant, date, amount, outcome) via subgrid,
+   so values line up down the card however wide any one of them is. */
+.review-list { display:grid; grid-template-columns:minmax(0,1fr) auto auto auto; column-gap:var(--s-4); }
+.review-list:empty { display:none; }
+.review-row { grid-column:1/-1; display:grid; grid-template-columns:subgrid; align-items:center; padding:var(--s-3) 0; border-bottom:1px solid var(--line); font-size:var(--t-sm); animation:row-in var(--dur-slow) var(--ease) backwards; }
+.review-list > .review-row:last-child { border-bottom:0; }
+.review-name { min-width:0; overflow-wrap:anywhere; hyphens:auto; }
+.review-date { font-size:var(--t-xs); color:var(--muted); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+.review-amount { font-weight:600; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+/* Pill then a fixed action slot, so every pill lines up whether or not the row has an action. */
+.review-outcome { display:grid; grid-template-columns:auto 32px; align-items:center; justify-items:center; gap:var(--s-2); }
+.review-outcome > .tag { justify-self:end; }
+.review-row mark { background:none; color:var(--accent); font-weight:700; }
+.review-empty { grid-column:1/-1; padding:var(--s-7) 0 var(--s-3); text-align:center; color:var(--muted); font-size:var(--t-sm); }
+@keyframes row-in { from { opacity:0; transform:translateY(4px); } }
+
+
+.row-icon-btn { position:relative; display:inline-grid; place-items:center; flex-shrink:0; width:24px; height:24px; border:0; border-radius:50%; background:transparent; color:var(--muted); cursor:pointer; }
+.row-icon-btn svg { width:12px; height:12px; }
+.row-icon-btn::after { content:""; position:absolute; inset:-10px; }
+.row-icon-btn:hover { background:var(--danger-soft); color:var(--danger); }
+
+.review-row.is-dup > :not(.review-outcome),.review-row.is-left-out > :not(.review-outcome) { opacity:.45; }
+.review-row.is-dup .review-amount,.review-row.is-left-out .review-amount { text-decoration:line-through; }
+
+/* A close match: the incoming row over the saved row it resembles, in one
+   light-green group that bleeds past the text column. */
+.review-match { position:relative; isolation:isolate; grid-column:1/-1; display:grid; grid-template-columns:subgrid; margin:var(--s-2) 0; }
+.review-match::before { content:""; position:absolute; z-index:-1; inset:0 calc(var(--s-3) * -1); border-radius:var(--r-lg); background:var(--accent-soft); }
+.review-match:not(.is-resolved) > .review-row:first-child { border-bottom:1px dashed var(--accent-line); }
+.review-match .review-row.is-saved { border-bottom:0; color:var(--muted); }
+.review-match-actions { grid-column:1/-1; display:flex; gap:var(--s-2); margin:var(--s-1) 0 var(--s-4); }
+.review-match-actions:empty { display:none; }
+.pill-btn { min-height:36px; padding:var(--s-1) var(--s-5); border:1px solid var(--line-strong); border-radius:var(--r-pill); background:var(--surface); font-size:var(--t-xs); font-weight:600; cursor:pointer; }
+.pill-btn:hover:not(:disabled) { border-color:var(--ink); }
+.pill-btn.is-primary { border-color:var(--accent); background:var(--accent); color:var(--on-accent); }
+.pill-btn.is-primary:hover:not(:disabled) { background:var(--accent-strong); }
+/* Once decided, the group closes to the one row that was decided on. */
+.review-match.is-resolved { margin:0; }
+.review-match.is-resolved::before { background:transparent; }
+.review-match.is-resolved .review-row.is-saved { display:none; }
+
+/* ── Phones ─────────────────────────────────────────────────────────────── */
+@media (max-width:640px) {
+  .main-app { padding:var(--s-6) 0 var(--s-8); }
+  .app-head { margin-bottom:var(--s-5); }
+  .app-card { padding:var(--s-5); }
+  .app-intro { padding:var(--s-8) 0; }
+  .upload-zone { padding:var(--s-8) var(--s-4); }
+  .batch-row { flex-wrap:wrap; }
+  .app-actions > * { flex:1 1 100%; }
+  /* The date tucks under the merchant, so merchant, amount and outcome always fit. */
+  .review-list { grid-template-columns:minmax(0,1fr) auto auto; column-gap:var(--s-3); }
+  .review-row { grid-template-columns:subgrid; grid-template-rows:auto auto; }
+  .review-name { grid-column:1; grid-row:1; }
+  .review-date { grid-column:1; grid-row:2; text-align:left; margin-top:1px; }
+  .review-amount { grid-column:2; grid-row:1 / span 2; }
+  .review-outcome { grid-column:3; grid-row:1 / span 2; }
+  .tag { min-width:64px; }
+}

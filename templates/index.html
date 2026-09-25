@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>Compline</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
+
+</head>
+<body>
+  <a class="skip-link" href="#workspaceMain">Skip to workspace</a>
+  <div class="page">
+    <div id="mainApp" class="frame" style="display:none;">
+      {% with current='workspace' %}{% include "partials/app_nav.html" %}{% endwith %}
+
+      <main class="main-app" id="workspaceMain">
+        <section id="loadingView" class="workspace-section">
+          <section class="panel loading-panel">
+            <span class="spinner" aria-hidden="true"></span>
+            <div class="loading-success-mark" id="loadingSuccessMark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.5 9.2 16.7 19 7"></path>
+              </svg>
+            </div>
+            <div class="loading-text">
+              <div class="loading-title" id="loadingTitle">Opening your workspace</div>
+              <p class="loading-copy" id="loadingCopy">Checking your account and loading your saved setup.</p>
+              <button class="btn btn-secondary" id="retryWorkspaceBtn" type="button" hidden>Try again</button>
+            </div>
+          </section>
+        </section>
+
+        <section id="welcomeView" class="workspace-section">
+          <div class="app-intro">
+            <h1 class="app-title" id="welcomeHeadline">Welcome to Compline</h1>
+            <p class="app-lede">Save a card, upload screenshots, and add what belongs to your history.</p>
+            <button class="btn btn-primary btn-lg" id="welcomeContinueBtn" type="button" onclick="completeWelcome()">Continue</button>
+          </div>
+        </section>
+
+        <section id="setupView" class="workspace-section">
+          <div class="app-intro" id="cardSetupGrid" style="display:none;">
+            <h1 class="app-title">Add your first card</h1>
+            <p class="app-lede">Each batch of screenshots is filed under one of your saved cards.</p>
+            <a class="btn btn-primary btn-lg" href="/settings?return_to=%2Fapp">Add a card</a>
+          </div>
+        </section>
+
+        <div id="workspaceView" class="workspace-section">
+          <header class="app-head">
+            <h1 class="app-title">Upload screenshots</h1>
+            <p class="app-quota" id="uploadStatusLine"></p>
+          </header>
+
+          <section class="app-card upload-panel" id="uploadPanel">
+            <div class="upload-zone" id="dropZone" role="button" tabindex="0" aria-label="Choose card screenshots" aria-describedby="uploadZoneHelp">
+              <input type="file" id="fileInput" class="sr-only" accept="image/png,image/jpeg,image/gif,image/webp" multiple tabindex="-1" />
+              <span class="upload-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m-4 4 4-4 4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg></span>
+              <strong>Drop screenshots here</strong>
+              <span class="upload-help" id="uploadZoneHelp">PNG, JPG, GIF, or WEBP</span>
+            </div>
+
+            <div class="batch-row">
+              <div class="preview-strip" id="previewGrid"></div>
+              <label class="card-picker" id="uploadCardPicker">
+                <span class="sr-only">Card for this batch</span>
+                <select id="uploadCardSelect"><option value="">Select a card</option></select>
+              </label>
+            </div>
+
+            <p class="callout callout--warning" id="cardEmptyState" hidden>
+              <strong>No saved cards yet.</strong>
+              <a href="/settings?return_to=%2Fapp">Add one in Profile</a>
+            </p>
+
+            <div class="app-actions">
+              <button class="btn btn-primary btn-lg" id="analyzeBtn" disabled>Analyze screenshots</button>
+            </div>
+          </section>
+
+          <section class="app-card review" id="resultsBox" tabindex="-1" aria-live="polite">
+            <p class="review-head"><b id="reviewCard"></b><span id="reviewCount"></span></p>
+            <div class="review-list" id="possibleList" role="list"></div>
+            <div class="review-list" id="txList" role="list"></div>
+          </section>
+
+          <div class="app-actions results-actions">
+            <button class="btn btn-primary btn-lg" id="confirmBtn" style="display:none">Add to history</button>
+            <a class="btn btn-primary btn-lg" id="viewHistoryBtn" href="/history" style="display:none">View history</a>
+            <button class="btn btn-secondary btn-lg" id="resetBtn" style="display:none">Upload more</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/auth_session.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/site_nav.js') }}"></script>
+
+</body>
+</html>
