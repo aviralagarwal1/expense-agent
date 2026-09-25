@@ -1,0 +1,23 @@
+/* About: one centred column. Headshot, name, links, then a few short
+   paragraphs in the landing page's type and colours. */
+.about-main { padding:var(--s-9) 0 var(--s-10); }
+.about { display:grid; justify-items:center; max-width:640px; margin:0 auto; text-align:center; }
+.about-photo { display:block; width:132px; height:132px; border-radius:50%; object-fit:cover; object-position:center 20%; box-shadow:0 0 0 1px var(--line-strong); }
+.about h1 { margin-top:var(--s-6); font-size:clamp(2rem,4vw,2.8rem); font-weight:600; line-height:1.1; letter-spacing:-.03em; }
+/* Photo, name and copy sit 20px apart; the links get a little more room (32px).
+   They lose the paragraph's trailing line spacing so the gap measures true. */
+.about-links { display:flex; gap:var(--s-2); margin-top:calc(var(--s-7) - 5px); }
+.about-icon-link { display:inline-grid; place-items:center; width:var(--control-h); height:var(--control-h); border-radius:50%; background:var(--surface); color:var(--muted); box-shadow:var(--shadow-soft); transition:background var(--dur) var(--ease),color var(--dur) var(--ease),transform var(--dur) var(--ease); }
+.about-icon-link:hover { background:var(--accent-soft); color:var(--accent); transform:translateY(-1px); }
+.about-icon-link svg { width:17px; height:17px; }
+.about-copy { margin-top:var(--s-5); text-align:left; }
+.about-copy p { color:var(--muted); font-size:var(--t-lg); line-height:1.75; }
+.about-copy p + p { margin-top:var(--s-5); }
+.about-copy a { color:var(--accent); font-weight:600; text-underline-offset:3px; }
+@media (max-width:640px) {
+  .about-main { padding:var(--s-7) 0 var(--s-9); }
+  .about-photo { width:112px; height:112px; }
+  .about-copy { margin-top:var(--s-5); }
+  .about-links { margin-top:calc(var(--s-7) - 3px); }
+  .about-copy p { font-size:var(--t-md); }
+}
