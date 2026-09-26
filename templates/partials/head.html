@@ -18,4 +18,19 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" />
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
-<script>try{if(sessionStorage.getItem("expense_token"))document.documentElement.classList.add("is-signed-in");}catch(e){}</script>
+<script>
+/* Runs before any page script. Browser keys were renamed from expense_* to
+   compline_*; carry old ones over once so nobody is signed out or loses their
+   saved card. The shim can go once old keys are gone (see notes). Then mark a
+   signed-in visitor before paint so public pages show the right nav. */
+try {
+  var s = sessionStorage, l = localStorage, move = function (store, from, to) {
+    var v = store.getItem(from);
+    if (v !== null) { if (store.getItem(to) === null) store.setItem(to, v); store.removeItem(from); }
+  };
+  move(s, "expense_token", "compline_token");
+  move(s, "expense_refresh_token", "compline_refresh_token");
+  Object.keys(l).forEach(function (k) { if (k.indexOf("expense_") === 0) move(l, k, "compline_" + k.slice(8)); });
+  if (s.getItem("compline_token")) document.documentElement.classList.add("is-signed-in");
+} catch (e) {}
+</script>

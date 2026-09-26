@@ -1,7 +1,7 @@
 (function () {
   function clearExpenseSessionStorage() {
-    sessionStorage.removeItem("expense_token");
-    sessionStorage.removeItem("expense_refresh_token");
+    sessionStorage.removeItem("compline_token");
+    sessionStorage.removeItem("compline_refresh_token");
   }
 
   window.clearExpenseSessionStorage = clearExpenseSessionStorage;

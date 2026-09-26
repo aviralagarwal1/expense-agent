@@ -2,7 +2,7 @@
    the selected month (or a search across everything), and the uploads they
    came from. Rows open an edit sheet; uploads open a sheet that can delete them. */
 (function () {
-  const token = sessionStorage.getItem("expense_token");
+  const token = sessionStorage.getItem("compline_token");
   if (!token) {
     window.location.href = "/app";
     return;

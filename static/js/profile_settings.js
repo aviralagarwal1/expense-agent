@@ -1,4 +1,4 @@
-  const token = sessionStorage.getItem("expense_token");
+  const token = sessionStorage.getItem("compline_token");
   if (!token) {
     window.location.href = "/app";
   }
@@ -249,7 +249,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.error) throw new Error(data.error || "failed");
       window.clearExpenseSessionStorage();
-      Object.keys(localStorage).filter(key => key.startsWith("expense_")).forEach(key => localStorage.removeItem(key));
+      Object.keys(localStorage).filter(key => key.startsWith("compline_")).forEach(key => localStorage.removeItem(key));
       window.location.replace("/?account_deleted=1");
     } catch (e) {
       deleteMsg.textContent = "Could not delete your account. Try again.";

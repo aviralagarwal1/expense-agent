@@ -1,4 +1,4 @@
-let sessionToken = sessionStorage.getItem("expense_token") || "";
+let sessionToken = sessionStorage.getItem("compline_token") || "";
 let savedCards = [];
 let selectedCardId = "";
 let profileFirstName = "";
@@ -55,7 +55,7 @@ let authBootstrapFromHash = false;
   if (accessToken) {
     sessionToken = accessToken;
     shouldFlashLoginSuccess = true;
-    sessionStorage.setItem("expense_token", sessionToken);
+    sessionStorage.setItem("compline_token", sessionToken);
     window.history.replaceState(null, "", "/app");
     profileFirstName = getFirstNameFromToken(sessionToken);
     authBootstrapFromHash = true;
@@ -98,8 +98,8 @@ function clearStoredSession() {
   selectedCardId = "";
   profileFirstName = "";
   isNewAccount = false;
-  sessionStorage.removeItem("expense_token");
-  sessionStorage.removeItem("expense_refresh_token");
+  sessionStorage.removeItem("compline_token");
+  sessionStorage.removeItem("compline_refresh_token");
 }
 
 function getUserIdFromToken(token) {
@@ -112,7 +112,7 @@ function getUserIdFromToken(token) {
 
 function getWelcomeSeenKey() {
   const userId = getUserIdFromToken(sessionToken);
-  return userId ? `expense_welcome_seen_${userId}` : "";
+  return userId ? `compline_welcome_seen_${userId}` : "";
 }
 
 function markWelcomeSeenLocally() {
@@ -127,7 +127,7 @@ function hasSeenWelcomeLocally() {
 
 function getSavedCardKey() {
   const userId = getUserIdFromToken(sessionToken);
-  return userId ? `expense_saved_card_${userId}` : "";
+  return userId ? `compline_saved_card_${userId}` : "";
 }
 
 function persistSelectedCard(cardId) {

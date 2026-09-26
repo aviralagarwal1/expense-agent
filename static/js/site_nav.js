@@ -78,7 +78,7 @@
    workspace, not another sign-in prompt. */
 (function () {
   var token = "";
-  try { token = sessionStorage.getItem("expense_token") || ""; } catch (err) { return; }
+  try { token = sessionStorage.getItem("compline_token") || ""; } catch (err) { return; }
   if (!token) return;
   document.querySelectorAll('a[href="/auth/google"]').forEach(function (link) {
     link.setAttribute("href", "/app");
