@@ -57,7 +57,7 @@ class RouteSmokeTests(TestCase):
 
     def test_local_oauth_ignores_production_app_url(self):
         fake_oauth_response = SimpleNamespace(url="https://supabase.example/auth/v1/authorize?redirect_to=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Fcallback")
-        with patch.object(app, "APP_URL", "https://expenseagent.aviralagarwal.com"), \
+        with patch.object(app, "APP_URL", "https://compline.aviralagarwal.com"), \
              patch.object(app.supabase_admin.auth, "sign_in_with_oauth", return_value=fake_oauth_response), \
              patch.object(app, "get_supabase_pkce_verifier", return_value="verifier-1"):
             response = self.client.get("/auth/google", base_url="http://localhost:5000")
@@ -65,7 +65,7 @@ class RouteSmokeTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn("redirect_to=http%3A%2F%2Flocalhost%3A5000%2Fauth%2Fcallback", response.headers["Location"])
         self.assertNotIn("state=", response.headers["Location"])
-        self.assertIn("expense_oauth_pkce=", response.headers.get("Set-Cookie", ""))
+        self.assertIn("compline_oauth_pkce=", response.headers.get("Set-Cookie", ""))
         self.assertNotIn("Secure", response.headers.get("Set-Cookie", ""))
 
     def test_ipv6_localhost_is_treated_as_local(self):

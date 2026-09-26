@@ -98,11 +98,11 @@ AUTH_COOKIE_SECRET   = os.environ.get("AUTH_COOKIE_SECRET") or os.environ.get("S
 supabase_admin: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 AUTH_CODE_CACHE_TTL_SECONDS = 120
-AUTH_PKCE_COOKIE = "expense_oauth_pkce"
+AUTH_PKCE_COOKIE = "compline_oauth_pkce"
 AUTH_PKCE_MAX_AGE_SECONDS = 600
 auth_code_redirect_cache: dict[str, tuple[float, str]] = {}
 auth_code_exchange_lock = Lock()
-auth_serializer = URLSafeTimedSerializer(AUTH_COOKIE_SECRET, salt="expense-agent-oauth-pkce")
+auth_serializer = URLSafeTimedSerializer(AUTH_COOKIE_SECRET, salt="compline-oauth-pkce")
 
 
 def is_local_request_host(host: str):
